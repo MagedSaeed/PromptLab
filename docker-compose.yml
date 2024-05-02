@@ -8,7 +8,7 @@ services:
             - 80:80
         volumes:
             - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-            - static_volume:/app/tawjeeh/django_static/
+            - static_volume:/app/tawjeeh/static/
     server:
         restart: unless-stopped
         build:
@@ -16,7 +16,7 @@ services:
             dockerfile: ./docker/django-site/Dockerfile
         entrypoint: /app/docker/django-site/server-entrypoint.sh
         volumes:
-            - static_volume:/app/tawjeeh/django_static/
+            - static_volume:/app/tawjeeh/static/
         expose:
             - 8000
         environment:
@@ -36,7 +36,7 @@ services:
     #         dockerfile: ./docker/django-site/Dockerfile
     #     entrypoint: /app/docker/django-site/worker-entrypoint.sh
     #     volumes:
-    #         - static_volume:/app/tawjeeh/django_static
+    #         - static_volume:/app/tawjeeh/static
     #     environment:
     #         DEBUG: "True"
     #         CELERY_BROKER_URL: "redis://redis:6379/0"
