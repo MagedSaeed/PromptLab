@@ -13,6 +13,14 @@ do
 done
 
 
+# create superusers
+until python manage.py import_superusers ../docker/django-site/admins.yml
+do
+    echo "Waiting for superusers to be created..."
+    sleep 2
+done
+
+
 python manage.py collectstatic --noinput
 
 gunicorn tawjeeh.wsgi --bind 0.0.0.0:8000 --workers 4 --threads 4
