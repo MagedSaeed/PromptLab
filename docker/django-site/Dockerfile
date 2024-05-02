@@ -12,7 +12,7 @@ ADD ./requirements.txt /app/
 RUN pip install -r requirements.txt
 
 # create static folder
-RUN mkdir -p /app/tawjeeh/django_static
+RUN mkdir -p /app/tawjeeh/static
 
 ADD ./tawjeeh /app/tawjeeh
 ADD ./docker /app/docker
