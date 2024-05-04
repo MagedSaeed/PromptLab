@@ -11,6 +11,8 @@ services:
             - static_volume:/app/tawjeeh/static/
     server:
         restart: unless-stopped
+        depends_on:
+            - db
         build:
             context: .
             dockerfile: ./docker/django-site/Dockerfile
