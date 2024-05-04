@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
@@ -21,5 +22,6 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path("admin/", admin.site.urls),
     # create a url, called up. If the server is up and running, it should return an HTML page with a green background. You can use templateview with html page that only have a green background
-    path("up", TemplateView.as_view(template_name="up.html")), 
+    path("up", TemplateView.as_view(template_name="up.html")),
+    path("", TemplateView.as_view(template_name="index.html")),
 ]
