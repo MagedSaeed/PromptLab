@@ -35,12 +35,20 @@ ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    # allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    # django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # installed
+    "crispy_forms",
+    "crispy_bootstrap4",
     # added
     "core",
 ]
@@ -53,6 +61,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # allauth
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "tawjeeh.urls"
@@ -133,6 +143,21 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "core.TawjeehUser"
+
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# all-auth settings
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+SOCIALACCOUNT_PROVIDERS = {
+    # "google": {"SCOPE": ["profile", "email"], "AUTH_PARAMS": {"access_type": "online"}},
+}
+
+ACCOUNT_EMAIL_REQUIRED = True
 
 
 # manage development settings
