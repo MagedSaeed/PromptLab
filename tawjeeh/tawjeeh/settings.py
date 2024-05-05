@@ -158,11 +158,3 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 ACCOUNT_EMAIL_REQUIRED = True
-
-
-# manage development settings
-
-dotenv.load_dotenv()
-
-if os.getenv("DEV_ENV"):
-    from .dev_settings import *
