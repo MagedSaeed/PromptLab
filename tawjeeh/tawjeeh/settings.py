@@ -35,11 +35,8 @@ ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
-    # allauth
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
     # django
+    "django.contrib.sites",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,6 +48,11 @@ INSTALLED_APPS = [
     "crispy_bootstrap4",
     # added
     "core",
+    # allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
 
 MIDDLEWARE = [
@@ -151,10 +153,25 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # all-auth settings
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
+ACCOUNT_EMAIL_REQUIRED = True
+
+SITE_ID = 1
+
 SOCIALACCOUNT_PROVIDERS = {
-    # "google": {"SCOPE": ["profile", "email"], "AUTH_PARAMS": {"access_type": "online"}},
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
 }
 
-ACCOUNT_EMAIL_REQUIRED = True
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
