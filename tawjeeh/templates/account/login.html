@@ -1,6 +1,6 @@
 {% extends "base/base.html" %}
-
 {% load crispy_forms_tags %}
+{% load socialaccount %}
 
 {% block main_content %}
 <div class="container mt-5">
@@ -23,6 +23,12 @@
                             <button type="submit" class="btn btn-outline-primary btn-block">Log In</button>
                         </div>
                     </form>
+                    <hr>
+                    <div class="form-group d-grid">
+                        <a href="{% provider_login_url 'google' %}?next=/" class="btn btn-outline-danger btn-block">
+                            Log In with Google
+                        </a>
+                    </div>
                 </div>
                 <div class="card-footer text-center">
                     <p>
