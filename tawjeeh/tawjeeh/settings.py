@@ -46,13 +46,16 @@ INSTALLED_APPS = [
     # installed
     "crispy_forms",
     "crispy_bootstrap4",
-    # added
-    "core",
+    "django_filters",
+    "django_htmx",
     # allauth
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    # added
+    "core",
+    "prompt",
 ]
 
 MIDDLEWARE = [
@@ -65,6 +68,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # allauth
     "allauth.account.middleware.AccountMiddleware",
+    # htmx
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "tawjeeh.urls"
