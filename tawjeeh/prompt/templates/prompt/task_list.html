@@ -1,0 +1,93 @@
+{% extends "base/base.html" %}
+
+{% block style %}
+<style>
+    /* Spinner styles */
+    #loading-spinner {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: .3em;
+    }
+    
+    /* Dimming effect */
+    #tasks-list.dimmed {
+        opacity: 0.5;
+        pointer-events: none;  /* Prevent interactions */
+    }
+</style>
+       
+{% endblock style %}
+
+{% block main_content %}
+<div class="container mt-4">
+    <h2 class="my-4">Tasks</h2>
+
+    <!-- Search form -->
+    <form method="get" id="search-form">
+        <div class="input-group mb-3">
+            <input 
+                type="text"
+                name="name"
+                id="search-input"
+                class="form-control"
+                placeholder="Search tasks..."
+                value="{{ request.GET.name }}"
+                hx-get="{% url 'prompt:task_list' %}"
+                hx-trigger="keyup changed delay:500ms"
+                hx-target="#tasks-list"
+                hx-push-url="true"
+                hx-indicator="#loading-spinner"/>
+        </div>
+    </form>
+
+    <!-- Spinner -->
+    <div id="loading-spinner" style="display:none;">Loading...</div>
+
+    <!-- Tasks list -->
+    <div id="tasks-list">
+        {% include "prompt/partials/task_list_table.html" %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('htmx:configRequest', function(event) {
+        document.querySelector("#loading-spinner").style.display = 'block';
+        document.querySelector("#tasks-list").classList.add('dimmed');
+    });
+    
+    document.addEventListener('htmx:afterRequest', function(event) {
+        document.querySelector("#loading-spinner").style.display = 'none';
+        document.querySelector("#tasks-list").classList.remove('dimmed');
+    });
+    function highlightMatches(searchTerm) {
+        if (!searchTerm) return;
+    
+        const terms = searchTerm.split(/\s+/).filter(Boolean);  // Split by whitespace and filter empty terms
+        const taskElements = document.querySelectorAll('.task-name');
+    
+        taskElements.forEach(el => {
+            let text = el.textContent;
+            terms.forEach(term => {
+                const regex = new RegExp(`(${term})`, 'gi');
+                text = text.replace(regex, '<u><strong>$1</strong></u>');
+            });
+            el.innerHTML = text;  // Set the inner HTML to the highlighted text
+        });
+    }
+    
+    document.addEventListener('htmx:afterSwap', () => {
+        const searchTerm = document.getElementById('search-input').value;
+        highlightMatches(searchTerm);
+    });
+</script>
+
+{% endblock %}

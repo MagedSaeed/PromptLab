@@ -1,0 +1,24 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Task Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Datasets</th>
+            <th scope="col">Prompts</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for task in tasks %}
+        <tr>
+            <th>{{ forloop.counter }}</th>
+            <td class="task-name">{{ task.name }}</td>
+            <td>{{ task.description }}</td>
+            <td>{{ task.datasets.count }}</td>
+            <td>{{ task.prompts.count }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include 'base/pagination.html' %}
