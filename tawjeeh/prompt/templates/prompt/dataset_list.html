@@ -11,31 +11,29 @@
         transform: translate(-50%, -50%);
         z-index: 1000;
     }
-    
+
     .spinner-border {
         width: 3rem;
         height: 3rem;
         border-width: .3em;
     }
-    
+
     /* Dimming effect */
-    #tasks-list.dimmed {
+    #datasets-list.dimmed {
         opacity: 0.5;
         pointer-events: none;  /* Prevent interactions */
     }
 </style>
-       
 {% endblock style %}
 
 {% block main_content %}
 <div class="container mt-4">
-    <h2 class="my-4">Tasks</h2>
+    <h2 class="my-4">Datasets {% if task %}for <u>{{ task.name }}</u> Task {% endif %}</h2>
 
     <div class="text-center mb-4">
         <p class="h6">
-            Filter datasets with tasks,
-            <a href="{% url 'prompt:dataset_list' %}" class="h6">
-                List all datasets instead
+            <a href="{% url 'prompt:task_list' %}" class="h6">
+                Go back to tasks
             </a>
         </p>
     </div>
@@ -43,47 +41,52 @@
     <!-- Search form -->
     <form method="get" id="search-form">
         <div class="input-group mb-3">
-            <input 
+            <input
                 type="text"
                 name="name"
                 id="search-input"
                 class="form-control"
-                placeholder="Search tasks..."
+                placeholder="Search datasets..."
                 value="{{ request.GET.name }}"
-                hx-get="{% url 'prompt:task_list' %}"
+                hx-get="{% url 'prompt:dataset_list' %}{% if task %}?task_pk={{ task.pk }}{% endif %}"
                 hx-trigger="keyup changed delay:500ms"
-                hx-target="#tasks-list"
+                hx-target="#datasets-list"
                 hx-push-url="true"
-                hx-indicator="#loading-spinner"/>
+                hx-replace-url="false"
+                hx-indicator="#loading-spinner"
+            />
         </div>
     </form>
 
     <!-- Spinner -->
-    <div id="loading-spinner" style="display:none;">Loading...</div>
+    <div id="loading-spinner" class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
 
-    <!-- Tasks list -->
-    <div id="tasks-list">
-        {% include "prompt/partials/task_list_table.html" %}
+    <!-- Datasets list -->
+    <div id="datasets-list">
+        {% include "prompt/partials/dataset_list_table.html" %}
     </div>
 </div>
 
 <script>
     document.addEventListener('htmx:configRequest', function(event) {
         document.querySelector("#loading-spinner").style.display = 'block';
-        document.querySelector("#tasks-list").classList.add('dimmed');
+        document.querySelector("#datasets-list").classList.add('dimmed');
     });
-    
+
     document.addEventListener('htmx:afterRequest', function(event) {
         document.querySelector("#loading-spinner").style.display = 'none';
-        document.querySelector("#tasks-list").classList.remove('dimmed');
+        document.querySelector("#datasets-list").classList.remove('dimmed');
     });
+
     function highlightMatches(searchTerm) {
         if (!searchTerm) return;
-    
+
         const terms = searchTerm.split(/\s+/).filter(Boolean);  // Split by whitespace and filter empty terms
-        const taskElements = document.querySelectorAll('.task-name');
-    
-        taskElements.forEach(el => {
+        const datasetElements = document.querySelectorAll('.dataset-name');
+
+        datasetElements.forEach(el => {
             let text = el.textContent;
             terms.forEach(term => {
                 const regex = new RegExp(`(${term})`, 'gi');
@@ -92,11 +95,10 @@
             el.innerHTML = text;  // Set the inner HTML to the highlighted text
         });
     }
-    
+
     document.addEventListener('htmx:afterSwap', () => {
         const searchTerm = document.getElementById('search-input').value;
         highlightMatches(searchTerm);
     });
 </script>
-
-{% endblock %}
+{% endblock main_content %}
