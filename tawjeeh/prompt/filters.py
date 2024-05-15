@@ -1,5 +1,5 @@
 import django_filters
-from prompt.models import Task, Dataset
+from prompt.models import Dataset, Task
 
 
 class TaskFilter(django_filters.FilterSet):

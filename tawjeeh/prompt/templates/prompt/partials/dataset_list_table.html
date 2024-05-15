@@ -11,24 +11,24 @@
     </thead>
     <tbody>
         {% for dataset in datasets %}
-        <tr>
-            <th>{{ forloop.counter }}</th>
-            <td>
-                <a href="https://huggingface.co/datasets/{{ dataset.huggingface_name }}" target="_blank">
-                    <span class="dataset-name">{{ dataset.name }}</span>
-                </a>
-            </td>
-            {% if not task %}
-                <td>{{ dataset.task.name }}</td>
-            {% endif %}
-            <td>
-                {% if dataset.description|length > 150 %}
-                    {{ dataset.description|slice:":150" }}...
-                {% else %}
-                    {{ dataset.description }}
+            <tr>
+                <th>{{ forloop.counter }}</th>
+                <td>
+                    <a href="https://huggingface.co/datasets/{{ dataset.huggingface_name }}" target="_blank">
+                        <span class="dataset-name">{{ dataset.name }}</span>
+                    </a>
+                </td>
+                {% if not task %}
+                    <td>{{ dataset.task.name }}</td>
                 {% endif %}
-            </td>
-        </tr>
+                <td>
+                    {% if dataset.description|length > 150 %}
+                        {{ dataset.description|slice:":150" }}...
+                    {% else %}
+                        {{ dataset.description }}
+                    {% endif %}
+                </td>
+            </tr>
         {% endfor %}
     </tbody>
 </table>

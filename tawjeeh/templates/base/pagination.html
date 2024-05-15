@@ -3,13 +3,13 @@
 <nav aria-label="Page navigation">
     <ul class="pagination">
         {% if page_obj.has_previous %}
-        <li class="page-item">
-            <a class="page-link"
-               hx-get="?{% if request.GET.name %}name={{ request.GET.name }}&{% endif %}page={{ page_obj.previous_page_number }}{% if request.GET.task_pk %}&task_pk={{ request.GET.task_pk }}{% endif %}"
-               hx-target="#datasets-list" hx-trigger="click" aria-label="Previous">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>
+            <li class="page-item">
+                <a class="page-link"
+                   hx-get="?{% if request.GET.name %}name={{ request.GET.name }}&{% endif %}page={{ page_obj.previous_page_number }}{% if request.GET.task_pk %}&task_pk={{ request.GET.task_pk }}{% endif %}"
+                   hx-target="#datasets-list" hx-trigger="click" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
         {% endif %}
 
         {% pagination_range page_obj as page_numbers %}
@@ -28,13 +28,13 @@
         {% endfor %}
 
         {% if page_obj.has_next %}
-        <li class="page-item">
-            <a class="page-link"
-               hx-get="?{% if request.GET.name %}name={{ request.GET.name }}&{% endif %}page={{ page_obj.next_page_number }}{% if request.GET.task_pk %}&task_pk={{ request.GET.task_pk }}{% endif %}"
-               hx-target="#datasets-list" hx-trigger="click" aria-label="Next">
-                <span aria-hidden="true">&raquo;</span>
-            </a>
-        </li>
+            <li class="page-item">
+                <a class="page-link"
+                   hx-get="?{% if request.GET.name %}name={{ request.GET.name }}&{% endif %}page={{ page_obj.next_page_number }}{% if request.GET.task_pk %}&task_pk={{ request.GET.task_pk }}{% endif %}"
+                   hx-target="#datasets-list" hx-trigger="click" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
         {% endif %}
     </ul>
 </nav>
