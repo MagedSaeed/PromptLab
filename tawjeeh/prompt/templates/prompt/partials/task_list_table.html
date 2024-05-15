@@ -3,7 +3,6 @@
         <tr>
             <th scope="col">#</th>
             <th scope="col">Task Name</th>
-            <th scope="col">Description</th>
             <th scope="col">Datasets</th>
             <th scope="col">Prompts</th>
         </tr>
@@ -12,8 +11,11 @@
         {% for task in tasks %}
         <tr>
             <th>{{ forloop.counter }}</th>
-            <td class="task-name">{{ task.name }}</td>
-            <td>{{ task.description }}</td>
+            <td>
+                <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
+                    <span class="task-name">{{ task.name }}</span>
+                </a>
+            </td>
             <td>{{ task.datasets.count }}</td>
             <td>{{ task.prompts.count }}</td>
         </tr>

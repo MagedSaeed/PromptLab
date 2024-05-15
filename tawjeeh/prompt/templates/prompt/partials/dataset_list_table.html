@@ -1,0 +1,36 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col" style="width: 10%;">#</th>
+            <th scope="col" style="width: 25%;">Dataset Name</th>
+            {% if not task %}
+                <th scope="col" style="width: 25%;">Task</th>
+            {% endif %}
+            <th scope="col" style="width: 40%;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dataset in datasets %}
+        <tr>
+            <th>{{ forloop.counter }}</th>
+            <td>
+                <a href="https://huggingface.co/datasets/{{ dataset.huggingface_name }}" target="_blank">
+                    <span class="dataset-name">{{ dataset.name }}</span>
+                </a>
+            </td>
+            {% if not task %}
+                <td>{{ dataset.task.name }}</td>
+            {% endif %}
+            <td>
+                {% if dataset.description|length > 150 %}
+                    {{ dataset.description|slice:":150" }}...
+                {% else %}
+                    {{ dataset.description }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include 'base/pagination.html' %}
