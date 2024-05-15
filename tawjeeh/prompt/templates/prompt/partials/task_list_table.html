@@ -9,16 +9,16 @@
     </thead>
     <tbody>
         {% for task in tasks %}
-        <tr>
-            <th>{{ forloop.counter }}</th>
-            <td>
-                <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
-                    <span class="task-name">{{ task.name }}</span>
-                </a>
-            </td>
-            <td>{{ task.datasets.count }}</td>
-            <td>{{ task.prompts.count }}</td>
-        </tr>
+            <tr>
+                <th>{{ forloop.counter }}</th>
+                <td>
+                    <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
+                        <span class="task-name">{{ task.name }}</span>
+                    </a>
+                </td>
+                <td>{{ task.datasets.count }}</td>
+                <td>{{ task.prompts.count }}</td>
+            </tr>
         {% endfor %}
     </tbody>
 </table>

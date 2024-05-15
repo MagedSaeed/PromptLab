@@ -1,9 +1,8 @@
 from django.shortcuts import render
-
-from prompt.models import Task, Dataset
 from django.views.generic import ListView
 from django_filters.views import FilterView
-from prompt.filters import TaskFilter, DatasetFilter
+from prompt.filters import DatasetFilter, TaskFilter
+from prompt.models import Dataset, Task
 
 
 class TaskListView(FilterView, ListView):

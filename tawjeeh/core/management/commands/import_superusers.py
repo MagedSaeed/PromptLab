@@ -1,9 +1,9 @@
 import os
-import yaml
-from dotenv import load_dotenv
 
-from django.core.management.base import BaseCommand
+import yaml
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+from dotenv import load_dotenv
 
 User = get_user_model()
 

@@ -1,6 +1,6 @@
 import requests
 from django.core.management.base import BaseCommand
-from prompt.models import Task, Dataset
+from prompt.models import Dataset, Task
 from rich.progress import Progress
 
 

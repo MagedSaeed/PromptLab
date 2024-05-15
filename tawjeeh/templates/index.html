@@ -2,47 +2,47 @@
 
 
 {% block main_content %}
-<div class="container mt-5">
-    <div class="jumbotron p-5 mb-4 rounded-3" style="background-color: #e9ecef;">
-        <div class="container py-5">
-            <h1 class="display-4">Welcome to Tawjeeh!</h1>
-            <p class="lead">Join our research-driven platform for creating and sharing prompts on Arabic datasets. Collaborate, explore, and contribute to the community.</p>
-            <hr class="my-4">
-            <p>Get started by logging in or signing up. Your contributions will help improve prompt collections for various datasets.</p>
-            {% if user.is_authenticated %}
-                <a class="btn btn-outline-danger btn-lg me-2" href="{% url 'account_logout' %}" role="button">Log out</a>
-            {% else %}
-                <a class="btn btn-outline-success btn-lg me-2" href="{% url 'account_login' %}" role="button">Log in</a>
-                <a class="btn btn-outline-primary btn-lg" href="{% url 'account_signup' %}" role="button">Sign up</a>
-            {% endif %}
+    <div class="container mt-5">
+        <div class="jumbotron p-5 mb-4 rounded-3" style="background-color: #e9ecef;">
+            <div class="container py-5">
+                <h1 class="display-4">Welcome to Tawjeeh!</h1>
+                <p class="lead">Join our research-driven platform for creating and sharing prompts on Arabic datasets. Collaborate, explore, and contribute to the community.</p>
+                <hr class="my-4">
+                <p>Get started by logging in or signing up. Your contributions will help improve prompt collections for various datasets.</p>
+                {% if user.is_authenticated %}
+                    <a class="btn btn-outline-danger btn-lg me-2" href="{% url 'account_logout' %}" role="button">Log out</a>
+                {% else %}
+                    <a class="btn btn-outline-success btn-lg me-2" href="{% url 'account_login' %}" role="button">Log in</a>
+                    <a class="btn btn-outline-primary btn-lg" href="{% url 'account_signup' %}" role="button">Sign up</a>
+                {% endif %}
+            </div>
         </div>
-    </div>
 
-    <div class="row text-center">
-        <div class="col-md-4 mb-4 d-flex align-items-stretch">
-            <div class="card border border-light rounded-3 shadow-sm w-100">
-                <div class="card-body d-flex flex-column">
-                    <h2>Create</h2>
-                    <p class="flex-grow-1">Create high-quality prompts for various Arabic datasets, helping advance research in natural language processing.</p>
+        <div class="row text-center">
+            <div class="col-md-4 mb-4 d-flex align-items-stretch">
+                <div class="card border border-light rounded-3 shadow-sm w-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2>Create</h2>
+                        <p class="flex-grow-1">Create high-quality prompts for various Arabic datasets, helping advance research in natural language processing.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4 d-flex align-items-stretch">
-            <div class="card border border-light rounded-3 shadow-sm w-100">
-                <div class="card-body d-flex flex-column">
-                    <h2>Review</h2>
-                    <p class="flex-grow-1">Review and refine prompts to ensure quality and consistency across the community.</p>
+            <div class="col-md-4 mb-4 d-flex align-items-stretch">
+                <div class="card border border-light rounded-3 shadow-sm w-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2>Review</h2>
+                        <p class="flex-grow-1">Review and refine prompts to ensure quality and consistency across the community.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4 d-flex align-items-stretch">
-            <div class="card border border-light rounded-3 shadow-sm w-100">
-                <div class="card-body d-flex flex-column">
-                    <h2>Share</h2>
-                    <p class="flex-grow-1">Share your own prompt collections and contribute to the growing repository of prompts for Arabic datasets.</p>
+            <div class="col-md-4 mb-4 d-flex align-items-stretch">
+                <div class="card border border-light rounded-3 shadow-sm w-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2>Share</h2>
+                        <p class="flex-grow-1">Share your own prompt collections and contribute to the growing repository of prompts for Arabic datasets.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

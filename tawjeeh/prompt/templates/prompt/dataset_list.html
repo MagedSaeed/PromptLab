@@ -1,104 +1,104 @@
 {% extends "base/base.html" %}
 
 {% block style %}
-<style>
+    <style>
     /* Spinner styles */
-    #loading-spinner {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1000;
-    }
+        #loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
 
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
-        border-width: .3em;
-    }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: .3em;
+        }
 
     /* Dimming effect */
-    #datasets-list.dimmed {
-        opacity: 0.5;
-        pointer-events: none;  /* Prevent interactions */
-    }
-</style>
+        #datasets-list.dimmed {
+            opacity: 0.5;
+            pointer-events: none;  /* Prevent interactions */
+        }
+    </style>
 {% endblock style %}
 
 {% block main_content %}
-<div class="container mt-4">
-    <h2 class="my-4">Datasets {% if task %}for <u>{{ task.name }}</u> Task {% endif %}</h2>
+    <div class="container mt-4">
+        <h2 class="my-4">Datasets {% if task %}for <u>{{ task.name }}</u> Task {% endif %}</h2>
 
-    <div class="text-center mb-4">
-        <p class="h6">
-            <a href="{% url 'prompt:task_list' %}" class="h6">
-                Go back to tasks
-            </a>
-        </p>
-    </div>
+        <div class="text-center mb-4">
+            <p class="h6">
+                <a href="{% url 'prompt:task_list' %}" class="h6">
+                    Go back to tasks
+                </a>
+            </p>
+        </div>
 
     <!-- Search form -->
-    <form method="get" id="search-form">
-        <div class="input-group mb-3">
-            <input
-                type="text"
-                name="name"
-                id="search-input"
-                class="form-control"
-                placeholder="Search datasets..."
-                value="{{ request.GET.name }}"
-                hx-get="{% url 'prompt:dataset_list' %}{% if task %}?task_pk={{ task.pk }}{% endif %}"
-                hx-trigger="keyup changed delay:500ms"
-                hx-target="#datasets-list"
-                hx-push-url="true"
-                hx-replace-url="false"
-                hx-indicator="#loading-spinner"
-            />
-        </div>
-    </form>
+        <form method="get" id="search-form">
+            <div class="input-group mb-3">
+                <input
+                    type="text"
+                    name="name"
+                    id="search-input"
+                    class="form-control"
+                    placeholder="Search datasets..."
+                    value="{{ request.GET.name }}"
+                    hx-get="{% url 'prompt:dataset_list' %}{% if task %}?task_pk={{ task.pk }}{% endif %}"
+                    hx-trigger="keyup changed delay:500ms"
+                    hx-target="#datasets-list"
+                    hx-push-url="true"
+                    hx-replace-url="false"
+                    hx-indicator="#loading-spinner"
+                />
+            </div>
+        </form>
 
     <!-- Spinner -->
-    <div id="loading-spinner" class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
+        <div id="loading-spinner" class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
 
     <!-- Datasets list -->
-    <div id="datasets-list">
-        {% include "prompt/partials/dataset_list_table.html" %}
+        <div id="datasets-list">
+            {% include "prompt/partials/dataset_list_table.html" %}
+        </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('htmx:configRequest', function(event) {
-        document.querySelector("#loading-spinner").style.display = 'block';
-        document.querySelector("#datasets-list").classList.add('dimmed');
-    });
-
-    document.addEventListener('htmx:afterRequest', function(event) {
-        document.querySelector("#loading-spinner").style.display = 'none';
-        document.querySelector("#datasets-list").classList.remove('dimmed');
-    });
-
-    function highlightMatches(searchTerm) {
-        if (!searchTerm) return;
-
-        const terms = searchTerm.split(/\s+/).filter(Boolean);  // Split by whitespace and filter empty terms
-        const datasetElements = document.querySelectorAll('.dataset-name');
-
-        datasetElements.forEach(el => {
-            let text = el.textContent;
-            terms.forEach(term => {
-                const regex = new RegExp(`(${term})`, 'gi');
-                text = text.replace(regex, '<u><strong>$1</strong></u>');
-            });
-            el.innerHTML = text;  // Set the inner HTML to the highlighted text
+    <script>
+        document.addEventListener('htmx:configRequest', function(event) {
+            document.querySelector("#loading-spinner").style.display = 'block';
+            document.querySelector("#datasets-list").classList.add('dimmed');
         });
-    }
 
-    document.addEventListener('htmx:afterSwap', () => {
-        const searchTerm = document.getElementById('search-input').value;
-        highlightMatches(searchTerm);
-    });
-</script>
+        document.addEventListener('htmx:afterRequest', function(event) {
+            document.querySelector("#loading-spinner").style.display = 'none';
+            document.querySelector("#datasets-list").classList.remove('dimmed');
+        });
+
+        function highlightMatches(searchTerm) {
+            if (!searchTerm) return;
+
+            const terms = searchTerm.split(/\s+/).filter(Boolean);  // Split by whitespace and filter empty terms
+            const datasetElements = document.querySelectorAll('.dataset-name');
+
+            datasetElements.forEach(el => {
+                let text = el.textContent;
+                terms.forEach(term => {
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    text = text.replace(regex, '<u><strong>$1</strong></u>');
+                });
+                el.innerHTML = text;  // Set the inner HTML to the highlighted text
+            });
+        }
+
+        document.addEventListener('htmx:afterSwap', () => {
+            const searchTerm = document.getElementById('search-input').value;
+            highlightMatches(searchTerm);
+        });
+    </script>
 {% endblock main_content %}

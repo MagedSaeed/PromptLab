@@ -1,5 +1,5 @@
 from django.urls import path
-from prompt.views import TaskListView, DatasetListView
+from prompt.views import DatasetListView, TaskListView
 
 app_name = "prompt"
 
