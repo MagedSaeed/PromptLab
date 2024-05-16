@@ -14,7 +14,7 @@
             <tr>
                 <th>{{ forloop.counter }}</th>
                 <td>
-                    <a href="https://huggingface.co/datasets/{{ dataset.huggingface_name }}" target="_blank">
+                    <a href="https://huggingface.co/datasets/{{ dataset.huggingface_name }}" target="_blank" data-toggle="tooltip" data-placement="top" title="Go to dataset page on huggingface">
                         <span class="dataset-name">{{ dataset.name }}</span>
                     </a>
                 </td>
