@@ -38,7 +38,7 @@ class TaskListView(FilterView, ListView):
 
 class DatasetListView(FilterView, ListView):
     model = Dataset
-    paginate_by = 6
+    paginate_by = 10
     ordering = "name"
     filterset_class = DatasetFilter
     context_object_name = "datasets"
@@ -49,8 +49,8 @@ class DatasetListView(FilterView, ListView):
         task_pk = self.request.GET.get("task_pk")
         self.task = None
         if task_pk:
-            queryset = queryset.filter(task__pk=task_pk)
             self.task = Task.objects.get(pk=task_pk)
+            queryset = queryset.filter(tasks__pk=self.task.pk)
         filterset = self.filterset_class(self.request.GET, queryset=queryset)
         filtered_qs = filterset.qs
         search_term = self.request.GET.get("name", "")
