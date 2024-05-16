@@ -1,0 +1,62 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+{% block main_content %}
+    <div class="container mt-5">
+        <div class="accordion" id="instructionsAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
+                        <h4 style="margin: 0;">Creating Diverse Prompts</h4>
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
+                    <div class="accordion-body">
+                        <p>
+                            Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
+                            Ultimately, the hope is that exposing the model to such a diversity will have a non-trivial impact on the model's robustness to the prompt formulation.
+                        </p>
+                        <p>
+                            <strong>To get various prompts, you can try moving the cursor along these axes:</strong>
+                        </p>
+                        <ul>
+                            <li>
+                                <strong>Interrogative vs affirmative form:</strong> Ask a question about an attribute of the inputs or tell the model to decide something about the input.
+                            </li>
+                            <li>
+                                <strong>Task description localization:</strong> Where is the task description blended with the inputs? In the beginning, in the middle, at the end?
+                            </li>
+                            <li>
+                                <strong>Implicit situation or contextualization:</strong> How explicit is the query? For instance, <em>Given this review, would you buy this product?</em> is an indirect way to ask whether the review is positive.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card my-4">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="mb-3 col-8">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="mb-3 col-4" style="padding-top: 1.75rem;">
+                            {{ form.original_task|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.template|as_crispy_field }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.answer_choices|as_crispy_field }}
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary my-4">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
