@@ -30,3 +30,8 @@ def pagination_range(page_obj, num_pages=5):
         page_numbers.append(total_pages)
 
     return page_numbers
+
+
+@register.filter(name="dictify_GET_params")
+def dictify_GET_params(params):
+    return {key: value for key, value in params.dict().items()}

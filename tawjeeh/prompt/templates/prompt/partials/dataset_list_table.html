@@ -3,10 +3,10 @@
         <tr>
             <th scope="col" style="width: 10%;">#</th>
             <th scope="col" style="width: 25%;">Dataset Name</th>
-            {% if not task %}
-                <th scope="col" style="width: 25%;">Tasks</th>
-            {% endif %}
-            <th scope="col" style="width: 40%;">Description</th>
+            <th scope="col" style="width: 15%;">Tasks</th>
+            <th scope="col" style="width: 30%;">Description</th>
+            <th scope="col" style="width: 5%;">Prompts</th>
+            <th scope="col" style="width: 15%;"></th>
         </tr>
     </thead>
     <tbody>
@@ -35,9 +35,10 @@
                         {{ dataset.description }}
                     {% endif %}
                 </td>
+                <td class="text-center" > {{ dataset.prompts.count }} </td>
+                <td> <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">Add Prompt</a> </td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
-
-{% include 'base/pagination.html' %}
+{% include 'base/pagination.html' with target_id="datasets-list" %}
