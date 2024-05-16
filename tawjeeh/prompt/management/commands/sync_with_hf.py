@@ -34,6 +34,7 @@ class Command(BaseCommand):
                         task_names = tag.replace("task_categories:", "").split(",")
                         task_categories.extend(task_names)
 
+                tasks = []
                 for task_name in task_categories:
                     task_name = task_name.strip()
                     task, created = Task.objects.get_or_create(name=task_name)
@@ -42,20 +43,24 @@ class Command(BaseCommand):
                     if created:
                         tasks_created += 1
 
-                    # Create or update the dataset
-                    dataset, dataset_created = Dataset.objects.update_or_create(
-                        name=dataset_name,
-                        defaults={
-                            "task": task,
-                            "huggingface_name": huggingface_name,
-                            "description": description,
-                            "huggingface_raw": huggingface_raw,
-                        },
-                    )
+                    tasks.append(task)
 
-                    # Count newly created datasets
-                    if dataset_created:
-                        datasets_created += 1
+                # Create or update the dataset
+                dataset, dataset_created = Dataset.objects.update_or_create(
+                    name=dataset_name,
+                    defaults={
+                        "huggingface_name": huggingface_name,
+                        "description": description,
+                        "huggingface_raw": huggingface_raw,
+                    },
+                )
+
+                # Add tasks to the dataset
+                dataset.tasks.set(tasks)
+
+                # Count newly created datasets
+                if dataset_created:
+                    datasets_created += 1
 
                 progress.advance(progress_task)
 

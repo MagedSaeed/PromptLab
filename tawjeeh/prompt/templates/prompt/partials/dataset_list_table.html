@@ -4,7 +4,7 @@
             <th scope="col" style="width: 10%;">#</th>
             <th scope="col" style="width: 25%;">Dataset Name</th>
             {% if not task %}
-                <th scope="col" style="width: 25%;">Task</th>
+                <th scope="col" style="width: 25%;">Tasks</th>
             {% endif %}
             <th scope="col" style="width: 40%;">Description</th>
         </tr>
@@ -18,9 +18,16 @@
                         <span class="dataset-name">{{ dataset.name }}</span>
                     </a>
                 </td>
-                {% if not task %}
-                    <td>{{ dataset.task.name }}</td>
-                {% endif %}
+
+                <td>
+                    {% for task in dataset.tasks.all %}
+                        <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
+                            {{ task }}
+                        </a>
+                        {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+
                 <td>
                     {% if dataset.description|length > 150 %}
                         {{ dataset.description|slice:":150" }}...

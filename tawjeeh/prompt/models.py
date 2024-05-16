@@ -8,21 +8,21 @@ class Task(models.Model):
 
     @property
     def prompts(self):
-        return Prompt.objects.filter(dataset__task__pk=self.pk)
+        return Prompt.objects.filter(dataset__tasks__pk=self.pk)
+
+    def __str__(self):
+        return self.name
 
 
 class Dataset(models.Model):
     name = models.CharField(max_length=255)
-    task = models.ForeignKey(
-        Task,
-        null=True,
-        blank=True,
-        related_name="datasets",
-        on_delete=models.CASCADE,
-    )
+    tasks = models.ManyToManyField(Task, related_name="datasets")
     huggingface_name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     huggingface_raw = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Prompt(models.Model):
@@ -32,3 +32,6 @@ class Prompt(models.Model):
         related_name="prompts",
         on_delete=models.CASCADE,
     )
+
+    def __str__(self):
+        return f"prompt for dataset{self.dataset}"
