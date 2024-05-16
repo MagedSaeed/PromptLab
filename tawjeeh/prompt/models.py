@@ -26,11 +26,15 @@ class Dataset(models.Model):
 
 
 class Prompt(models.Model):
-    content = models.CharField(max_length=50_000)
+    name = models.CharField(max_length=1_000)
+    original_task = models.BooleanField(default=False)
+    answer_choices = models.CharField(max_length=100_000, null=True, blank=True)
+    template = models.TextField()
     dataset = models.ForeignKey(
         Dataset,
+        null=True,
         related_name="prompts",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
 
     def __str__(self):
