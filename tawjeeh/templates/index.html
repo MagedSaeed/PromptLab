@@ -10,7 +10,7 @@
                 <hr class="my-4">
                 <p>Get started by logging in or signing up. Your contributions will help improve prompt collections for various datasets.</p>
                 {% if user.is_authenticated %}
-                    <a class="btn btn-outline-danger btn-lg me-2" href="{% url 'account_logout' %}" role="button">Log out</a>
+                    <a class="btn btn-outline-success btn-lg me-2" href="{% url 'prompt:task_list' %}" role="button">Go to NLP Tasks</a>
                 {% else %}
                     <a class="btn btn-outline-success btn-lg me-2" href="{% url 'account_login' %}" role="button">Log in</a>
                     <a class="btn btn-outline-primary btn-lg" href="{% url 'account_signup' %}" role="button">Sign up</a>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="row text-center">
+        {% comment %} <div class="row text-center">
             <div class="col-md-4 mb-4 d-flex align-items-stretch">
                 <div class="card border border-light rounded-3 shadow-sm w-100">
                     <div class="card-body d-flex flex-column">
@@ -43,6 +43,6 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
     </div>
 {% endblock %}
