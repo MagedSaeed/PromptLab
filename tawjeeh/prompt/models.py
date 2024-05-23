@@ -59,10 +59,8 @@ class Dataset(models.Model):
                 args.append(subset)
             kwargs = dict(split=f"{split_name}[:{max_samples}]")
             dataset = datasets.load_dataset(*args, **kwargs)
-            print(len(dataset))
             return dataset
         except Exception as e:
-            print(e)
             return {"error": str(e)}
 
     def __str__(self):

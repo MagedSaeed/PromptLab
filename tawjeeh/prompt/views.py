@@ -126,7 +126,8 @@ class DatasetDetailsView(View):
                 {
                     "len_samples": dataset.huggingface_info["full_info"]
                     .splits[split]
-                    .num_examples
+                    .num_examples,
+                    "first_sample": samples[0],
                 },
                 safe=False,
             )

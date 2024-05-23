@@ -98,17 +98,19 @@
                 currentSplit = event.detail.elt.getAttribute('data-split');
                 const splitSamples = JSON.parse(event.detail.xhr.response).len_samples;
                 const lenSamples = Math.min(splitSamples,10000)
+                const firstSample = JSON.parse(event.detail.xhr.response).first_sample;
                 $('#splitDropdown').text(currentSplit);
                 $('#split-details').html(`
                     <p class="my-3"><strong>Total number of samples:</strong> ${splitSamples} samples</p>
                     <p class="my-2"><span class="text-muted">For preview, select a sample out of at most </span><u> 10k samples</u></p>
+                    <p>Browse Samples: </p>
                     <div class="d-flex justify-content-between">
                         <span>0</span>
                         <input type="range" min="0" max="${lenSamples}" value="0" class="form-range" id="sampleRange">
                         <span>${lenSamples}</span>
                     </div>
                     <p>Selected Sample Index: <span id="selectedSampleIndex">0</span></p>
-                    <div id="sample-content" style="margin-top: 20px;"></div>
+                    <div id="sample-content" style="margin-top: 20px;"><pre> ${syntaxHighlight(firstSample)} </pre></div>
                 `);
                 $('#split-details').show();
 
