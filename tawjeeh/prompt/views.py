@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
 from django_filters.views import FilterView
+from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import PromptCreateForm
 from prompt.models import Dataset, Prompt, Task
@@ -112,11 +113,21 @@ class PromptCreateView(CreateView):
 @method_decorator(csrf_exempt, name="dispatch")
 class ApplyTemplateView(View):
     def post(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         template_content = request.POST.get("template", "")
+        sample_index = int(request.POST.get("sample_index", 0))
+        template = Template(template_content)
+        rendered_content = template.render(**self.dataset.load_samples()[sample_index])
         return render(
             request,
             "prompt/partials/template_merge.html",
-            {"template_content": template_content},
+            {
+                "dataset": self.dataset,
+                "sample_index": sample_index,
+                "rendred_template": rendered_content,
+                "template_content": template_content,
+                "max_samples": min(10_000, len(self.dataset.load_samples())),
+            },
         )
 
 

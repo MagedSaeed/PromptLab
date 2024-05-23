@@ -27,7 +27,7 @@ urlpatterns = [
         PromptCreateView.as_view(),
     ),
     path(
-        "dataset/prompt/apply-template/",
+        "dataset/<int:dataset_pk>/prompt/apply-template/",
         ApplyTemplateView.as_view(),
         name="apply_template",
     ),
