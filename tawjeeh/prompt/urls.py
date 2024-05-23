@@ -1,5 +1,6 @@
 from django.urls import path
 from prompt.views import (
+    ApplyTemplateView,
     DatasetDetailsView,
     DatasetListView,
     PromptCreateView,
@@ -20,5 +21,14 @@ urlpatterns = [
         "dataset/<int:dataset_pk>/details/",
         DatasetDetailsView.as_view(),
         name="dataset_details",
+    ),
+    path(
+        "dataset/prompt/merge/",
+        PromptCreateView.as_view(),
+    ),
+    path(
+        "dataset/prompt/apply-template/",
+        ApplyTemplateView.as_view(),
+        name="apply_template",
     ),
 ]

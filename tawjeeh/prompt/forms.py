@@ -8,7 +8,6 @@ class PromptCreateForm(forms.ModelForm):
         fields = ["name", "template", "answer_choices"]
 
     def __init__(self, *args, **kwargs):
-        self.dataset = kwargs.pop("dataset")
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
             {
