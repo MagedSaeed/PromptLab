@@ -38,13 +38,14 @@
         }
 
         .main-content {
-            margin-left: 420px; /* Adjust this value based on your sidebar width and padding */
+            margin-left: 350px; /* Adjust this value based on your sidebar width and padding */
             padding: 20px;
             transition: margin-left 0.3s ease;
         }
 
         .main-content.full-width {
-            margin-left: 30px; /* Adjust to the width of the minimized sidebar */
+            margin-left: 50px; /* Adjust to the width of the minimized sidebar */
+            transition: margin-left 0.3s ease;
         }
 
         .fixed-sidebar h4 {
@@ -99,6 +100,7 @@
             vertical-align: top;
             transition: opacity 0.3s ease;
             opacity: 0;
+            position: relative; /* To position the spinner absolutely */
         }
 
         .template-result.visible {
@@ -107,6 +109,18 @@
 
         .template-result.hidden {
             display: none;
+        }
+
+        .template-result-spinner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .template-result-spinner.visible {
+            display: block;
         }
 
         .close-btn {
@@ -127,7 +141,7 @@
 {% endblock style %}
 
 {% block main_content %}
-    <div class="container">
+    <div class="container-fluid w-85">
         <div class="row">
             <div class="fixed-sidebar" id="sidebar">
                 <div class="sidebar-header">
@@ -153,7 +167,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingOne">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
-                                <h4 style="margin: 0;">Creating Diverse Prompts</h4>
+                                <h4 style="margin: 0;">Creating Diverse Prompts for dataset: {{dataset}}</h4>
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
@@ -194,6 +208,9 @@
                                 <div class="template-result hidden" id="templateResultContainer">
                                     <div class="close-btn" id="closeTemplateResult">✖</div>
                                     <div id="mergeTemplateResult"></div>
+                                    <div id="templateResultSpinner" class="spinner-border spinner-border-sm text-secondary template-result-spinner" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
                                 </div>
                             </div>
                             <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
@@ -220,30 +237,29 @@
 
             $('#closeTemplateResult').on('click', function() {
                 $('#templateResultContainer').removeClass('visible').addClass('hidden');
-                setTimeout(function() {
-                    $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
-                }, 300);
+                $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
             });
 
             $('#applyButton').on('click', function() {
                 var templateValue = $('#id_template').val();
-                $('#templateFieldContainer').removeClass('full-width').addClass('half-width');
                 $('#apply-spinner').addClass('visible');
-                setTimeout(function() {
-                    htmx.ajax('POST', "{% url 'prompt:apply_template' %}", {
-                        target: '#mergeTemplateResult',
-                        swap: 'innerHTML',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        values: {
-                            'template': templateValue
-                        }
-                    }).then(function() {
-                        $('#apply-spinner').removeClass('visible');
-                        $('#templateResultContainer').removeClass('hidden').addClass('visible');
-                    });
-                }, 300);
+                $('#templateResultSpinner').addClass('visible');
+
+                htmx.ajax('POST', "{% url 'prompt:apply_template' dataset.pk %}", {
+                    target: '#mergeTemplateResult',
+                    swap: 'innerHTML',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    values: {
+                        'template': templateValue
+                    }
+                }).then(function() {
+                    $('#apply-spinner').removeClass('visible');
+                    $('#templateResultSpinner').removeClass('visible');
+                    $('#templateFieldContainer').removeClass('full-width').addClass('half-width');
+                    $('#templateResultContainer').removeClass('hidden').addClass('visible');
+                });
             });
 
             $(document).on('htmx:beforeRequest', function(event) {

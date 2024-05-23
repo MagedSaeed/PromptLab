@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import datasets
 from core.utils import redis_cache
 from django.db import models
@@ -26,6 +28,10 @@ class Dataset(models.Model):
         max_length=50_000,
     )  # if provided, split by ","
 
+    @cached_property
+    def hf_object(self):
+        return datasets.load_dataset(self.dataset.huggingface_name)
+
     @property
     @redis_cache()
     def huggingface_info(self):
@@ -52,7 +58,7 @@ class Dataset(models.Model):
             return {"error": str(e)}
 
     @redis_cache()
-    def load_samples(self, split_name, subset="", max_samples=10_000):
+    def load_samples(self, split_name="train", subset="", max_samples=10_000):
         try:
             args = [self.huggingface_name]
             if subset:
@@ -63,6 +69,10 @@ class Dataset(models.Model):
             return dataset
         except Exception as e:
             return {"error": str(e)}
+
+    @property
+    def huggingface_link(self):
+        return f"https://huggingface.co/datasets/{self.huggingface_name}"
 
     def __str__(self):
         return self.name
