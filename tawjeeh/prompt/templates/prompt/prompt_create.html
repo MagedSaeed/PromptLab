@@ -1,62 +1,173 @@
 {% extends 'base/base.html' %}
 {% load crispy_forms_tags %}
+
+{% block style %}
+    <style>
+        .fixed-sidebar {
+            position: fixed;
+            top: 60px; /* Adjust this value based on your header height */
+            left: 0;
+            width: 350px; /* Adjust this value based on your sidebar width */
+            height: calc(100vh - 60px); /* Adjust this value based on your header height */
+            overflow-y: auto;
+            background-color: #ffffff; /* White background */
+            color: #000000; /* Black text color */
+            border-right: 2px solid #ddd; /* Bold border line on the right side */
+            box-shadow: 1px 0 5px rgba(0, 0, 0, 0.05); /* Small shadow effect */
+            padding: 5px; /* Add some padding for inner content */
+            transition: transform 0.3s ease;
+        }
+
+        .fixed-sidebar.closed {
+            transform: translateX(-310px);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-toggle {
+            background-color: #fff;
+            border: none;
+            color: #000;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 5px 10px;
+        }
+
+        .main-content {
+            margin-left: 420px; /* Adjust this value based on your sidebar width and padding */
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.full-width {
+            margin-left: 30px; /* Adjust to the width of the minimized sidebar */
+        }
+
+        .fixed-sidebar h4 {
+            color: #2c3e50; /* Dark color for header text */
+        }
+
+        .fixed-sidebar hr {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+
+        .fixed-sidebar .nav-link {
+            color: #000000; /* Black color for links */
+            transition: color 0.3s ease;
+        }
+
+        .fixed-sidebar .nav-link:hover {
+            color: #2c3e50; /* Darker color on hover */
+        }
+
+        .spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .spinner-text {
+            margin-left: 10px;
+        }
+    </style>
+{% endblock style %}
+
 {% block main_content %}
-    <div class="container mt-5">
-        <div class="accordion" id="instructionsAccordion">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
-                        <h4 style="margin: 0;">Creating Diverse Prompts</h4>
-                    </button>
-                </h2>
-                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
-                    <div class="accordion-body">
-                        <p>
-                            Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
-                            Ultimately, the hope is that exposing the model to such a diversity will have a non-trivial impact on the model's robustness to the prompt formulation.
-                        </p>
-                        <p>
-                            <strong>To get various prompts, you can try moving the cursor along these axes:</strong>
-                        </p>
-                        <ul>
-                            <li>
-                                <strong>Interrogative vs affirmative form:</strong> Ask a question about an attribute of the inputs or tell the model to decide something about the input.
-                            </li>
-                            <li>
-                                <strong>Task description localization:</strong> Where is the task description blended with the inputs? In the beginning, in the middle, at the end?
-                            </li>
-                            <li>
-                                <strong>Implicit situation or contextualization:</strong> How explicit is the query? For instance, <em>Given this review, would you buy this product?</em> is an indirect way to ask whether the review is positive.
-                            </li>
-                        </ul>
+    <div class="container">
+        <div class="row">
+            <div class="fixed-sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h4 class="pt-2">Dataset Information</h4>
+                    <button class="sidebar-toggle" id="toggleSidebar">☰</button>
+                </div>
+                <hr>
+                <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#spinner">
+                    <div id="spinner">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    <div id="dataset-details" style="margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;"></div>
+                </div>
+            </div>
+        <!-- Main Content -->
+            <div class="main-content col" id="mainContent">
+                <div class="accordion" id="instructionsAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
+                                <h4 style="margin: 0;">Creating Diverse Prompts</h4>
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
+                            <div class="accordion-body">
+                                <p>
+                                    Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
+                                    Ultimately, the hope is that exposing the model to such a diversity will have a non-trivial impact on the model's robustness to the prompt formulation.
+                                </p>
+                                <p>
+                                    <strong>To get various prompts, you can try moving the cursor along these axes:</strong>
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>Interrogative vs affirmative form:</strong> Ask a question about an attribute of the inputs or tell the model to decide something about the input.
+                                    </li>
+                                    <li>
+                                        <strong>Task description localization:</strong> Where is the task description blended with the inputs? In the beginning, in the middle, at the end?
+                                    </li>
+                                    <li>
+                                        <strong>Implicit situation or contextualization:</strong> How explicit is the query? For instance, <em>Given this review, would you buy this product?</em> is an indirect way to ask whether the review is positive.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card my-4">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="mb-3 col-12">
+                                    {{ form.name|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ form.template|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.answer_choices|as_crispy_field }}
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary my-4">Submit</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="card my-4">
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="mb-3 col-8">
-                            {{ form.name|as_crispy_field }}
-                        </div>
-                        <div class="mb-3 col-4" style="padding-top: 1.75rem;">
-                            {{ form.original_task|as_crispy_field }}
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        {{ form.template|as_crispy_field }}
-                    </div>
-                    <div class="mb-3">
-                        {{ form.answer_choices|as_crispy_field }}
-                    </div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary my-4">Submit</button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#toggleSidebar').on('click', function() {
+                $('#sidebar').toggleClass('closed');
+                $('#mainContent').toggleClass('full-width');
+            });
+
+            $(document).on('htmx:afterRequest', function(event) {
+                $('#spinner').hide();
+            });
+        });
+    </script>
 {% endblock %}

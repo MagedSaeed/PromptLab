@@ -1,5 +1,10 @@
 from django.urls import path
-from prompt.views import DatasetListView, PromptCreateView, TaskListView
+from prompt.views import (
+    DatasetDetailsView,
+    DatasetListView,
+    PromptCreateView,
+    TaskListView,
+)
 
 app_name = "prompt"
 
@@ -10,5 +15,10 @@ urlpatterns = [
         "dataset/<int:dataset_pk>/prompt/add",
         PromptCreateView.as_view(),
         name="prompt_create",
+    ),
+    path(
+        "dataset/<int:dataset_pk>/details/",
+        DatasetDetailsView.as_view(),
+        name="dataset_details",
     ),
 ]
