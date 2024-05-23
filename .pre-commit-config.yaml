@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.4.4'  # Use the latest revision
+    rev: 'v0.4.5'  # Use the latest revision
     hooks:
       - id: ruff
 
@@ -13,12 +13,13 @@ repos:
         # pre-commit's default_language_version, see
         # https://pre-commit.com/#top_level-default_language_version
         language_version: python3
+        additional_dependencies: ['toml']
 
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: 'v5.10.1'  # Use the latest revision
+  - repo: https://github.com/pycqa/isort
+    rev: '5.13.0'
     hooks:
       - id: isort
-        additional_dependencies: [toml]  # Add this if your project uses pyproject.toml for isort configuration
+        name: isort (python)
 
   - repo: https://github.com/rtts/djhtml
     rev: '3.0.6'  # replace with the latest tag on GitHub
