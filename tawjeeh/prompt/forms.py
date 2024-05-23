@@ -5,7 +5,7 @@ from prompt.models import Prompt
 class PromptCreateForm(forms.ModelForm):
     class Meta:
         model = Prompt
-        fields = ["name", "original_task", "template", "answer_choices"]
+        fields = ["name", "template", "answer_choices"]
 
     def __init__(self, *args, **kwargs):
         self.dataset = kwargs.pop("dataset")

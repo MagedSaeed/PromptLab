@@ -1,5 +1,6 @@
-from django.shortcuts import render
-from django.views.generic import CreateView, ListView
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.generic import CreateView, ListView, View
 from django_filters.views import FilterView
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import PromptCreateForm
@@ -74,7 +75,6 @@ class DatasetListView(FilterView, ListView):
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.htmx:
-            print(self.request)
             return render(
                 self.request,
                 "prompt/partials/dataset_list_table.html",
@@ -89,10 +89,51 @@ class PromptCreateView(CreateView):
     template_name = "prompt/prompt_create.html"
 
     def get(self, request, *args, **kwargs):
-        self.dataset = Dataset.objects.get(pk=kwargs["dataset_pk"])
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        self.subset = request.GET.get("subset")
+        self.split = request.GET.get("split")
         return super().get(request, *args, **kwargs)
 
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs(**kwargs)
         kwargs["dataset"] = self.dataset
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dataset"] = self.dataset
+        return context
+
+
+class DatasetDetailsView(View):
+    def get(self, request, dataset_pk, *args, **kwargs):
+        dataset = get_object_or_404(Dataset, pk=dataset_pk)
+        split = request.GET.get("split")
+        sample_index = request.GET.get("sample_index")
+
+        if split:
+            samples = dataset.load_samples(split_name=split)
+
+            if sample_index is not None:
+                try:
+                    sample_index = int(sample_index)
+                    sample = samples[sample_index]
+                    return JsonResponse({"sample": sample}, safe=False)
+                except (ValueError, IndexError):
+                    return JsonResponse({"error": "Invalid sample index"}, status=400)
+
+            return JsonResponse(
+                {
+                    "len_samples": dataset.huggingface_info["full_info"]
+                    .splits[split]
+                    .num_examples
+                },
+                safe=False,
+            )
+
+        details = dataset.huggingface_info
+        return render(
+            request,
+            "prompt/partials/dataset_details.html",
+            {"dataset_info": details, "dataset": dataset},
+        )
