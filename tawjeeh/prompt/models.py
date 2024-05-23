@@ -1,6 +1,5 @@
-from functools import cached_property
-
 import datasets
+from core.utils import redis_cache
 from django.db import models
 
 
@@ -27,7 +26,8 @@ class Dataset(models.Model):
         max_length=50_000,
     )  # if provided, split by ","
 
-    @cached_property
+    @property
+    @redis_cache()
     def huggingface_info(self):
         try:
             # Load the dataset information without loading the entire dataset
@@ -51,6 +51,7 @@ class Dataset(models.Model):
         except Exception as e:
             return {"error": str(e)}
 
+    @redis_cache()
     def load_samples(self, split_name, subset="", max_samples=10_000):
         try:
             args = [self.huggingface_name]
