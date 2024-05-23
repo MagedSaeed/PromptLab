@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
 from django_filters.views import FilterView
 from prompt.filters import DatasetFilter, TaskFilter
@@ -88,21 +90,34 @@ class PromptCreateView(CreateView):
     form_class = PromptCreateForm
     template_name = "prompt/prompt_create.html"
 
-    def get(self, request, *args, **kwargs):
+    def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        return super().setup(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
         self.subset = request.GET.get("subset")
         self.split = request.GET.get("split")
         return super().get(request, *args, **kwargs)
-
-    def get_form_kwargs(self, **kwargs):
-        kwargs = super().get_form_kwargs(**kwargs)
-        kwargs["dataset"] = self.dataset
-        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
         return context
+
+    def form_valid(self, form):
+        form.instance.dataset = self.dataset
+        return super().form_valid(form)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class ApplyTemplateView(View):
+    def post(self, request, *args, **kwargs):
+        template_content = request.POST.get("template", "")
+        return render(
+            request,
+            "prompt/partials/template_merge.html",
+            {"template_content": template_content},
+        )
 
 
 class DatasetDetailsView(View):

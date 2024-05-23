@@ -75,6 +75,54 @@
         .spinner-text {
             margin-left: 10px;
         }
+
+        .half-width {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+            transition: width 0.3s ease;
+        }
+
+        .full-width {
+            width: 100%;
+            display: inline-block;
+            transition: width 0.3s ease;
+        }
+
+        .template-result {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-left: 2%;
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .template-result.visible {
+            opacity: 1;
+        }
+
+        .template-result.hidden {
+            display: none;
+        }
+
+        .close-btn {
+            display: block;
+            text-align: right;
+            cursor: pointer;
+        }
+
+        .apply-spinner {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .apply-spinner.visible {
+            display: inline-block;
+        }
     </style>
 {% endblock style %}
 
@@ -87,8 +135,8 @@
                     <button class="sidebar-toggle" id="toggleSidebar">☰</button>
                 </div>
                 <hr>
-                <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#spinner">
-                    <div id="spinner">
+                <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#sidebar-spinner">
+                    <div id="sidebar-spinner">
                         <div class="d-flex flex-column align-items-center">
                             <div class="spinner-border text-secondary" role="status">
                                 <span class="visually-hidden">Loading...</span>
@@ -135,20 +183,25 @@
 
                 <div class="card my-4">
                     <div class="card-body">
-                        <form method="post">
+                        <form id="promptForm" method="post" hx-post="{% url 'prompt:prompt_create' dataset.pk %}" hx-include="[name='merge_template']" hx-indicator="#apply-spinner">
                             {% csrf_token %}
                             <div class="row">
-                                <div class="mb-3 col-12">
+                                <div class="mb-3 col-12 full-width" id="templateFieldContainer">
                                     {{ form.name|as_crispy_field }}
+                                    {{ form.template|as_crispy_field }}
+                                    {{ form.answer_choices|as_crispy_field }}
+                                </div>
+                                <div class="template-result hidden" id="templateResultContainer">
+                                    <div class="close-btn" id="closeTemplateResult">✖</div>
+                                    <div id="mergeTemplateResult"></div>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                {{ form.template|as_crispy_field }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form.answer_choices|as_crispy_field }}
-                            </div>
+                            <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
                             <div class="text-end">
+                                <button type="button" class="btn btn-secondary my-4" id="applyButton">
+                                    Apply
+                                    <span id="apply-spinner" class="spinner-border spinner-border-sm text-secondary apply-spinner" role="status" aria-hidden="true"></span>
+                                </button>
                                 <button type="submit" class="btn btn-primary my-4">Submit</button>
                             </div>
                         </form>
@@ -165,9 +218,49 @@
                 $('#mainContent').toggleClass('full-width');
             });
 
-            $(document).on('htmx:afterRequest', function(event) {
-                $('#spinner').hide();
+            $('#closeTemplateResult').on('click', function() {
+                $('#templateResultContainer').removeClass('visible').addClass('hidden');
+                setTimeout(function() {
+                    $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
+                }, 300);
             });
+
+            $('#applyButton').on('click', function() {
+                var templateValue = $('#id_template').val();
+                $('#templateFieldContainer').removeClass('full-width').addClass('half-width');
+                $('#apply-spinner').addClass('visible');
+                setTimeout(function() {
+                    htmx.ajax('POST', "{% url 'prompt:apply_template' %}", {
+                        target: '#mergeTemplateResult',
+                        swap: 'innerHTML',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        values: {
+                            'template': templateValue
+                        }
+                    }).then(function() {
+                        $('#apply-spinner').removeClass('visible');
+                        $('#templateResultContainer').removeClass('hidden').addClass('visible');
+                    });
+                }, 300);
+            });
+
+            $(document).on('htmx:beforeRequest', function(event) {
+                if ($(event.target).is('#promptForm')) {
+                    $('#apply-spinner').addClass('visible');
+                }
+            });
+
+            $(document).on('htmx:afterRequest', function(event) {
+                if ($(event.target).is('#promptForm')) {
+                    $('#apply-spinner').removeClass('visible');
+                }
+                if ($(event.target).is('[hx-get=\"{% url 'prompt:dataset_details' dataset.pk %}\"]')) {
+                    $('#sidebar-spinner').hide();
+                }
+            });
+
         });
     </script>
 {% endblock %}
