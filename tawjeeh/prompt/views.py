@@ -124,7 +124,7 @@ class ApplyTemplateView(View):
             {
                 "dataset": self.dataset,
                 "sample_index": sample_index,
-                "rendred_template": rendered_content,
+                "rendered_template": rendered_content,
                 "template_content": template_content,
                 "max_samples": min(10_000, len(self.dataset.load_samples())),
             },
