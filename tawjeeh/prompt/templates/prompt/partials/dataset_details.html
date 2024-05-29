@@ -4,28 +4,34 @@
     <div class="dataset-info">
         {% if dataset_info.homepage %}
             <a href="{{ dataset_info.homepage }}">
-                <p><h6>Dataset Homepage</h6></p>
+                <h6>Dataset Homepage</h6>
             </a>
         {% endif %}
         <a href="{{ dataset_info.huggingface_link }}" target="_blank">
-            <p><h6>Visit on Hugging Face</h6></p>
+            <h6>Visit on Hugging Face</h6>
         </a>
         <hr>
-        <p><strong>Description:</strong></p>
-        <div class="description">
-            {% if dataset_info.description|length > 100 %}
-                <p class="short-description">{{ dataset_info.description|slice:":100" }}... <a href="#" class="show-more">Show more</a></p>
-                <p class="full-description" style="display:none;">{{ dataset_info.description }} <a href="#" class="show-less">Show less</a></p>
-            {% else %}
-                <p>{{ dataset_info.description }}</p>
-            {% endif %}
-        </div>
+        {% if dataset_info.description %}
+            <p><strong>Description:</strong></p>
+            <div class="description">
+                {% if dataset_info.description|length > 100 %}
+                    <p class="short-description">{{ dataset_info.description|slice:":100" }}... <a href="#" class="show-more">Show more</a></p>
+                    <p class="full-description" style="display:none;">{{ dataset_info.description }} <a href="#" class="show-less">Show less</a></p>
+                {% else %}
+                    <p>{{ dataset_info.description }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
 
         {% if dataset_info.full_info.splits %}
-            <div class="dropdown" style="margin-right: 10px; padding-right: 10px;" >
+            <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
                 <div class="d-grid">
-                    <button class="btn btn-secondary no-arrow text-start" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
-                        Select split
+                    <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
+                        {% for split, split_details in dataset_info.full_info.splits.items %}
+                            {% if forloop.first %}
+                                {{ split }}
+                            {% endif %}
+                        {% endfor %}
                     </button>
                     <ul class="dropdown-menu form-control" aria-labelledby="splitDropdown">
                         {% for split, split_details in dataset_info.full_info.splits.items %}
@@ -45,9 +51,7 @@
                     </ul>
                 </div>
             </div>
-            <div id="split-details"
-                 style="display: none; margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;"
-            >
+            <div id="split-details" style="display: none; margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;">
             </div>
         {% endif %}
     </div>
@@ -71,8 +75,77 @@
     </style>
 
     <script>
-        $(document).ready(function() {
-            let currentSplit = '';
+        function initSplitDetails() {
+            let currentSplit = $('#splitDropdown').text().trim();
+
+            function fetchSplitDetails(split) {
+                $('#splitDropdown').prop('disabled', true);
+                $('#split-details').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
+                $('#split-details').show();
+                $.ajax({
+                    url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${split}`,
+                    method: 'GET',
+                    success: function(response) {
+                        const splitSamples = response.len_samples;
+                        const lenSamples = Math.min(splitSamples, 10000);
+                        const firstSample = response.first_sample;
+                        $('#splitDropdown').text(split);
+                        $('#split-details').html(`
+                            <p class="my-3"><strong>Total number of samples:</strong> ${splitSamples} samples</p>
+                            <p class="my-2"><span class="text-muted">For preview, select a sample out of at most </span><u> 10k samples</u></p>
+                            <p>Browse Samples: </p>
+                            <div class="d-flex justify-content-between">
+                                <span>0</span>
+                                <input type="range" min="0" max="${lenSamples}" value="0" class="form-range" id="sampleRange">
+                                <span>${lenSamples}</span>
+                            </div>
+                            <p>Selected Sample Index: <span id="selectedSampleIndex">0</span></p>
+                            <div id="sample-content" style="margin-top: 20px;"><pre>${syntaxHighlight(firstSample)}</pre></div>
+                        `);
+                        $('#split-details').show();
+                        $('#splitDropdown').prop('disabled', false);
+
+                        // Add event listener for the slider
+                        $('#sampleRange').on('input', function() {
+                            const sampleIndex = $(this).val();
+                            $('#selectedSampleIndex').text(sampleIndex);
+                        });
+
+                        // Add event listener for the slider mouse up event
+                        $('#sampleRange').on('change', function() {
+                            const sampleIndex = $(this).val();
+
+                            // Show spinner and disable interaction
+                            $('#sample-content').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
+                            $('#sample-content').show();
+                            $('#sampleRange').prop('disabled', true);
+
+                            // Fetch and display the sample details
+                            $.ajax({
+                                url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${currentSplit}&sample_index=${sampleIndex}`,
+                                method: 'GET',
+                                success: function(response) {
+                                    $('#sample-content').html('<pre>' + syntaxHighlight(response.sample) + '</pre>');
+                                    $('#sample-details').show();
+                                    $('#sampleRange').prop('disabled', false);
+                                },
+                                error: function() {
+                                    $('#sample-content').text('Error fetching sample details.');
+                                    $('#sample-details').show();
+                                    $('#sampleRange').prop('disabled', false);
+                                }
+                            });
+                        });
+                    },
+                    error: function() {
+                        $('#split-details').text('Error fetching split details.');
+                        $('#split-details').show();
+                        $('#splitDropdown').prop('disabled', false);
+                    }
+                });
+            }
+
+            fetchSplitDetails(currentSplit);
 
             $('.show-more').on('click', function(event) {
                 event.preventDefault();
@@ -86,69 +159,11 @@
                 $(this).closest('.full-description').prev('.short-description').show();
             });
 
-            $(document).on('htmx:beforeRequest', function(event) {
-                if ($(event.target).is('.split-item')) {
-                    $('#splitDropdown').prop('disabled', true);
-                    $('.dropdown-menu').removeClass('show');  // Hide the dropdown menu
-                    $('#split-details').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
-                    $('#split-details').show();
-                }
-            });
-
-            $(document).on('htmx:afterRequest', function(event) {
-                if ($(event.target).is('.split-item')) {
-                    $('#splitDropdown').prop('disabled', false);
-                    currentSplit = event.detail.elt.getAttribute('data-split');
-                    const splitSamples = JSON.parse(event.detail.xhr.response).len_samples;
-                    const lenSamples = Math.min(splitSamples, 10000);
-                    const firstSample = JSON.parse(event.detail.xhr.response).first_sample;
-                    $('#splitDropdown').text(currentSplit);
-                    $('#split-details').html(`
-                        <p class="my-3"><strong>Total number of samples:</strong> ${splitSamples} samples</p>
-                        <p class="my-2"><span class="text-muted">For preview, select a sample out of at most </span><u> 10k samples</u></p>
-                        <p>Browse Samples: </p>
-                        <div class="d-flex justify-content-between">
-                            <span>0</span>
-                            <input type="range" min="0" max="${lenSamples}" value="0" class="form-range" id="sampleRange">
-                            <span>${lenSamples}</span>
-                        </div>
-                        <p>Selected Sample Index: <span id="selectedSampleIndex">0</span></p>
-                        <div id="sample-content" style="margin-top: 20px;"><pre>${syntaxHighlight(firstSample)}</pre></div>
-                    `);
-                    $('#split-details').show();
-
-                    // Add event listener for the slider
-                    $('#sampleRange').on('input', function() {
-                        const sampleIndex = $(this).val();
-                        $('#selectedSampleIndex').text(sampleIndex);
-                    });
-
-                    // Add event listener for the slider mouse up event
-                    $('#sampleRange').on('change', function() {
-                        const sampleIndex = $(this).val();
-
-                        // Show spinner and disable interaction
-                        $('#sample-content').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
-                        $('#sample-content').show();
-                        $('#sampleRange').prop('disabled', true);
-
-                        // Fetch and display the sample details
-                        $.ajax({
-                            url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${currentSplit}&sample_index=${sampleIndex}`,
-                            method: 'GET',
-                            success: function(response) {
-                                $('#sample-content').html('<pre>' + syntaxHighlight(response.sample) + '</pre>');
-                                $('#sample-details').show();
-                                $('#sampleRange').prop('disabled', false);
-                            },
-                            error: function() {
-                                $('#sample-content').text('Error fetching sample details.');
-                                $('#sample-details').show();
-                                $('#sampleRange').prop('disabled', false);
-                            }
-                        });
-                    });
-                }
+            $(document).on('click', '.split-item', function(event) {
+                event.preventDefault();
+                const split = $(this).data('split');
+                currentSplit = split;
+                fetchSplitDetails(split);
             });
 
             function syntaxHighlight(json) {
@@ -172,6 +187,16 @@
                     return '<span class="' + cls + '">' + match + '</span>';
                 });
             }
+        }
+
+        document.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'split-details') {
+                initSplitDetails();
+            }
+        });
+
+        $(document).ready(function() {
+            initSplitDetails();
         });
     </script>
 {% endif %}
