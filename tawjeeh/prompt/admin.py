@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.core.management import call_command
+from prompt.forms import DatasetAdminForm
 from prompt.models import Dataset, Prompt, Task
 
 # Register your models here.
@@ -28,6 +29,7 @@ class DatasetAdmin(admin.ModelAdmin):
     search_fields = ["name", "description", "tasks__name"]
     list_filter = ["tasks"]
     filter_horizontal = ["tasks"]
+    form = DatasetAdminForm
 
 
 class PromptAdmin(admin.ModelAdmin):
