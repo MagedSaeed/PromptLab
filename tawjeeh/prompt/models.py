@@ -22,11 +22,11 @@ class Dataset(models.Model):
     huggingface_name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     huggingface_raw = models.JSONField(null=True, blank=True)
-    subsets = models.CharField(
+    config = models.CharField(
         null=True,
         blank=True,
         max_length=50_000,
-    )  # if provided, split by ","
+    )
 
     @cached_property
     def hf_object(self):
@@ -37,7 +37,12 @@ class Dataset(models.Model):
     def huggingface_info(self):
         try:
             # Load the dataset information without loading the entire dataset
-            info = datasets.load_dataset_builder(self.huggingface_name).info
+            if self.config:
+                info = datasets.load_dataset_builder(
+                    self.huggingface_name, self.config
+                ).info
+            else:
+                info = datasets.load_dataset_builder(self.huggingface_name).info
 
             # Create the Hugging Face link
             huggingface_link = (
@@ -58,12 +63,11 @@ class Dataset(models.Model):
             return {"error": str(e)}
 
     @redis_cache()
-    def load_samples(self, split_name="train", subset="", max_samples=10_000):
+    def load_samples(self, split_name="train", max_samples=10_000):
         try:
             args = [self.huggingface_name]
-            if subset:
-                assert subset in self.subsets.split(",")
-                args.append(subset)
+            if self.config:
+                args.append(self.config)
             kwargs = dict(split=f"{split_name}[:{max_samples}]")
             dataset = datasets.load_dataset(*args, **kwargs)
             return dataset
