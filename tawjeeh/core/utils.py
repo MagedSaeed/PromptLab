@@ -13,7 +13,7 @@ def pickle_deserialize(serialized_obj):
     return pickle.loads(serialized_obj)
 
 
-def redis_cache(timeout=60 * 60 * 24):
+def redis_cache(timeout=60 * 60 * 24, refresh=False):  # refresh results
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -30,15 +30,18 @@ def redis_cache(timeout=60 * 60 * 24):
             cache_key = f"{class_name}{func.__name__}_{hashlib.md5(serialized_args + serialized_kwargs).hexdigest()}"
 
             # Try to get the cached result
-            cached_result = cache.get(cache_key)
-            if cached_result is not None:
-                return pickle_deserialize(cached_result)
+            if not refresh:
+                cached_result = cache.get(cache_key)
+                if cached_result is not None:
+                    return pickle_deserialize(cached_result)
 
             # Call the function and cache the result
             result = func(*args, **kwargs)
             serialized_result = pickle_serialize(result)
             cache.set(
-                cache_key, serialized_result, timeout=timeout
+                cache_key,
+                serialized_result,
+                timeout=timeout,
             )  # Cache with the specified timeout
             return result
 
