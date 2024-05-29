@@ -1,5 +1,7 @@
+from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
@@ -90,6 +92,7 @@ class PromptCreateView(CreateView):
     model = Prompt
     form_class = PromptCreateForm
     template_name = "prompt/prompt_create.html"
+    success_url = reverse_lazy("prompt:dataset_list")
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
@@ -107,6 +110,7 @@ class PromptCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.dataset = self.dataset
+        messages.success(self.request, "prompt saved successfully.")
         return super().form_valid(form)
 
 
