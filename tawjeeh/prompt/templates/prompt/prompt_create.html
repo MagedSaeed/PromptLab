@@ -158,7 +158,11 @@
                             <p>Loading...</p>
                         </div>
                     </div>
-                    <div id="dataset-details" style="margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;"></div>
+                    <div
+                        id="dataset-details"
+                        style="margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;"
+                    >
+                    </div>
                 </div>
             </div>
         <!-- Main Content -->
@@ -202,8 +206,8 @@
                             <div class="row">
                                 <div class="mb-3 col-12 full-width" id="templateFieldContainer">
                                     {{ form.name|as_crispy_field }}
-                                    {{ form.template|as_crispy_field }}
                                     {{ form.answer_choices|as_crispy_field }}
+                                    {{ form.template|as_crispy_field }}
                                 </div>
                                 <div class="template-result hidden" id="templateResultContainer">
                                     <div class="close-btn" id="closeTemplateResult">✖</div>
