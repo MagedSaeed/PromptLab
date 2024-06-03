@@ -18,13 +18,14 @@
         {% include 'base/header.html' %}
 
     <!-- Block for messages -->
-        <div class="container-fluid mt-3">
+        <div class="container mt-3">
             {% block messages %}
                 {% if messages %}
-                    <div class="alert alert-info">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
                         {% for message in messages %}
                             <p>{{ message }}</p>
                         {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75em; width: 1em; height: 1em;"></button>
                     </div>
                 {% endif %}
             {% endblock %}
