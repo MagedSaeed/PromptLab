@@ -1,6 +1,7 @@
 from functools import cached_property
 
 import datasets
+import requests
 from core.utils import redis_cache
 from django.db import models
 
@@ -31,6 +32,19 @@ class Dataset(models.Model):
     @cached_property
     def hf_object(self):
         return datasets.load_dataset(self.dataset.huggingface_name)
+
+    @property
+    @redis_cache()
+    def configs_with_splits(self):
+        url = f"https://datasets-server.huggingface.co/splits?dataset={self.huggingface_name}"
+        response = requests.get(url)
+        splits = response.json()["splits"]
+        configs_with_splits = {}
+        for split in splits:
+            if split["config"] not in configs_with_splits:
+                configs_with_splits[split["config"]] = []
+            configs_with_splits[split["config"]].append(split["split"])
+        return configs_with_splits
 
     @property
     @redis_cache()
