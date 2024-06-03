@@ -11,8 +11,8 @@ class DatasetAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(DatasetAdminForm, self).__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
-            self.fields["config"].choices = get_hf_dataset_config_choices(
-                self.instance.huggingface_name
+            self.fields["config"].widget = forms.Select(
+                choices=get_hf_dataset_config_choices(self.instance.huggingface_name)
             )
 
 
