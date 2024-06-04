@@ -139,11 +139,13 @@ class DatasetDetailsView(View):
     def get(self, request, dataset_pk, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=dataset_pk)
         split = request.GET.get("split")
+        subset = request.GET.get("subset")
         sample_index = request.GET.get("sample_index")
-
+        if not subset and len(dataset.subsets_with_splits) > 1:
+            # select the first one by default
+            subset = list(dataset.subsets_with_splits.keys())[0]
         if split:
-            samples = dataset.load_samples(split_name=split)
-
+            samples = dataset.load_samples(split_name=split, subset=subset)
             if sample_index is not None:
                 try:
                     sample_index = int(sample_index)
@@ -151,20 +153,24 @@ class DatasetDetailsView(View):
                     return JsonResponse({"sample": sample}, safe=False)
                 except (ValueError, IndexError):
                     return JsonResponse({"error": "Invalid sample index"}, status=400)
-
             return JsonResponse(
                 {
-                    "len_samples": dataset.huggingface_info["full_info"]
+                    "len_samples": dataset.get_huggingface_info(subset=subset)[
+                        "full_info"
+                    ]
                     .splits[split]
                     .num_examples,
                     "first_sample": samples[0],
                 },
                 safe=False,
             )
-
-        details = dataset.huggingface_info
+        details = dataset.get_huggingface_info(subset=subset)
         return render(
             request,
             "prompt/partials/dataset_details.html",
-            {"dataset_info": details, "dataset": dataset},
+            {
+                "subset": subset,
+                "dataset": dataset,
+                "dataset_info": details,
+            },
         )

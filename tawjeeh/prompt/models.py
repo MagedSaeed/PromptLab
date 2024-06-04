@@ -35,25 +35,27 @@ class Dataset(models.Model):
 
     @property
     @redis_cache()
-    def configs_with_splits(self):
+    def subsets_with_splits(self):
         url = f"https://datasets-server.huggingface.co/splits?dataset={self.huggingface_name}"
         response = requests.get(url)
         splits = response.json()["splits"]
-        configs_with_splits = {}
+        subsets_with_splits = {}
         for split in splits:
-            if split["config"] not in configs_with_splits:
-                configs_with_splits[split["config"]] = []
-            configs_with_splits[split["config"]].append(split["split"])
-        return configs_with_splits
+            if split["config"] not in subsets_with_splits:
+                subsets_with_splits[split["config"]] = []
+            subsets_with_splits[split["config"]].append(split["split"])
+        return subsets_with_splits
 
-    @property
     @redis_cache()
-    def huggingface_info(self):
+    def get_huggingface_info(self, subset=None):
         try:
             # Load the dataset information without loading the entire dataset
-            if self.config:
+            if len(self.subsets_with_splits) > 1:
+                if not subset:
+                    subset = list(self.subsets_with_splits.keys())[0]
                 info = datasets.load_dataset_builder(
-                    self.huggingface_name, self.config
+                    self.huggingface_name,
+                    subset,
                 ).info
             else:
                 info = datasets.load_dataset_builder(self.huggingface_name).info
@@ -77,11 +79,13 @@ class Dataset(models.Model):
             return {"error": str(e)}
 
     @redis_cache()
-    def load_samples(self, split_name="train", max_samples=10_000):
+    def load_samples(self, split_name="train", subset=None, max_samples=10_000):
         try:
             args = [self.huggingface_name]
-            if self.config:
-                args.append(self.config)
+            if len(self.subsets_with_splits) > 1:
+                if not subset:
+                    subset = list(self.subsets_with_splits.keys())[0]
+                args.append(subset)
             kwargs = dict(split=f"{split_name}[:{max_samples}]")
             dataset = datasets.load_dataset(*args, **kwargs)
             return dataset
