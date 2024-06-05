@@ -102,7 +102,7 @@
     <script>
         function initSplitDetails() {
             let currentSplit = $('#splitDropdown').text().trim();
-            const subset = $('#subsetDropdown').text().trim();
+            let subset = $('#subsetDropdown').text().trim();
             function fetchSplitDetails(split,subset) {
                 $('#splitDropdown').prop('disabled', true);
                 $('#split-details').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
@@ -129,6 +129,11 @@
                         `);
                         $('#split-details').show();
                         $('#splitDropdown').prop('disabled', false);
+
+                        // Check if the dropdown is open before toggling
+                        if ($('#splitDropdown').next('.dropdown-menu').hasClass('show')) {
+                            $('#splitDropdown').dropdown('toggle');
+                        }
 
                         // Add event listener for the slider
                         $('#sampleRange').on('input', function() {
@@ -184,7 +189,7 @@
                 $(this).closest('.full-description').prev('.short-description').show();
             });
 
-            $(document).on('click', '.split-item', function(event) {
+            $('.split-item').on('click', function(event) {
                 event.preventDefault();
                 const split = $(this).data('split');
                 currentSplit = split;
@@ -213,13 +218,6 @@
                 });
             }
         }
-
-
-        document.addEventListener('htmx:afterSwap', function(event) {
-            if (event.detail.target.id === 'split-details') {
-                initSplitDetails();
-            }
-        });
 
         $(document).ready(function() {
             initSplitDetails();
