@@ -1,8 +1,9 @@
 <div class="content-container">
-    <span class="text-muted"> sampels are taken from the train split:</span>
+    <span class=""> <b>subset:</b> {{ subset }}, <b>split:</b> {{ split }}.</span>
+    <span class="text-muted"> change these configurations from the dataset information (left sidebar) then click apply</span>
     <hr>
     <div class="template-content">
-        {{ rendered_template|safe }}
+        {{ rendered_template|safe|linebreaks }}
     </div>
     <div class="slider-container">
         <label for="templteMergeSampleRanger">Select Sample Index:</label>
@@ -33,15 +34,16 @@
         slider.disabled = true; // Disable the slider
         sampleIndexText.style.display = 'none'; // Hide the sample index text
         spinner.style.display = 'inline-block'; // Show the spinner
-
-        htmx.ajax('POST', "{% url 'prompt:apply_template' dataset.pk %}", {
+        let split = $('#splitDropdown').text().trim();
+        let subset = $('#subsetDropdown').text().trim();
+        htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}`, {
             target: 'div.content-container',
             swap: 'outerHTML',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}'
             },
             values: {
-                'template': '{{ template_content }}',
+                'template': '{{ template_content|linebreaksbr }}',
                 'sample_index': sampleIndex,
             }
         }).then(function() {

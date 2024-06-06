@@ -68,7 +68,9 @@
                                 <a
                                     data-split="{{ split }}"
                                     class="dropdown-item split-item"
+                                    style="position: relative;"
                                 >
+                                    <span id="split-item-spinner-{{ split }}" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true" style="display: none;"></span>
                                     {{ split }}
                                 </a>
                             </li>
@@ -193,7 +195,16 @@
                 event.preventDefault();
                 const split = $(this).data('split');
                 currentSplit = split;
-                fetchSplitDetails(split,subset);
+
+                // Show the spinner
+                $('#split-item-spinner-' + split).show();
+
+                fetchSplitDetails(split, subset);
+
+                // Hide the spinner once the request is complete
+                $(document).ajaxStop(function () {
+                    $('#split-item-spinner-' + split).hide();
+                });
             });
 
             function syntaxHighlight(json) {

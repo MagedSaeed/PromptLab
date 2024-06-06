@@ -2,8 +2,6 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, View
 from django_filters.views import FilterView
 from jinja2 import Template
@@ -114,23 +112,31 @@ class PromptCreateView(CreateView):
         return super().form_valid(form)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class ApplyTemplateView(View):
     def post(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
-        template_content = request.POST.get("template", "")
+        split = request.GET.get("split")
+        subset = request.GET.get("subset")
         sample_index = int(request.POST.get("sample_index", 0))
+        sample = self.dataset.load_samples(
+            split=split,
+            subset=subset,
+        )[sample_index]
+        template_content = request.POST.get("template", "")
+        template_content = template_content.replace("<br>", "\n")
         template = Template(template_content)
-        rendered_content = template.render(**self.dataset.load_samples()[sample_index])
+        rendered_sample = template.render(**sample)
         return render(
             request,
             "prompt/partials/template_merge.html",
             {
                 "dataset": self.dataset,
                 "sample_index": sample_index,
-                "rendered_template": rendered_content,
+                "rendered_template": rendered_sample,
                 "template_content": template_content,
                 "max_samples": min(10_000, len(self.dataset.load_samples())),
+                "subset": subset,
+                "split": split,
             },
         )
 
@@ -145,7 +151,7 @@ class DatasetDetailsView(View):
             # select the first one by default
             subset = list(dataset.subsets_with_splits.keys())[0]
         if split:
-            samples = dataset.load_samples(split_name=split, subset=subset)
+            samples = dataset.load_samples(split=split, subset=subset)
             if sample_index is not None:
                 try:
                     sample_index = int(sample_index)
