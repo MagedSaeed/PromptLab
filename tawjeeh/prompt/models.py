@@ -23,11 +23,6 @@ class Dataset(models.Model):
     huggingface_name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     huggingface_raw = models.JSONField(null=True, blank=True)
-    config = models.CharField(
-        null=True,
-        blank=True,
-        max_length=50_000,
-    )
 
     @cached_property
     def hf_object(self):
