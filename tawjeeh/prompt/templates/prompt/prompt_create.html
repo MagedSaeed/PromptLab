@@ -20,6 +20,7 @@
 
         .fixed-sidebar.closed {
             transform: translateX(-310px);
+            overflow-y: hidden;
         }
 
         .sidebar-header {
@@ -78,27 +79,24 @@
         }
 
         .half-width {
-            width: 48%;
+            width: 49%;
             display: inline-block;
             vertical-align: top;
-            {% comment %} transition: width 0.3s ease; {% endcomment %}
         }
 
         .full-width {
             width: 100%;
             display: inline-block;
-            {% comment %} transition: width 0.3s ease; {% endcomment %}
         }
 
         .template-result {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 5px;
             background-color: #f9f9f9;
-            margin-left: 2%;
+            margin-left: 1%;
             width: 48%;
             display: inline-block;
             vertical-align: top;
-            {% comment %} transition: opacity 0.3s ease; {% endcomment %}
             opacity: 0;
             position: relative; /* To position the spinner absolutely */
         }
@@ -203,25 +201,22 @@
                     <div class="card-body">
                         <form id="promptForm" method="post" action="{% url 'prompt:prompt_create' dataset.pk %}">
                             {% csrf_token %}
-                            <div class="row">
+                            <div class="row justify-content-center">
                                 <div class="mb-3 col-12 full-width" id="templateFieldContainer">
                                     {{ form.name|as_crispy_field }}
                                     {{ form.answer_choices|as_crispy_field }}
                                     {{ form.template|as_crispy_field }}
                                 </div>
-                                <div class="template-result hidden" id="templateResultContainer">
+                                <div class="template-result hidden rounded" id="templateResultContainer">
                                     <div class="close-btn" id="closeTemplateResult">✖</div>
                                     <div id="mergeTemplateResult"></div>
-                                    <div id="templateResultSpinner" class="spinner-border spinner-border-sm text-secondary template-result-spinner" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
                                 </div>
                             </div>
                             <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
                             <div class="text-end">
                                 <button type="button" class="btn btn-secondary my-4" id="applyButton">
                                     Apply
-                                    <span id="apply-spinner" class="spinner-border spinner-border-sm text-secondary apply-spinner" role="status" aria-hidden="true"></span>
+                                    <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                 </button>
                                 <button type="submit" class="btn btn-primary my-4">Submit</button>
                             </div>
@@ -247,9 +242,9 @@
             $('#applyButton').on('click', function() {
                 var templateValue = $('#id_template').val();
                 $('#apply-spinner').addClass('visible');
-                $('#templateResultSpinner').addClass('visible');
-
-                htmx.ajax('POST', "{% url 'prompt:apply_template' dataset.pk %}", {
+                let split = $('#splitDropdown').text().trim();
+                let subset = $('#subsetDropdown').text().trim();
+                htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}`, {
                     target: '#mergeTemplateResult',
                     swap: 'innerHTML',
                     headers: {
@@ -260,7 +255,6 @@
                     }
                 }).then(function() {
                     $('#apply-spinner').removeClass('visible');
-                    $('#templateResultSpinner').removeClass('visible');
                     $('#templateFieldContainer').removeClass('full-width').addClass('half-width');
                     $('#templateResultContainer').removeClass('hidden').addClass('visible');
                 });
