@@ -5,7 +5,7 @@ from prompt.models import Prompt
 class PromptCreateForm(forms.ModelForm):
     class Meta:
         model = Prompt
-        fields = ["name", "template", "answer_choices"]
+        fields = ["name", "template", "answer_choices", "dataset_subset"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,3 +17,5 @@ class PromptCreateForm(forms.ModelForm):
         self.fields["name"].widget.attrs.update(
             {"placeholder": "Enter prompt name here"}
         )
+        # make dataset_subset hidden as this will be handled by the ui from the dataset information left sidebar
+        self.fields["dataset_subset"].widget = forms.HiddenInput()

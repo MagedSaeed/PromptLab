@@ -206,6 +206,7 @@
                                     {{ form.name|as_crispy_field }}
                                     {{ form.answer_choices|as_crispy_field }}
                                     {{ form.template|as_crispy_field }}
+                                    {{ form.dataset_subset }}
                                 </div>
                                 <div class="template-result hidden rounded" id="templateResultContainer">
                                     <div class="close-btn" id="closeTemplateResult">✖</div>
@@ -273,6 +274,15 @@
                 if ($(event.target).is('[hx-get=\"{% url 'prompt:dataset_details' dataset.pk %}\"]')) {
                     $('#sidebar-spinner').hide();
                 }
+            });
+
+            // set dataset_subset from subset element before submission
+            $('#promptForm').on('submit', function(event) {
+                if ($('#subsetDropdown').length) {
+                    let subset = $('#subsetDropdown').text().trim();
+                    $('#id_dataset_subset').val(subset);
+                }
+                return true;
             });
 
         });

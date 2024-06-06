@@ -105,6 +105,7 @@ class Prompt(models.Model):
         related_name="prompts",
         on_delete=models.SET_NULL,
     )
+    dataset_subset = models.CharField(max_length=10_000, null=True, blank=True)
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"
