@@ -17,22 +17,20 @@
     <!-- Block for header -->
         {% include 'base/header.html' %}
 
-    <!-- Block for messages -->
-        <div class="container mt-3">
-            {% block messages %}
-                {% if messages %}
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        {% for message in messages %}
-                            <p>{{ message }}</p>
-                        {% endfor %}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75em; width: 1em; height: 1em;"></button>
-                    </div>
-                {% endif %}
-            {% endblock %}
-        </div>
-
     <!-- Block for main content -->
         <div class="container-fluid mt-4">
+            <div class="container mt-3">
+                {% if messages %}
+                    <div class="messages-container">
+                        {% for message in messages %}
+                            <div class="alert alert-danger alert-dismissible fade show message" role="alert" style="z-index:5000">
+                                <p>{{ message }}</p>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75em; width: 1em; height: 1em"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
             {% block main_content %}
             {% endblock %}
         </div>

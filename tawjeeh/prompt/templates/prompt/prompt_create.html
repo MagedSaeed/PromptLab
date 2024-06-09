@@ -276,6 +276,14 @@
                 }
             });
 
+            // Handle htmx request error
+            $(document).on('htmx:responseError', function(event) {
+                if ($(event.target).is('[hx-get="{% url 'prompt:dataset_details' dataset.pk %}"]')) {
+                    $('#sidebar-spinner').hide();
+                    $('#dataset-details').html('<div class="alert alert-danger" role="alert">Failed to load dataset details. Please try again later.</div>');
+                }
+            });
+
             // set dataset_subset from subset element before submission
             $('#promptForm').on('submit', function(event) {
                 if ($('#subsetDropdown').length) {
