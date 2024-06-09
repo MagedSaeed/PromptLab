@@ -1,36 +1,51 @@
-version: '2'
-
 services:
     nginx:
         restart: always
         image: nginx:1.23-alpine
         ports:
-            - 80:80
+            - 8080:80
         volumes:
             - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
             - static_volume:/app/tawjeeh/static/
+    
+    redis:
+        image: redis:alpine
+        restart: always
+        ports:
+            - 6677:6677
+        command: --port 6677
+        volumes: 
+            - redis_cache:/data
+        environment:
+            ALLOW_EMPTY_PASSWORD: True
+
     server:
         restart: unless-stopped
         depends_on:
             - db
+            - redis
         build:
             context: .
             dockerfile: ./docker/django-site/Dockerfile
         entrypoint: /app/docker/django-site/server-entrypoint.sh
         volumes:
             - static_volume:/app/tawjeeh/static/
-        expose:
-            - 8000
+            - server_cache:/cache
+            - server_logs:/var/log
         environment:
             DEBUG: "True"
-            CELERY_BROKER_URL: "redis://redis:6379/0"
-            CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-            DJANGO_DB: postgresql
+            CELERY_BROKER_URL: redis://redis:6677/0
+            CELERY_RESULT_BACKEND: redis://redis:6677/0
+            DJANGO_SETTINGS_MODULE: "tawjeeh.production_settings"
+            # DJANGO_DB: postgresql
             POSTGRES_HOST: db
-            POSTGRES_NAME: postgres
+            REDIS_HOST: redis
+            REDIS_PORT: 6677
+            POSTGRES_NAME: tawjeeh
             POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
             POSTGRES_PORT: 5432
+            SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     # worker:
     #     restart: unless-stopped
     #     build:
@@ -65,10 +80,13 @@ services:
         environment:
             POSTGRES_DB: tawjeeh
             POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         expose:
             - 5432
 
 volumes:
     static_volume: {}
     postgres_data: {}
+    redis_cache: {}
+    server_cache: {}
+    server_logs: {}

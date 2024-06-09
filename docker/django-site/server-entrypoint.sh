@@ -1,12 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 until cd /app/tawjeeh
 do
     echo "Waiting for server volume..."
 done
 
+# setup huggingface cache
+mkdir -p /cache/huggingface
 
-until python manage.py migrate
+export HF_HOME=/cache/huggingface
+
+until python3 manage.py migrate
 do
     echo "Waiting for db to be ready..."
     sleep 2
@@ -14,16 +18,24 @@ done
 
 
 # create superusers
-until python manage.py import_superusers ../docker/django-site/admins.yml
+until python3 manage.py import_superusers ../docker/django-site/admins.yml
 do
     echo "Waiting for superusers to be created..."
     sleep 2
 done
 
+# collect static
+python3 manage.py collectstatic --noinput
 
-python manage.py collectstatic --noinput
+# get datasets from huggingface
+python3 manage.py sync_with_hf
 
-gunicorn tawjeeh.wsgi --bind 0.0.0.0:8000 --workers 4 --threads 4
+DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
+
+# create logs dir
+mkdir -p /var/log/gunicorn
+
+gunicorn tawjeeh.wsgi -c tawjeeh/gunicorn.conf.py
 
 # for debug
-#python manage.py runserver 0.0.0.0:8000
+#python3 manage.py runserver 0.0.0.0:8000
