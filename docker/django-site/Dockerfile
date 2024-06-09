@@ -20,6 +20,7 @@ RUN apt-get -y install redis-server
 RUN pip install --upgrade ipython --break-system-packages
 
 ADD ./requirements.txt /app/
+ADD ./.env /app/
 RUN pip install -r requirements.txt --break-system-packages
 
 # create static folder
