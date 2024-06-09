@@ -19,3 +19,7 @@ class PromptCreateForm(forms.ModelForm):
         )
         # make dataset_subset hidden as this will be handled by the ui from the dataset information left sidebar
         self.fields["dataset_subset"].widget = forms.HiddenInput()
+        self.fields["dataset_subset"].required = True
+        self.fields["dataset_subset"].error_messages = {
+            "required": "Please select a dataset from the left sidebar first.",
+        }
