@@ -111,6 +111,10 @@ class PromptCreateView(CreateView):
         messages.success(self.request, "prompt saved successfully.")
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        messages.error(self.request, form.errors)
+        return super().form_invalid(form)
+
 
 class ApplyTemplateView(View):
     def post(self, request, *args, **kwargs):
