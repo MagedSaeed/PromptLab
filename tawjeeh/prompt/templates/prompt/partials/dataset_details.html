@@ -37,11 +37,12 @@
                                     href="#"
                                     hx-ext="morph"
                                     hx-swap="innerHTML"
-                                    class="dropdown-item"
+                                    class="dropdown-item subset-item"
                                     data-subset="{{ subset }}"
                                     hx-target="#dataset-details"
                                     hx-get="{% url 'prompt:dataset_details' dataset.pk %}?subset={{ subset }}"
                                 >
+                                    <span id="subset-item-spinner-{{ subset }}" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true" style="display: none;"></span>
                                     {{ subset }}
                                 </a>
                             </li>
@@ -53,32 +54,34 @@
         {% endif %}
 
         {% if dataset_info.full_info.splits %}
-            <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
-                <div class="d-grid">
-                    <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
-                        {% for split, split_details in dataset_info.full_info.splits.items %}
-                            {% if forloop.first %}
-                                {{ split }}
-                            {% endif %}
-                        {% endfor %}
-                    </button>
-                    <ul class="dropdown-menu form-control" aria-labelledby="splitDropdown">
-                        {% for split, split_details in dataset_info.full_info.splits.items %}
-                            <li>
-                                <a
-                                    data-split="{{ split }}"
-                                    class="dropdown-item split-item"
-                                    style="position: relative;"
-                                >
-                                    <span id="split-item-spinner-{{ split }}" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true" style="display: none;"></span>
+            <div>
+                <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
+                    <div class="d-grid">
+                        <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
+                            {% for split, split_details in dataset_info.full_info.splits.items %}
+                                {% if forloop.first %}
                                     {{ split }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                                {% endif %}
+                            {% endfor %}
+                        </button>
+                        <ul class="dropdown-menu form-control" aria-labelledby="splitDropdown">
+                            {% for split, split_details in dataset_info.full_info.splits.items %}
+                                <li>
+                                    <a
+                                        data-split="{{ split }}"
+                                        class="dropdown-item split-item"
+                                        style="position: relative;"
+                                    >
+                                        <span id="split-item-spinner-{{ split }}" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true" style="display: none;"></span>
+                                        {{ split }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div id="split-details" style="display: none; margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;">
+                <div id="split-details" style="display: none; margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;">
+                </div>
             </div>
         {% endif %}
     </div>
@@ -105,8 +108,9 @@
         function initSplitDetails() {
             let currentSplit = $('#splitDropdown').text().trim();
             let subset = $('#subsetDropdown').text().trim();
-            function fetchSplitDetails(split,subset) {
+            function fetchSplitDetails(split, subset) {
                 $('#splitDropdown').prop('disabled', true);
+                $('#subsetDropdown').prop('disabled', true);
                 $('#split-details').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
                 $('#split-details').show();
                 $.ajax({
@@ -131,6 +135,7 @@
                         `);
                         $('#split-details').show();
                         $('#splitDropdown').prop('disabled', false);
+                        $('#subsetDropdown').prop('disabled', false);
 
                         // Check if the dropdown is open before toggling
                         if ($('#splitDropdown').next('.dropdown-menu').hasClass('show')) {
@@ -173,11 +178,12 @@
                         $('#split-details').text('Error fetching split details.');
                         $('#split-details').show();
                         $('#splitDropdown').prop('disabled', false);
+                        $('#subsetDropdown').prop('disabled', false);
                     }
                 });
             }
 
-            fetchSplitDetails(currentSplit,subset);
+            fetchSplitDetails(currentSplit, subset);
 
             $('.show-more').on('click', function(event) {
                 event.preventDefault();
@@ -199,12 +205,36 @@
                 // Show the spinner
                 $('#split-item-spinner-' + split).show();
 
+                // Disable interaction with split items
+                $('.split-item').css('pointer-events', 'none');
+
                 fetchSplitDetails(split, subset);
 
                 // Hide the spinner once the request is complete
                 $(document).ajaxStop(function () {
                     $('#split-item-spinner-' + split).hide();
                 });
+            });
+
+            $('.subset-item').on('click', function(event) {
+                // Dim the split-details div and show a centered spinner
+                $('#split-details').parent().css({
+                    'display': 'flex',
+                    'justify-content': 'center',
+                    'align-items': 'center',
+                    'height': '200px', // adjust the height as needed
+                    'opacity': '0.5'
+                }).html('<div class="spinner-border text-secondary spinner-large" role="status"><span class="visually-hidden">Loading...</span></div>');
+
+                $('#split-details').parent().show();
+
+                // Show the hidden spinner beside the subset text in the dropdown
+                const subset = $(this).data('subset');
+                $('#subset-item-spinner-' + subset).show();
+
+                // Disable interaction with the subset button and dropdown menu item
+                $('#subsetDropdown').prop('disabled', true);
+                $('.subset-item').css('pointer-events', 'none');
             });
 
             function syntaxHighlight(json) {
