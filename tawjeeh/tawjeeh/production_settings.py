@@ -31,3 +31,7 @@ CACHES = {
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")  # noqa: F405
 STATICFILES_DIRS = []
+
+server_ip = os.getenv('SERVER_IP')
+if server_ip:
+    ALLOWED_HOSTS.append(server_ip)
