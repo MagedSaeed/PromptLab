@@ -26,16 +26,16 @@ SECRET_KEY = "django-insecure-z!g^7r+mjdi7$n=lk%1$8r&7j&_)6kidx^62b$fcsrc1=-z%u_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1"]
+ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "localhost"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
     # django
-    "django.contrib.sites",
-    "django.contrib.admin",
     "django.contrib.auth",
+    "django.contrib.admin",
+    "django.contrib.sites",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
