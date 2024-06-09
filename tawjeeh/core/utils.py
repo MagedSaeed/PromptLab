@@ -29,11 +29,17 @@ def redis_cache(timeout=60 * 60 * 24, refresh=False):  # refresh results
             # Generate a unique cache key based on the class name, function name, and arguments
             cache_key = f"{class_name}{func.__name__}_{hashlib.md5(serialized_args + serialized_kwargs).hexdigest()}"
 
-            # Try to get the cached result
-            if not refresh:
-                cached_result = cache.get(cache_key)
-                if cached_result is not None:
-                    return pickle_deserialize(cached_result)
+            try:
+                # Try to get the cached result
+                if not refresh:
+                    cached_result = cache.get(cache_key)
+                    if cached_result is not None:
+                        return pickle_deserialize(cached_result)
+            except Exception as e:
+                print("*" * 80)
+                print("WARNING: Error occured while trying to retrieve cache!")
+                print(e)
+                print("*" * 80)
 
             # Call the function and cache the result
             result = func(*args, **kwargs)

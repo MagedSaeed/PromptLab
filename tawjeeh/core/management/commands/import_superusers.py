@@ -30,7 +30,8 @@ class Command(BaseCommand):
                     email = admin["email"]
                     if not User.objects.filter(username=username).exists():
                         superuser = User.objects.create_superuser(
-                            username=username, email=email
+                            username=username,
+                            email=email,
                         )
                         superuser.set_password(os.getenv("SUPERUSER_PASSWORD"))
                         superuser.save()
