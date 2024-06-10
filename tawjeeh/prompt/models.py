@@ -1,7 +1,6 @@
 from functools import cached_property
 
 import datasets
-import requests
 from core.utils import redis_cache
 from django.db import models
 
@@ -31,15 +30,21 @@ class Dataset(models.Model):
     @property
     @redis_cache()
     def subsets_with_splits(self):
-        url = f"https://datasets-server.huggingface.co/splits?dataset={self.huggingface_name}"
-        response = requests.get(url)
-        splits = response.json()["splits"]
-        subsets_with_splits = {}
-        for split in splits:
-            if split["config"] not in subsets_with_splits:
-                subsets_with_splits[split["config"]] = []
-            subsets_with_splits[split["config"]].append(split["split"])
-        return subsets_with_splits
+        configs_and_splits = {}
+        config_names = datasets.get_dataset_config_names(
+            self.huggingface_name,
+            trust_remote_code=True,
+        )
+        # Iterate through available configs and get their splits
+        for config_name in config_names:
+            config_info = datasets.get_dataset_config_info(
+                self.huggingface_name,
+                config_name,
+                trust_remote_code=True,
+            )
+            splits = list(config_info.splits.keys())
+            configs_and_splits[config_name] = splits
+        return configs_and_splits
 
     @redis_cache()
     def get_huggingface_info(self, subset=None):
@@ -51,9 +56,13 @@ class Dataset(models.Model):
                 info = datasets.load_dataset_builder(
                     self.huggingface_name,
                     subset,
+                    trust_remote_code=True,
                 ).info
             else:
-                info = datasets.load_dataset_builder(self.huggingface_name).info
+                info = datasets.load_dataset_builder(
+                    self.huggingface_name,
+                    trust_remote_code=True,
+                ).info
 
             # Create the Hugging Face link
             huggingface_link = (
@@ -81,7 +90,7 @@ class Dataset(models.Model):
                 if not subset:
                     subset = list(self.subsets_with_splits.keys())[0]
                 args.append(subset)
-            kwargs = dict(split=f"{split}[:{max_samples}]")
+            kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
             dataset = datasets.load_dataset(*args, **kwargs)
             return dataset
         except Exception as e:
