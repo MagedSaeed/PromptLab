@@ -106,6 +106,11 @@ class PromptCreateView(CreateView):
         context["dataset"] = self.dataset
         return context
 
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs(**kwargs)
+        kwargs["dataset"] = self.dataset
+        return kwargs
+
     def form_valid(self, form):
         form.instance.dataset = self.dataset
         messages.success(self.request, "prompt saved successfully.")
