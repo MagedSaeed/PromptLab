@@ -112,7 +112,7 @@ class PromptCreateView(CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        messages.error(self.request, form.errors)
+        messages.error(self.request, form.errors, extra_tags="danger")
         return super().form_invalid(form)
 
 
