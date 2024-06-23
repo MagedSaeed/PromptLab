@@ -205,6 +205,7 @@
                                 <div class="mb-3 col-12 full-width" id="templateFieldContainer">
                                     {{ form.name|as_crispy_field }}
                                     {{ form.answer_choices|as_crispy_field }}
+                                    {% include 'prompt/partials/prompt_tagified_textarea.html' %}
                                     {{ form.template|as_crispy_field }}
                                     {{ form.dataset_subset }}
                                 </div>
@@ -241,7 +242,8 @@
             });
 
             $('#applyButton').on('click', function() {
-                var templateValue = $('#id_template').val();
+                promptText = $('#tagifyTextarea').val();
+                promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 $('#apply-spinner').addClass('visible');
                 let split = $('#splitDropdown').text().trim();
                 let subset = $('#subsetDropdown').text().trim();
@@ -252,7 +254,7 @@
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
                     values: {
-                        'template': templateValue
+                        'template': promptTemplate
                     }
                 }).then(function() {
                     $('#apply-spinner').removeClass('visible');
@@ -284,12 +286,25 @@
                 }
             });
 
+            // Function to replace the [[..]] object
+            const replaceTagsWithJinjaBrackets = (match) => {
+                // Parse the JSON inside [[..]]
+                const jsonArray = JSON.parse(match.slice(2, -2));
+                const value = jsonArray.value;
+                {% verbatim %}
+                return `{{${value}}}`;
+                {% endverbatim %}
+            };
+
             // set dataset_subset from subset element before submission
             $('#promptForm').on('submit', function(event) {
                 if ($('#subsetDropdown').length) {
                     let subset = $('#subsetDropdown').text().trim();
                     $('#id_dataset_subset').val(subset);
                 }
+                promptText = $('#tagifyTextarea').val();
+                promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
+                $('#id_template').val(promptTemplate)
                 return true;
             });
 

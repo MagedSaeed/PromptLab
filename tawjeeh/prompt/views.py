@@ -98,12 +98,16 @@ class PromptCreateView(CreateView):
 
     def get(self, request, *args, **kwargs):
         self.subset = request.GET.get("subset")
-        self.split = request.GET.get("split")
+        self.split = request.GET.get("split", "train")
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
+        first_sample = self.dataset.load_samples(split=self.split, subset=self.subset)[
+            0
+        ]
+        context["dataset_columns"] = list(first_sample.keys())
         return context
 
     def get_form_kwargs(self, **kwargs):

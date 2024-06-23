@@ -1,0 +1,65 @@
+<style>
+    .tagify__input {
+        min-height: 300px; /* Set a specific minimum height */
+    }
+    .tagify__dropdown {
+        position: absolute !important; /* Ensure dropdown is positioned absolutely */
+        z-index: 1000; /* High z-index to overlay other elements */
+    }
+</style>
+<div class="my-2">
+    <label for="tagifyTextarea" class="form-label">Prompt Template</label>
+    <textarea id="tagifyTextarea" class="form-control"></textarea>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var input = document.getElementById('tagifyTextarea');
+        var whitelist = [{% for column in dataset_columns %} '{{column}}', {% endfor %}];
+
+        var promptTempateTagified = new Tagify(input, {
+            enforceWhitelist: true,
+            delimiters: "//",
+            whitelist: whitelist,
+            mode: "mix",
+            pattern: /\/\//,
+            dropdown: {
+                enabled: 0,                     // show the dropdown immediately on focus
+                //maxItems: 5,                  // maximum allowed rendered suggestions
+                classname: "tags-look",         // custom class for the dropdown
+                closeOnSelect: true,            // close the dropdown after selecting a suggestion
+                highlightFirst: true,           // automatically highlights the first suggestion item
+                includeSelectedTags: true,      // include selected tags in the dropdown
+                position: 'text',               // dropdown position
+                maxHeight: '150px'              // max height of the dropdown
+            }
+        });
+
+        // optional - adding mix-mode event listeners
+
+        promptTempateTagified.on('add', onAdd);
+        promptTempateTagified.on('remove', onRemove);
+
+        function onAdd(e) {
+            updateWhitelist();
+        }
+
+        function onRemove(e) {
+            updateWhitelist();
+        }
+
+        function updateWhitelist() {
+            promptTempateTagified.whitelist = [...whitelist];
+        }
+
+        promptTempateTagified.on('dropdown:show', function (e) {
+            promptTempateTagified.dropdown.filterListItems = function (value) {
+                promptTempateTagified.whitelist = [...whitelist];
+                return whitelist;
+            };
+        });
+
+        promptTempateTagified.on('dropdown:select', function (e) {
+            setTimeout(updateWhitelist, 0); // Ensuring the whitelist updates after the tag is added
+        });
+    });
+</script>

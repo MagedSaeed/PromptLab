@@ -26,6 +26,7 @@ class PromptCreateForm(forms.ModelForm):
         )
         # make dataset_subset hidden as this will be handled by the ui from the dataset information left sidebar
         self.fields["dataset_subset"].widget = forms.HiddenInput()
+        self.fields["template"].widget = forms.HiddenInput()
         self.instance.dataset = self.dataset
         if len(self.instance.dataset.subsets_with_splits) > 1:
             self.fields["dataset_subset"].required = True
