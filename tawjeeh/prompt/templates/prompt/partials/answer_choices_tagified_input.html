@@ -1,0 +1,11 @@
+<h2 class="my-4">Answer Choices</h2>
+
+<input id="tags-input" class="form-control" placeholder="Enter tags and press Enter. Double click on a tag to edit..">
+
+<script>
+    // Initialize Tagify on the input field
+    var answerChoices = document.querySelector('#tags-input');
+    new Tagify(answerChoices, {
+        editTags: true
+    });
+</script>
