@@ -6,44 +6,68 @@
         position: absolute !important; /* Ensure dropdown is positioned absolutely */
         z-index: 1000; /* High z-index to overlay other elements */
     }
+    .form-select-small {
+        width: auto; /* Adjust width to fit content */
+        display: inline-block;
+    }
 </style>
+
 <div class="my-2">
+    <label for="directionSwitcher" class="form-label">Text Direction: </label>
+    <select id="directionSwitcher" class="form-select form-select-small mb-2 mx-2">
+        <option value="ltr">Left-To-Right</option>
+        <option value="rtl">Right-To-Left</option>
+    </select>
+    <br>
     <label for="tagifyTextarea" class="form-label">Prompt Template</label>
-    <textarea id="tagifyTextarea" class="form-control"></textarea>
+    <div dir="{{ form.text_direction.value }}">
+        <textarea id="tagifyTextarea" class="form-control" placeholder="Enter your prompt here..."></textarea>
+    </div>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var input = document.getElementById('tagifyTextarea');
+        var directionSwitcher = document.getElementById('directionSwitcher');
         var whitelist = [{% for column in dataset_columns %} '{{column}}', {% endfor %}];
+        var promptTempateTagified;
 
-        var promptTempateTagified = new Tagify(input, {
-            enforceWhitelist: true,
-            delimiters: "//",
-            whitelist: whitelist,
-            mode: "mix",
-            pattern: /\/\//,
-            dropdown: {
-                enabled: 0,                     // show the dropdown immediately on focus
-                //maxItems: 5,                  // maximum allowed rendered suggestions
-                classname: "tags-look",         // custom class for the dropdown
-                closeOnSelect: true,            // close the dropdown after selecting a suggestion
-                highlightFirst: true,           // automatically highlights the first suggestion item
-                includeSelectedTags: true,      // include selected tags in the dropdown
-                position: 'text',               // dropdown position
-                maxHeight: '150px'              // max height of the dropdown
-            }
-        });
+        function initializeTagify() {
+            promptTempateTagified = new Tagify(input, {
+                enforceWhitelist: true,
+                delimiters: "//",
+                whitelist: whitelist,
+                mode: "mix",
+                pattern: /\\\\/,
+                dropdown: {
+                    enabled: 0,                     // show the dropdown immediately on focus
+                    classname: "tags-look",         // custom class for the dropdown
+                    closeOnSelect: true,            // close the dropdown after selecting a suggestion
+                    highlightFirst: true,           // automatically highlights the first suggestion item
+                    includeSelectedTags: true,      // include selected tags in the dropdown
+                    position: 'text',               // dropdown position
+                    maxHeight: '150px'              // max height of the dropdown
+                }
+            });
 
-        // optional - adding mix-mode event listeners
+            promptTempateTagified.on('add', onTagChange);
+            promptTempateTagified.on('remove', onTagChange);
 
-        promptTempateTagified.on('add', onAdd);
-        promptTempateTagified.on('remove', onRemove);
+            promptTempateTagified.on('dropdown:show', function () {
+                promptTempateTagified.dropdown.filterListItems = function () {
+                    promptTempateTagified.whitelist = [...whitelist];
+                    return whitelist;
+                };
+            });
 
-        function onAdd(e) {
+            promptTempateTagified.on('dropdown:select', function () {
+                setTimeout(updateWhitelist, 0); // Ensuring the whitelist updates after the tag is added
+            });
+
             updateWhitelist();
         }
 
-        function onRemove(e) {
+        function onTagChange() {
             updateWhitelist();
         }
 
@@ -51,15 +75,24 @@
             promptTempateTagified.whitelist = [...whitelist];
         }
 
-        promptTempateTagified.on('dropdown:show', function (e) {
-            promptTempateTagified.dropdown.filterListItems = function (value) {
-                promptTempateTagified.whitelist = [...whitelist];
-                return whitelist;
-            };
+        directionSwitcher.addEventListener('change', function () {
+            var direction = directionSwitcher.value;
+            $('#tagifyTextarea').parent().attr('dir', direction);
+
+            if (promptTempateTagified) {
+                promptTempateTagified.destroy();
+            }
+
+            if (direction === 'rtl') {
+                input.placeholder = 'أدخل التعليمات هنا...';
+            } else {
+                input.placeholder = 'Enter your prompt here...';
+            }
+
+            initializeTagify();
         });
 
-        promptTempateTagified.on('dropdown:select', function (e) {
-            setTimeout(updateWhitelist, 0); // Ensuring the whitelist updates after the tag is added
-        });
+        // Set initial direction and placeholder
+        directionSwitcher.dispatchEvent(new Event('change'));
     });
 </script>

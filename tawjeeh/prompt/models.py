@@ -105,9 +105,18 @@ class Dataset(models.Model):
 
 
 class Prompt(models.Model):
+    class TextDirectionChoices(models.TextChoices):
+        LTR = "ltr", "Left-to-Right"
+        RTL = "rtl", "Right-to-Left"
+
     name = models.CharField(max_length=1_000)
     answer_choices = models.CharField(max_length=100_000, null=True, blank=True)
     template = models.TextField()
+    text_direction = models.CharField(
+        max_length=10,
+        default="ltr",
+        choices=TextDirectionChoices.choices,
+    )
     dataset = models.ForeignKey(
         Dataset,
         null=True,
