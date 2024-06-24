@@ -2,7 +2,7 @@
     <span class=""> <b>subset:</b> {{ subset }}, <b>split:</b> {{ split }}.</span>
     <span class="text-muted"> change these configurations from the dataset information (left sidebar) then click apply</span>
     <hr>
-    <div class="template-content">
+    <div class="template-content" dir="{{ text_direction }}">
         {{ rendered_template|safe|linebreaks }}
     </div>
     <div class="slider-container">

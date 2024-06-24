@@ -94,12 +94,9 @@ class PromptCreateView(CreateView):
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
-        return super().setup(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
         self.subset = request.GET.get("subset")
         self.split = request.GET.get("split", "train")
-        return super().get(request, *args, **kwargs)
+        return super().setup(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -130,6 +127,7 @@ class ApplyTemplateView(View):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         split = request.GET.get("split")
         subset = request.GET.get("subset")
+        text_direction = request.GET.get("text_direction", "ltr")
         sample_index = int(request.POST.get("sample_index", 0))
         sample = self.dataset.load_samples(
             split=split,
@@ -150,6 +148,7 @@ class ApplyTemplateView(View):
                 "max_samples": min(10_000, len(self.dataset.load_samples())),
                 "subset": subset,
                 "split": split,
+                "text_direction": text_direction,
             },
         )
 

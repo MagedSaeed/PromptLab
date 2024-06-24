@@ -208,6 +208,7 @@
                                     {% include 'prompt/partials/prompt_tagified_textarea.html' %}
                                     {{ form.template|as_crispy_field }}
                                     {{ form.dataset_subset }}
+                                    {{ form.text_direction }}
                                 </div>
                                 <div class="template-result hidden rounded" id="templateResultContainer">
                                     <div class="close-btn" id="closeTemplateResult">✖</div>
@@ -244,10 +245,11 @@
             $('#applyButton').on('click', function() {
                 promptText = $('#tagifyTextarea').val();
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
+                text_direction = document.getElementById('directionSwitcher').value;
                 $('#apply-spinner').addClass('visible');
                 let split = $('#splitDropdown').text().trim();
                 let subset = $('#subsetDropdown').text().trim();
-                htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}`, {
+                htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}&text_direction=${text_direction}`, {
                     target: '#mergeTemplateResult',
                     swap: 'innerHTML',
                     headers: {
@@ -302,9 +304,11 @@
                     let subset = $('#subsetDropdown').text().trim();
                     $('#id_dataset_subset').val(subset);
                 }
+                text_direction = document.getElementById('directionSwitcher').value;
                 promptText = $('#tagifyTextarea').val();
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 $('#id_template').val(promptTemplate)
+                $("#id_text_direction").val(text_direction);
                 return true;
             });
 
