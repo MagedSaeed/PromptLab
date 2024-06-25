@@ -36,7 +36,7 @@
                     {% endif %}
                 </td>
                 <td class="text-center" > {{ dataset.prompts.count }} </td>
-                <td> <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">Add Prompt</a> </td>
+                <td> <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}">List Prompts</a> </td>
             </tr>
         {% endfor %}
     </tbody>
