@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models.query import QuerySet
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
@@ -120,6 +121,27 @@ class PromptCreateView(CreateView):
     def form_invalid(self, form):
         messages.error(self.request, form.errors, extra_tags="danger")
         return super().form_invalid(form)
+
+
+class PromptListView(ListView):
+    model = Prompt
+    paginate_by = 10
+    context_object_name = "prompts"
+    template_name = "prompt/prompt_list.html"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
+        return queryset
+
+    def setup(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        return super().setup(request, *args, **kwargs)
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["dataset"] = self.dataset
+        return context
 
 
 class ApplyTemplateView(View):

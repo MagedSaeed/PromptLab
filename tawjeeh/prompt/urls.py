@@ -4,6 +4,7 @@ from prompt.views import (
     DatasetDetailsView,
     DatasetListView,
     PromptCreateView,
+    PromptListView,
     TaskListView,
 )
 
@@ -13,9 +14,14 @@ urlpatterns = [
     path("task/list", TaskListView.as_view(), name="task_list"),
     path("dataset/list", DatasetListView.as_view(), name="dataset_list"),
     path(
-        "dataset/<int:dataset_pk>/prompt/add",
+        "dataset/<int:dataset_pk>/prompt/create",
         PromptCreateView.as_view(),
         name="prompt_create",
+    ),
+    path(
+        "dataset/<int:dataset_pk>/prompt/list",
+        PromptListView.as_view(),
+        name="prompt_list",
     ),
     path(
         "dataset/<int:dataset_pk>/details/",
