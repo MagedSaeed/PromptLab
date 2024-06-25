@@ -136,6 +136,10 @@ class ApplyTemplateView(View):
         template_content = request.POST.get("template", "")
         template_content = template_content.replace("<br>", "\n")
         template = Template(template_content)
+        answer_choices = request.POST.get("answer_choices", [])
+        if answer_choices:
+            answer_choices = answer_choices.split("||")
+        sample["answer_choices"] = answer_choices
         rendered_sample = template.render(**sample)
         return render(
             request,

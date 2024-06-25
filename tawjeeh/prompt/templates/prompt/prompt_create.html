@@ -246,6 +246,7 @@
                 promptText = $('#tagifyTextarea').val();
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 text_direction = document.getElementById('directionSwitcher').value;
+                answer_choices = $('#id_answer_choices').val();
                 $('#apply-spinner').addClass('visible');
                 let split = $('#splitDropdown').text().trim();
                 let subset = $('#subsetDropdown').text().trim();
@@ -256,7 +257,8 @@
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
                     values: {
-                        'template': promptTemplate
+                        'template': promptTemplate,
+                        'answer_choices': answer_choices,
                     }
                 }).then(function() {
                     $('#apply-spinner').removeClass('visible');
