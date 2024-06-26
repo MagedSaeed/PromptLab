@@ -147,7 +147,7 @@
                     <button class="sidebar-toggle" id="toggleSidebar">☰</button>
                 </div>
                 <hr>
-                <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#sidebar-spinner">
+                <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}?subset={{ object.dataset_subset }}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#sidebar-spinner">
                     <div id="sidebar-spinner">
                         <div class="d-flex flex-column align-items-center">
                             <div class="spinner-border text-secondary" role="status">
@@ -199,7 +199,7 @@
 
                 <div class="card my-4">
                     <div class="card-body">
-                        <form id="promptForm" method="post" action="{% url 'prompt:prompt_create' dataset.pk %}">
+                        <form id="promptForm" method="post">
                             {% csrf_token %}
                             <div class="row justify-content-center">
                                 <div class="mb-3 col-12 full-width" id="templateFieldContainer">
@@ -277,16 +277,20 @@
                 if ($(event.target).is('#promptForm')) {
                     $('#apply-spinner').removeClass('visible');
                 }
-                if ($(event.target).is('[hx-get=\"{% url 'prompt:dataset_details' dataset.pk %}\"]')) {
-                    $('#sidebar-spinner').hide();
+                if ($(event.target).attr('hx-get')){
+                    if ($(event.target).attr('hx-get').includes("{% url 'prompt:dataset_details' dataset.pk %}")) {
+                        $('#sidebar-spinner').hide();
+                    }
                 }
             });
 
             // Handle htmx request error
             $(document).on('htmx:responseError', function(event) {
-                if ($(event.target).is('[hx-get="{% url 'prompt:dataset_details' dataset.pk %}"]')) {
-                    $('#sidebar-spinner').hide();
-                    $('#dataset-details').html('<div class="alert alert-danger" role="alert">Failed to load dataset details. Please try again later.</div>');
+                if ($(event.target).attr('hx-get')){
+                    if ($(event.target).attr('hx-get').includes("{% url 'prompt:dataset_details' dataset.pk %}")) {
+                        $('#sidebar-spinner').hide();
+                        $('#dataset-details').html('<div class="alert alert-danger" role="alert">Failed to load dataset details. Please try again later.</div>');
+                    }
                 }
             });
 

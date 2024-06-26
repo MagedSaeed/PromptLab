@@ -214,6 +214,9 @@
                 $(document).ajaxStop(function () {
                     $('#split-item-spinner-' + split).hide();
                 });
+
+                // Enable interaction with the split button and dropdown menu item
+                $('.split-item').css('pointer-events', 'auto');
             });
 
             $('.subset-item').on('click', function(event) {

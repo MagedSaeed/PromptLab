@@ -2,11 +2,11 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView, View
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django_filters.views import FilterView
 from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
-from prompt.forms import PromptCreateForm
+from prompt.forms import PromptCreateUpdateForm
 from prompt.models import Dataset, Prompt, Task
 
 
@@ -88,9 +88,8 @@ class DatasetListView(FilterView, ListView):
 
 class PromptCreateView(CreateView):
     model = Prompt
-    form_class = PromptCreateForm
-    template_name = "prompt/prompt_create.html"
-    success_url = reverse_lazy("prompt:dataset_list")
+    form_class = PromptCreateUpdateForm
+    template_name = "prompt/prompt_create_update.html"
 
     def get_success_url(self):
         return reverse_lazy(
@@ -101,26 +100,73 @@ class PromptCreateView(CreateView):
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.subset = request.GET.get("subset")
-        self.split = request.GET.get("split", "train")
+        self.split = request.GET.get("split")
         return super().setup(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
-        first_sample = self.dataset.load_samples(split=self.split, subset=self.subset)[
-            0
-        ]
+        first_sample = self.dataset.load_samples(
+            split=self.split,
+            subset=self.subset,
+        )[0]
         context["dataset_columns"] = list(first_sample.keys())
         return context
 
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs(**kwargs)
         kwargs["dataset"] = self.dataset
-        kwargs["user"] = self.request.user
         return kwargs
 
     def form_valid(self, form):
+        instance = form.save(commit=False)
+        instance.created_by = self.request.user
+        instance.save()
         messages.success(self.request, "prompt saved successfully.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, form.errors, extra_tags="danger")
+        return super().form_invalid(form)
+
+
+class PromptUpdateView(UpdateView):
+    model = Prompt
+    form_class = PromptCreateUpdateForm
+    template_name = "prompt/prompt_create_update.html"
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.object.dataset.pk},
+        )
+
+    def setup(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        self.subset = request.GET.get("subset")
+        self.split = request.GET.get("split")
+        return super().setup(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["dataset"] = self.dataset
+        kwargs["instance"] = self.object
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dataset"] = self.dataset
+        first_sample = self.dataset.load_samples(
+            split=self.split,
+            subset=self.subset,
+        )[0]
+        context["dataset_columns"] = list(first_sample.keys())
+        if self.object.dataset_subset:
+            context["subset"] = self.object.dataset_subset
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, "prompt updated successfully.")
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -163,41 +209,6 @@ class PromptListView(ListView):
         return context
 
 
-class ApplyTemplateView(View):
-    def post(self, request, *args, **kwargs):
-        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
-        split = request.GET.get("split")
-        subset = request.GET.get("subset")
-        text_direction = request.GET.get("text_direction", "ltr")
-        sample_index = int(request.POST.get("sample_index", 0))
-        sample = self.dataset.load_samples(
-            split=split,
-            subset=subset,
-        )[sample_index]
-        template_content = request.POST.get("template", "")
-        template_content = template_content.replace("<br>", "\n")
-        template = Template(template_content)
-        answer_choices = request.POST.get("answer_choices", [])
-        if answer_choices:
-            answer_choices = answer_choices.split("||")
-        sample["answer_choices"] = answer_choices
-        rendered_sample = template.render(**sample)
-        return render(
-            request,
-            "prompt/partials/template_merge.html",
-            {
-                "dataset": self.dataset,
-                "sample_index": sample_index,
-                "rendered_template": rendered_sample,
-                "template_content": template_content,
-                "max_samples": min(10_000, len(self.dataset.load_samples())),
-                "subset": subset,
-                "split": split,
-                "text_direction": text_direction,
-            },
-        )
-
-
 class DatasetDetailsView(View):
     def get(self, request, dataset_pk, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=dataset_pk)
@@ -235,5 +246,40 @@ class DatasetDetailsView(View):
                 "subset": subset,
                 "dataset": dataset,
                 "dataset_info": details,
+            },
+        )
+
+
+class ApplyTemplateView(View):
+    def post(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        split = request.GET.get("split")
+        subset = request.GET.get("subset")
+        text_direction = request.GET.get("text_direction", "ltr")
+        sample_index = int(request.POST.get("sample_index", 0))
+        sample = self.dataset.load_samples(
+            split=split,
+            subset=subset,
+        )[sample_index]
+        template_content = request.POST.get("template", "")
+        template_content = template_content.replace("<br>", "\n")
+        template = Template(template_content)
+        answer_choices = request.POST.get("answer_choices", [])
+        if answer_choices:
+            answer_choices = answer_choices.split("||")
+        sample["answer_choices"] = answer_choices
+        rendered_sample = template.render(**sample)
+        return render(
+            request,
+            "prompt/partials/template_merge.html",
+            {
+                "dataset": self.dataset,
+                "sample_index": sample_index,
+                "rendered_template": rendered_sample,
+                "template_content": template_content,
+                "max_samples": min(10_000, len(self.dataset.load_samples())),
+                "subset": subset,
+                "split": split,
+                "text_direction": text_direction,
             },
         )

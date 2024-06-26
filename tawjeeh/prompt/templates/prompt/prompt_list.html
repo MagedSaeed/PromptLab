@@ -7,7 +7,7 @@
 
         <div class="text-center my-4">
             <p class="h6 my-4">
-                <a href="{% url 'prompt:task_list' %}" class="h5 my-4">
+                <a href="{% url 'prompt:task_list' %}" class="h6 my-4">
                     Go back to tasks
                 </a>
             </p>
@@ -18,6 +18,7 @@
                 <tr>
                     <th scope="col" style="width: 10%;">#</th>
                     <th scope="col" style="width: 25%;">Name</th>
+                    <th scope="col" style="width: 25%;">Dataset Subset</th>
                     <th scope="col" style="width: 15%;">Created By</th>
                     <th scope="col" style="width: 30%;">Created On</th>
                     <th scope="col" style="width: 15%;"></th>
@@ -28,10 +29,11 @@
                     <tr>
                         <th>{{ forloop.counter }}</th>
                         <td>
-                            <a href="#">
+                            <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
                                 <span class="prmopt-name">{{ prompt.name }}</span>
                             </a>
                         </td>
+                        <td> {{ prompt.dataset_subset }} </td>
                         <td>{{ prompt.created_by }}</td>
                         <td>{{ prompt.created_on }}</td>
                         <td class="text-center">
