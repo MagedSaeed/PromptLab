@@ -1,9 +1,8 @@
 from django.contrib import messages
-from django.db.models.query import QuerySet
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, View
+from django.views.generic import CreateView, DeleteView, ListView, View
 from django_filters.views import FilterView
 from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
@@ -93,6 +92,12 @@ class PromptCreateView(CreateView):
     template_name = "prompt/prompt_create.html"
     success_url = reverse_lazy("prompt:dataset_list")
 
+    def get_success_url(self):
+        return reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.object.dataset.pk},
+        )
+
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.subset = request.GET.get("subset")
@@ -121,6 +126,20 @@ class PromptCreateView(CreateView):
     def form_invalid(self, form):
         messages.error(self.request, form.errors, extra_tags="danger")
         return super().form_invalid(form)
+
+
+class PromptDeleteView(DeleteView):
+    model = Prompt
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.object.dataset.pk},
+        )
+
+    def get(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        return self.delete(request, *args, **kwargs)
 
 
 class PromptListView(ListView):
