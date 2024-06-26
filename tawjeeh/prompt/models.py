@@ -2,7 +2,10 @@ from functools import cached_property
 
 import datasets
 from core.utils import redis_cache
+from django.contrib.auth import get_user_model
 from django.db import models
+
+User = get_user_model()
 
 
 class Task(models.Model):
@@ -124,6 +127,14 @@ class Prompt(models.Model):
         on_delete=models.SET_NULL,
     )
     dataset_subset = models.CharField(max_length=10_000, null=True, blank=True)
+    created_by = models.ForeignKey(
+        to=User,
+        null=True,
+        related_name="prompts",
+        on_delete=models.SET_NULL,
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    last_updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"
