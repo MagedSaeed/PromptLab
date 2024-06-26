@@ -16,6 +16,7 @@ class PromptCreateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.dataset = kwargs.pop("dataset")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
             {
@@ -42,4 +43,6 @@ class PromptCreateForm(forms.ModelForm):
                 self.dataset.huggingface_name,
                 trust_remote_code=True,
             )
+
+        self.instance.created_by = self.user
         return super().save(commit=commit)
