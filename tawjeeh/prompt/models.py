@@ -86,13 +86,18 @@ class Dataset(models.Model):
             return {"error": str(e)}
 
     @redis_cache()
-    def load_samples(self, split="train", subset=None, max_samples=10_000):
+    def load_samples(self, split=None, subset=None, max_samples=10_000):
         try:
             args = [self.huggingface_name]
             if len(self.subsets_with_splits) > 1:
                 if not subset:
                     subset = list(self.subsets_with_splits.keys())[0]
-                args.append(subset)
+            args.append(subset)
+            if not split:
+                if subset:
+                    split = list(self.subsets_with_splits[subset])[0]
+                else:
+                    split = list(self.subsets_with_splits.values())[0][0]
             kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
             dataset = datasets.load_dataset(*args, **kwargs)
             return dataset
