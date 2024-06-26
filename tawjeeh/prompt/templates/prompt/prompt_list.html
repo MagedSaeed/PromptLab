@@ -1,39 +1,54 @@
 {% extends "base/base.html" %}
 {% block main_content %}
-<div id="prompts-list" class="container">
-    <h4> Prompts created for dataset: <a href="{{dataset.huggingface_link}}" target="_blank">{{dataset}}</a> </h4>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col" style="width: 10%;">#</th>
-                <th scope="col" style="width: 25%;">Name</th>
-                <th scope="col" style="width: 15%;">Created By</th>
-                <th scope="col" style="width: 30%;">Created On</th>
-                <th scope="col" style="width: 15%;"></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for prompt in prompts %}
-            <tr>
-                <th>{{ forloop.counter }}</th>
-                <td>
-                    <a href="#">
-                        <span class="prmopt-name">{{ prompt.name }}</span>
-                    </a>
-                </td>
-                <td>{{ prompt.created_by }}</td>
-                <td>{{ prompt.created_on }}</td>
-                <td class="text-center">edit | delete</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <!-- Utilize Bootstrap grid system to align the button to the right -->
-    <div class="row">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">Create New Prompt</a>
+
+    <div id="prompts-list" class="container">
+        <h4 class="my-4"> Prompts created for dataset: <a href="{{dataset.huggingface_link}}" target="_blank">{{dataset}}</a> </h4>
+
+
+        <div class="text-center my-4">
+            <p class="h6 my-4">
+                <a href="{% url 'prompt:task_list' %}" class="h5 my-4">
+                    Go back to tasks
+                </a>
+            </p>
         </div>
+
+        <table class="my-4 table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col" style="width: 10%;">#</th>
+                    <th scope="col" style="width: 25%;">Name</th>
+                    <th scope="col" style="width: 15%;">Created By</th>
+                    <th scope="col" style="width: 30%;">Created On</th>
+                    <th scope="col" style="width: 15%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prompt in prompts %}
+                    <tr>
+                        <th>{{ forloop.counter }}</th>
+                        <td>
+                            <a href="#">
+                                <span class="prmopt-name">{{ prompt.name }}</span>
+                            </a>
+                        </td>
+                        <td>{{ prompt.created_by }}</td>
+                        <td>{{ prompt.created_on }}</td>
+                        <td class="text-center">
+                            <a class="text-danger" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
+                                delete
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    <!-- Utilize Bootstrap grid system to align the button to the right -->
+        <div class="row">
+            <div class="col text-end">
+                <a class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">Create New Prompt</a>
+            </div>
+        </div>
+        {% include 'base/pagination.html' with target_id="prompts-list" %}
     </div>
-    {% include 'base/pagination.html' with target_id="prompts-list" %}
-</div>
 {% endblock %}
