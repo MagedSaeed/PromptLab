@@ -41,8 +41,6 @@ done
 # collect static
 python3 manage.py collectstatic --noinput
 
-# get datasets from huggingface
-python3 manage.py sync_with_hf
 
 DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
 
