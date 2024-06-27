@@ -10,7 +10,7 @@ RUN set -xe \
 WORKDIR /app
 
 # Upgrade pip and setuptools with --break-system-packages flag
-RUN pip install --upgrade pip setuptools --break-system-packages
+RUN pip install --upgrade setuptools --break-system-packages
 RUN pip install gunicorn psycopg2-binary --break-system-packages
 
 # for redis cache
