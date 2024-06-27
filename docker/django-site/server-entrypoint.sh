@@ -32,7 +32,7 @@ do
 done
 
 # sync datastes with huggingface
-until python3 manage.py synch_with_hf --datasets-urls datasets.urls
+until python3 manage.py sync_with_hf --datasets-urls datasets.urls
 do
     echo "Waiting for superusers to be created..."
     sleep 2
@@ -41,8 +41,6 @@ done
 # collect static
 python3 manage.py collectstatic --noinput
 
-# get datasets from huggingface
-python3 manage.py sync_with_hf
 
 DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
 
