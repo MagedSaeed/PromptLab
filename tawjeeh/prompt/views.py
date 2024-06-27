@@ -106,11 +106,7 @@ class PromptCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
-        first_sample = self.dataset.load_samples(
-            split=self.split,
-            subset=self.subset,
-        )[0]
-        context["dataset_columns"] = list(first_sample.keys())
+        context["dataset_columns"] = self.dataset.get_columns_names()
         return context
 
     def get_form_kwargs(self, **kwargs):
@@ -156,11 +152,7 @@ class PromptUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
-        first_sample = self.dataset.load_samples(
-            split=self.split,
-            subset=self.subset,
-        )[0]
-        context["dataset_columns"] = list(first_sample.keys())
+        context["dataset_columns"] = self.dataset.get_columns_names()
         if self.object.dataset_subset:
             context["subset"] = self.object.dataset_subset
         return context

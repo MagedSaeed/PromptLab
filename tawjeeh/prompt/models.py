@@ -30,6 +30,23 @@ class Dataset(models.Model):
     def hf_object(self):
         return datasets.load_dataset(self.dataset.huggingface_name)
 
+    @redis_cache()
+    def get_columns_names(self):
+        try:
+            # Retrieve dataset information
+            dataset_info = datasets.get_dataset_infos(self.huggingface_name)
+
+            # Assuming the default configuration
+            default_config_name = list(dataset_info.keys())[0]
+            features = dataset_info[default_config_name].features
+
+            # Extract and return column names
+            columns = list(features.keys())
+            return columns
+        except Exception as e:
+            print(f"Error retrieving dataset columns: {e}")
+            raise e
+
     @property
     @redis_cache()
     def subsets_with_splits(self):
