@@ -24,6 +24,20 @@ do
     sleep 2
 done
 
+# setup django allauth
+until python3 manage.py setup_allauth
+do
+    echo "Waiting for superusers to be created..."
+    sleep 2
+done
+
+# sync datastes with huggingface
+until python3 manage.py synch_with_hf --datasets-urls datasets.urls
+do
+    echo "Waiting for superusers to be created..."
+    sleep 2
+done
+
 # collect static
 python3 manage.py collectstatic --noinput
 
