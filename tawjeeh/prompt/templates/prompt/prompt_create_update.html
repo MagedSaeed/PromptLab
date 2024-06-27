@@ -221,7 +221,10 @@
                                     Apply
                                     <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                 </button>
-                                <button type="submit" class="btn btn-primary my-4">Submit</button>
+                                <button type="submit" id="submit-btn" class="btn btn-primary my-4">
+                                    <span id="submit-btn-text">Submit</span>
+                                    <span id="submit-spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -231,6 +234,11 @@
     </div>
 
     <script>
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
         $(document).ready(function() {
             $('#toggleSidebar').on('click', function() {
                 $('#sidebar').toggleClass('closed');
@@ -315,6 +323,17 @@
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 $('#id_template').val(promptTemplate)
                 $("#id_text_direction").val(text_direction);
+                var submitButton = document.getElementById('submit-btn');
+                var submitSpinner = document.getElementById('submit-spinner');
+
+                // Show spinner and disable button
+                submitSpinner.style.display = 'inline-block';
+                submitButton.classList.add('disabled');
+                submitButton.style.pointerEvents = 'none';
+
+                applyButton = document.getElementById('applyButton');
+                applyButton.classList.add('disabled');
+                applyButton.style.pointerEvents = 'none';
                 return true;
             });
 

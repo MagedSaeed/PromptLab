@@ -37,7 +37,7 @@
                         <td>{{ prompt.created_by }}</td>
                         <td>{{ prompt.created_on }}</td>
                         <td class="text-center">
-                            <a class="text-danger" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
+                            <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
                                 delete
                             </a>
                         </td>
@@ -48,9 +48,32 @@
     <!-- Utilize Bootstrap grid system to align the button to the right -->
         <div class="row">
             <div class="col text-end">
-                <a class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">Create New Prompt</a>
+                <a id="create-prompt-btn" class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">
+                    <span id="btn-text">Create New Prompt</span>
+                    <span id="spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                </a>
             </div>
         </div>
+        <script>
+            window.onpageshow = function(event) {
+                if (event.persisted) {
+                    window.location.reload();
+                }
+            };
+            document.getElementById('create-prompt-btn').addEventListener('click', function(event) {
+                event.preventDefault();  // Prevent the default action
+                var button = this;
+                var spinner = document.getElementById('spinner');
+
+                // Show spinner and disable button
+                spinner.style.display = 'inline-block';
+                button.classList.add('disabled');
+                button.style.pointerEvents = 'none';
+
+                // Redirect to the href of the button after showing the spinner
+                window.location.href = button.href;
+            });
+        </script>
         {% include 'base/pagination.html' with target_id="prompts-list" %}
     </div>
 {% endblock %}
