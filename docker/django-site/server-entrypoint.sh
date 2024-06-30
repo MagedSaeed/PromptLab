@@ -27,14 +27,14 @@ done
 # setup django allauth
 until python3 manage.py setup_allauth
 do
-    echo "Waiting for superusers to be created..."
+    echo "Waiting for setup allauth to finish..."
     sleep 2
 done
 
 # sync datastes with huggingface
 until python3 manage.py sync_with_hf --datasets-urls datasets.urls
 do
-    echo "Waiting for superusers to be created..."
+    echo "Waiting for huggingface sync to finish..."
     sleep 2
 done
 
