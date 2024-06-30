@@ -1,3 +1,4 @@
+import concurrent.futures
 from functools import cached_property
 
 import datasets
@@ -33,12 +34,12 @@ class Dataset(models.Model):
     @redis_cache()
     def get_columns_names(self):
         try:
-            # Retrieve dataset information
-            dataset_info = datasets.get_dataset_infos(self.huggingface_name)
-
             # Assuming the default configuration
-            default_config_name = list(dataset_info.keys())[0]
-            features = dataset_info[default_config_name].features
+            default_config_name = list(self.subsets_with_splits.keys())[0]
+            features = datasets.get_dataset_config_info(
+                self.huggingface_name,
+                config_name=default_config_name,
+            ).features
 
             # Extract and return column names
             columns = list(features.keys())
@@ -55,15 +56,33 @@ class Dataset(models.Model):
             self.huggingface_name,
             trust_remote_code=True,
         )
-        # Iterate through available configs and get their splits
-        for config_name in config_names:
+
+        # Function to fetch splits for a given config name
+        def fetch_splits(config_name):
             config_info = datasets.get_dataset_config_info(
                 self.huggingface_name,
                 config_name,
                 trust_remote_code=True,
             )
             splits = list(config_info.splits.keys())
-            configs_and_splits[config_name] = splits
+            return config_name, splits
+
+        # Process configs in parallel if there are more than 10
+        if len(config_names) > 10:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future_to_config = {
+                    executor.submit(fetch_splits, config_name): config_name
+                    for config_name in config_names
+                }
+                for future in concurrent.futures.as_completed(future_to_config):
+                    config_name, splits = future.result()
+                    configs_and_splits[config_name] = splits
+        else:
+            # Process configs sequentially if there are 10 or fewer
+            for config_name in config_names:
+                config_name, splits = fetch_splits(config_name)
+                configs_and_splits[config_name] = splits
+
         return configs_and_splits
 
     @redis_cache()
