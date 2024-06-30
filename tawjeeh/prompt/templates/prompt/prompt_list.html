@@ -53,6 +53,7 @@
                     <span id="spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
                 </a>
             </div>
+            <span class="text-muted text-end my-2" id="loadingHelper" style="display:none;">Some datasets may take a while to load...</span>
         </div>
         <script>
             window.onpageshow = function(event) {
@@ -69,6 +70,9 @@
                 spinner.style.display = 'inline-block';
                 button.classList.add('disabled');
                 button.style.pointerEvents = 'none';
+
+                var textHelper = document.getElementById('loadingHelper');
+                textHelper.style.display = 'inline-block';
 
                 // Redirect to the href of the button after showing the spinner
                 window.location.href = button.href;
