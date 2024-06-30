@@ -127,8 +127,8 @@
                             <p>Browse Samples: </p>
                             <div class="d-flex justify-content-between">
                                 <span>0</span>
-                                <input type="range" min="0" max="${lenSamples}" value="0" class="form-range" id="sampleRange">
-                                <span>${lenSamples}</span>
+                                <input type="range" min="0" max="${lenSamples-1}" value="0" class="form-range" id="sampleRange">
+                                <span>${lenSamples-1}</span>
                             </div>
                             <p>Selected Sample Index: <span id="selectedSampleIndex">0</span></p>
                             <div id="sample-content" style="margin-top: 20px;"><pre>${syntaxHighlight(firstSample)}</pre></div>
@@ -159,7 +159,7 @@
 
                             // Fetch and display the sample details
                             $.ajax({
-                                url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${currentSplit}&sample_index=${sampleIndex}`,
+                                url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${currentSplit}&sample_index=${sampleIndex}&subset=${subset}`,
                                 method: 'GET',
                                 success: function(response) {
                                     $('#sample-content').html('<pre>' + syntaxHighlight(response.sample) + '</pre>');
