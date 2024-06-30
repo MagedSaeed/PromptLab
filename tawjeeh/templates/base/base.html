@@ -35,6 +35,18 @@
                     </div>
                 {% endif %}
             </div>
+            {% if form.errors %}
+                <div class="messages-overlay">
+                    <div class="messages-container">
+                        <div class="alert alert-danger alert-dismissible fade show message" role="alert">
+                            {% for field, error in form.errors.items %}
+                                <p> {% if not field|first in '_' %} {{field}}: {% endif %} {{ error }}</p>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75em; width: 1em; height: 1em"></button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
             <style>
                 .messages-overlay {
                     position: fixed;
