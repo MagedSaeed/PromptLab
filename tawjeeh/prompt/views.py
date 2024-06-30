@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
@@ -10,7 +11,7 @@ from prompt.forms import PromptCreateUpdateForm
 from prompt.models import Dataset, Prompt, Task
 
 
-class TaskListView(FilterView, ListView):
+class TaskListView(LoginRequiredMixin, FilterView, ListView):
     model = Task
     paginate_by = 10
     ordering = "name"
@@ -45,7 +46,7 @@ class TaskListView(FilterView, ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
-class DatasetListView(FilterView, ListView):
+class DatasetListView(LoginRequiredMixin, FilterView, ListView):
     model = Dataset
     paginate_by = 10
     ordering = "name"
@@ -86,7 +87,7 @@ class DatasetListView(FilterView, ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
-class PromptCreateView(CreateView):
+class PromptCreateView(LoginRequiredMixin, CreateView):
     model = Prompt
     form_class = PromptCreateUpdateForm
     template_name = "prompt/prompt_create_update.html"
@@ -126,7 +127,7 @@ class PromptCreateView(CreateView):
         return super().form_invalid(form)
 
 
-class PromptUpdateView(UpdateView):
+class PromptUpdateView(LoginRequiredMixin, UpdateView):
     model = Prompt
     form_class = PromptCreateUpdateForm
     template_name = "prompt/prompt_create_update.html"
@@ -166,7 +167,7 @@ class PromptUpdateView(UpdateView):
         return super().form_invalid(form)
 
 
-class PromptDeleteView(DeleteView):
+class PromptDeleteView(LoginRequiredMixin, DeleteView):
     model = Prompt
 
     def get_success_url(self):
@@ -201,7 +202,7 @@ class PromptListView(ListView):
         return context
 
 
-class DatasetDetailsView(View):
+class DatasetDetailsView(LoginRequiredMixin, View):
     def get(self, request, dataset_pk, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=dataset_pk)
         split = request.GET.get("split")
@@ -242,7 +243,7 @@ class DatasetDetailsView(View):
         )
 
 
-class ApplyTemplateView(View):
+class ApplyTemplateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         split = request.GET.get("split")
