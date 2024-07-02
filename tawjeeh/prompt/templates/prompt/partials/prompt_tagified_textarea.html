@@ -21,7 +21,7 @@
     <br>
     <label for="tagifyTextarea" class="form-label">Prompt Template</label>
     <div dir="{{ form.text_direction.value }}">
-        <textarea id="tagifyTextarea" class="form-control" placeholder="Enter your prompt here...">
+        <textarea id="tagifyTextarea" class="form-control" placeholder="Enter your prompt here..." rows="10">
             {% if form.template.value %}
                 {{ form.template.value }}
             {% endif %}
@@ -33,70 +33,77 @@
     document.addEventListener('DOMContentLoaded', function () {
         var input = document.getElementById('tagifyTextarea');
         var directionSwitcher = document.getElementById('directionSwitcher');
-        var whitelist = [{% for column in dataset_columns %} '{{column}}', {% endfor %}];
-        var promptTempateTagified;
+        {% if prompt.status != 'DRAFT' %}
+            currentText = input.value;
+            currentText = currentText.trim()
+            input.value = currentText
+            input.disabled = true;
+            directionSwitcher.disabled = true;
+        {% else %}
+            var whitelist = [{% for column in dataset_columns %} '{{column}}', {% endfor %}];
+            var promptTempateTagified;
+            function initializeTagify() {
+                promptTempateTagified = new Tagify(input, {
+                    enforceWhitelist: true,
+                    delimiters: "//",
+                    whitelist: whitelist,
+                    mode: "mix",
+                    pattern: /\\\\/,
+                    dropdown: {
+                        enabled: 0,                     // show the dropdown immediately on focus
+                        classname: "tags-look",         // custom class for the dropdown
+                        closeOnSelect: true,            // close the dropdown after selecting a suggestion
+                        highlightFirst: true,           // automatically highlights the first suggestion item
+                        includeSelectedTags: true,      // include selected tags in the dropdown
+                        position: 'text',               // dropdown position
+                        maxHeight: '150px'              // max height of the dropdown
+                    }
+                });
 
-        function initializeTagify() {
-            promptTempateTagified = new Tagify(input, {
-                enforceWhitelist: true,
-                delimiters: "//",
-                whitelist: whitelist,
-                mode: "mix",
-                pattern: /\\\\/,
-                dropdown: {
-                    enabled: 0,                     // show the dropdown immediately on focus
-                    classname: "tags-look",         // custom class for the dropdown
-                    closeOnSelect: true,            // close the dropdown after selecting a suggestion
-                    highlightFirst: true,           // automatically highlights the first suggestion item
-                    includeSelectedTags: true,      // include selected tags in the dropdown
-                    position: 'text',               // dropdown position
-                    maxHeight: '150px'              // max height of the dropdown
+                promptTempateTagified.on('add', onTagChange);
+                promptTempateTagified.on('remove', onTagChange);
+
+                promptTempateTagified.on('dropdown:show', function () {
+                    promptTempateTagified.dropdown.filterListItems = function () {
+                        promptTempateTagified.whitelist = [...whitelist];
+                        return whitelist;
+                    };
+                });
+
+                promptTempateTagified.on('dropdown:select', function () {
+                    setTimeout(updateWhitelist, 0); // Ensuring the whitelist updates after the tag is added
+                });
+
+                updateWhitelist();
+            }
+
+            function onTagChange() {
+                updateWhitelist();
+            }
+
+            function updateWhitelist() {
+                promptTempateTagified.whitelist = [...whitelist];
+            }
+
+            directionSwitcher.addEventListener('change', function () {
+                var direction = directionSwitcher.value;
+                $('#tagifyTextarea').parent().attr('dir', direction);
+
+                if (promptTempateTagified) {
+                    promptTempateTagified.destroy();
                 }
+
+                if (direction === 'rtl') {
+                    input.placeholder = 'أدخل التعليمات هنا...';
+                } else {
+                    input.placeholder = 'Enter your prompt here...';
+                }
+
+                initializeTagify();
             });
 
-            promptTempateTagified.on('add', onTagChange);
-            promptTempateTagified.on('remove', onTagChange);
-
-            promptTempateTagified.on('dropdown:show', function () {
-                promptTempateTagified.dropdown.filterListItems = function () {
-                    promptTempateTagified.whitelist = [...whitelist];
-                    return whitelist;
-                };
-            });
-
-            promptTempateTagified.on('dropdown:select', function () {
-                setTimeout(updateWhitelist, 0); // Ensuring the whitelist updates after the tag is added
-            });
-
-            updateWhitelist();
-        }
-
-        function onTagChange() {
-            updateWhitelist();
-        }
-
-        function updateWhitelist() {
-            promptTempateTagified.whitelist = [...whitelist];
-        }
-
-        directionSwitcher.addEventListener('change', function () {
-            var direction = directionSwitcher.value;
-            $('#tagifyTextarea').parent().attr('dir', direction);
-
-            if (promptTempateTagified) {
-                promptTempateTagified.destroy();
-            }
-
-            if (direction === 'rtl') {
-                input.placeholder = 'أدخل التعليمات هنا...';
-            } else {
-                input.placeholder = 'Enter your prompt here...';
-            }
-
-            initializeTagify();
-        });
-
-        // Set initial direction and placeholder
-        directionSwitcher.dispatchEvent(new Event('change'));
+            // Set initial direction and placeholder
+            directionSwitcher.dispatchEvent(new Event('change'));
+        {% endif %}
     });
 </script>
