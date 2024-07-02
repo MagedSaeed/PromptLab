@@ -153,6 +153,15 @@ class Prompt(models.Model):
         LTR = "ltr", "Left-to-Right"
         RTL = "rtl", "Right-to-Left"
 
+    class PromptStatus(models.TextChoices):
+        DRAFT = "DRAFT", "Draft"
+        SUBMITTED = "SUBMITTED", "Submitted"
+        RETURNED_FOR_MODIFICATION = (
+            "RETURNED_FOR_MODIFICATION",
+            "Returned for modification",
+        )
+        APPROVED = "APPROVED", "Approved"
+
     name = models.CharField(max_length=1_000)
     answer_choices = models.CharField(max_length=100_000, null=True, blank=True)
     template = models.TextField()
@@ -165,17 +174,22 @@ class Prompt(models.Model):
         Dataset,
         null=True,
         related_name="prompts",
-        on_delete=models.SET_NULL,
+        on_delete=models.SET_NULL,  # TODO: change to protect
     )
     dataset_subset = models.CharField(max_length=10_000, null=True, blank=True)
     created_by = models.ForeignKey(
         to=User,
         null=True,
         related_name="prompts",
-        on_delete=models.SET_NULL,
+        on_delete=models.SET_NULL,  # TODO: change to protect
     )
     created_on = models.DateTimeField(auto_now_add=True)
     last_updated_on = models.DateTimeField(auto_now=True)
+    status = models.CharField(
+        max_length=1_000,
+        default=PromptStatus.DRAFT,
+        choices=PromptStatus.choices,
+    )
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"

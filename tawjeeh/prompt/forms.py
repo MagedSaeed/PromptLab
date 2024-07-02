@@ -35,6 +35,11 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["dataset_subset"].error_messages = {
                 "required": "Please select a dataset from the left sidebar first.",
             }
+        if self.instance.status != Prompt.PromptStatus.DRAFT:
+            self.fields["name"].disabled = True
+            self.fields["template"].disabled = True
+            self.fields["text_direction"].disabled = True
+            self.fields["answer_choices"].disabled = True
 
     def save(self, commit=True):
         if not len(self.instance.dataset.subsets_with_splits) > 1:

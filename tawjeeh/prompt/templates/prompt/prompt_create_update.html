@@ -199,7 +199,7 @@
 
                 <div class="card my-4">
                     <div class="card-body">
-                        <form id="promptForm" method="post">
+                        <form id="promptForm" method="POST">
                             {% csrf_token %}
                             <div class="row justify-content-center">
                                 <div class="mb-3 col-12 full-width" id="templateFieldContainer">
@@ -217,14 +217,20 @@
                             </div>
                             <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
                             <div class="text-end">
-                                <button type="button" class="btn btn-secondary my-4" id="applyButton">
-                                    Apply
+                                <button type="button" class="btn btn-outline-primary my-4" id="applyButton">
+                                    Apply Template
                                     <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                 </button>
-                                <button type="submit" id="submit-btn" class="btn btn-primary my-4">
-                                    <span id="submit-btn-text">Submit</span>
-                                    <span id="submit-spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
-                                </button>
+                                {% if prompt.status == 'DRAFT' %}
+                                    <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary my-4">
+                                        <span>Save</span>
+                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                    </button>
+                                    <button type="submit" name="submit" value="submit_for_review" class="btn btn-success my-4">
+                                        <span >Submit for review</span>
+                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                    </button>
+                                {% endif %}
                             </div>
                         </form>
                     </div>
@@ -323,17 +329,22 @@
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 $('#id_template').val(promptTemplate)
                 $("#id_text_direction").val(text_direction);
-                var submitButton = document.getElementById('submit-btn');
-                var submitSpinner = document.getElementById('submit-spinner');
-
+                // get closest spinner to $(this)
+                var submitButton = $(event.originalEvent.submitter);
+                var submitSpinner = $(event.originalEvent.submitter).children('.spinner')[0];
                 // Show spinner and disable button
                 submitSpinner.style.display = 'inline-block';
-                submitButton.classList.add('disabled');
-                submitButton.style.pointerEvents = 'none';
+                // add class disabled to submitButton
+                submitButton.addClass('disabled');
+                submitButton.css('pointer-events', 'none');
 
-                applyButton = document.getElementById('applyButton');
-                applyButton.classList.add('disabled');
-                applyButton.style.pointerEvents = 'none';
+                // for button in form.text-end div, make them disabled with pointer-events none
+                submitButtons = $(this).find('.text-end button');
+                for (var i = 0; i < submitButtons.length; i++) {
+                    submitButtons[i].classList.add('disabled');
+                    submitButtons[i].style.pointerEvents = 'none';
+                }
+
                 return true;
             });
 

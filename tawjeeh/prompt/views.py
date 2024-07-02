@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django_filters.views import FilterView
@@ -118,6 +118,8 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         instance = form.save(commit=False)
         instance.created_by = self.request.user
+        if self.request.POST.get("submit") == "submit_for_review":
+            instance.status = Prompt.PromptStatus.SUBMITTED
         instance.save()
         messages.success(self.request, "prompt saved successfully.")
         return super().form_valid(form)
@@ -131,11 +133,12 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
     model = Prompt
     form_class = PromptCreateUpdateForm
     template_name = "prompt/prompt_create_update.html"
+    context_object_name = "prompt"
 
     def get_success_url(self):
         return reverse_lazy(
             "prompt:prompt_list",
-            kwargs={"dataset_pk": self.object.dataset.pk},
+            kwargs={"dataset_pk": self.dataset.pk},
         )
 
     def setup(self, request, *args, **kwargs):
@@ -143,6 +146,17 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         self.subset = request.GET.get("subset")
         self.split = request.GET.get("split")
         return super().setup(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status != Prompt.PromptStatus.DRAFT:
+            messages.error(
+                self.request,
+                "prompt cannot be updated while being reviewed.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
+        return super().post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -159,7 +173,13 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, "prompt updated successfully.")
+        instance = form.save(commit=False)
+        success_message = "prompt updated successfully."
+        if self.request.POST.get("submit") == "submit_for_review":
+            instance.status = Prompt.PromptStatus.SUBMITTED
+            success_message = "prompt submitted for review successfully."
+        instance.save()
+        messages.success(self.request, success_message)
         return super().form_valid(form)
 
     def form_invalid(self, form):

@@ -13,15 +13,16 @@
             </p>
         </div>
 
-        <table class="my-4 table table-striped">
+        <table class="my-4 table table-striped text-center">
             <thead>
                 <tr>
                     <th scope="col" style="width: 10%;">#</th>
-                    <th scope="col" style="width: 25%;">Name</th>
-                    <th scope="col" style="width: 25%;">Dataset Subset</th>
+                    <th scope="col" style="width: 15%;">Name</th>
+                    <th scope="col" style="width: 15%;">Dataset Subset</th>
                     <th scope="col" style="width: 15%;">Created By</th>
-                    <th scope="col" style="width: 30%;">Created On</th>
-                    <th scope="col" style="width: 15%;"></th>
+                    <th scope="col" style="width: 20%;">Created On</th>
+                    <th scope="col" style="width: 15%;">Status</th>
+                    <th scope="col" style="width: 10%;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -36,6 +37,7 @@
                         <td> {{ prompt.dataset_subset }} </td>
                         <td>{{ prompt.created_by }}</td>
                         <td>{{ prompt.created_on }}</td>
+                        <td>{{ prompt.get_status_display }}</td>
                         <td class="text-center">
                             <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
                                 delete
