@@ -83,7 +83,7 @@
                             <tr>
                                 <th>{{ forloop.counter }}</th>
                                 <td>
-                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
+                                    <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk pk=prompt.pk %}">
                                         <span class="prompt-name">{{ prompt.name }}</span>
                                     </a>
                                 </td>
@@ -91,13 +91,6 @@
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
                                 <td>{{ prompt.get_status_display }}</td>
-                                <td class="text-center">
-                                    {% if prompt.updateable %}
-                                        <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
-                                            delete
-                                        </a>
-                                    {% endif %}
-                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -122,21 +115,12 @@
                             <tr>
                                 <th>{{ forloop.counter }}</th>
                                 <td>
-                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
-                                        <span class="prompt-name">{{ prompt.name }}</span>
-                                    </a>
+                                    <span class="prompt-name">{{ prompt.name }}</span>
                                 </td>
                                 <td> {{ prompt.dataset_subset }} </td>
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
                                 <td>{{ prompt.get_status_display }}</td>
-                                <td class="text-center">
-                                    {% if prompt.updateable %}
-                                        <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
-                                            delete
-                                        </a>
-                                    {% endif %}
-                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
