@@ -215,7 +215,7 @@ class PromptDeleteView(LoginRequiredMixin, DeleteView):
 class PromptListView(ListView):
     model = Prompt
     paginate_by = 10
-    context_object_name = "prompts"
+    context_object_name = "all_prompts"
     template_name = "prompt/prompt_list.html"
 
     def get_queryset(self):
@@ -230,6 +230,10 @@ class PromptListView(ListView):
     def get_context_data(self):
         context = super().get_context_data()
         context["dataset"] = self.dataset
+        context["user_prompts"] = Prompt.objects.filter(created_by=self.request.user)
+        context["prompts_to_review"] = Prompt.objects.filter(
+            status=Prompt.PromptStatus.SUBMITTED
+        )
         return context
 
 

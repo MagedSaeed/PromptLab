@@ -4,7 +4,6 @@
     <div id="prompts-list" class="container">
         <h4 class="my-4"> Prompts created for dataset: <a href="{{dataset.huggingface_link}}" target="_blank">{{dataset}}</a> </h4>
 
-
         <div class="text-center my-4">
             <p class="h6 my-4">
                 <a href="{% url 'prompt:task_list' %}" class="h6 my-4">
@@ -13,42 +12,138 @@
             </p>
         </div>
 
-        <table class="my-4 table table-striped text-center">
-            <thead>
-                <tr>
-                    <th scope="col" style="width: 10%;">#</th>
-                    <th scope="col" style="width: 15%;">Name</th>
-                    <th scope="col" style="width: 15%;">Dataset Subset</th>
-                    <th scope="col" style="width: 15%;">Created By</th>
-                    <th scope="col" style="width: 20%;">Created On</th>
-                    <th scope="col" style="width: 15%;">Status</th>
-                    <th scope="col" style="width: 10%;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for prompt in prompts %}
-                    <tr>
-                        <th>{{ forloop.counter }}</th>
-                        <td>
-                            <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
-                                <span class="prmopt-name">{{ prompt.name }}</span>
-                            </a>
-                        </td>
-                        <td> {{ prompt.dataset_subset }} </td>
-                        <td>{{ prompt.created_by }}</td>
-                        <td>{{ prompt.created_on }}</td>
-                        <td>{{ prompt.get_status_display }}</td>
-                        <td class="text-center">
-                            {% if prompt.updateable %}
-                                <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
-                                    delete
-                                </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Tabs navigation -->
+        <ul class="nav nav-tabs" id="promptTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="my-prompts-tab" data-bs-toggle="tab" href="#my-prompts" role="tab" aria-controls="my-prompts" aria-selected="true">My Prompts</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="submitted-prompts-tab" data-bs-toggle="tab" href="#submitted-prompts" role="tab" aria-controls="submitted-prompts" aria-selected="false">Submitted Prompts to Review</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="all-prompts-tab" data-bs-toggle="tab" href="#all-prompts" role="tab" aria-controls="all-prompts" aria-selected="false">All Prompts</a>
+            </li>
+        </ul>
+        <div class="tab-content" id="promptTabsContent">
+            <div class="tab-pane fade show active" id="my-prompts" role="tabpanel" aria-labelledby="my-prompts-tab">
+            <!-- My Prompts Table -->
+                <table class="my-4 table table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%;">#</th>
+                            <th scope="col" style="width: 15%;">Name</th>
+                            <th scope="col" style="width: 15%;">Dataset Subset</th>
+                            <th scope="col" style="width: 15%;">Created By</th>
+                            <th scope="col" style="width: 20%;">Created On</th>
+                            <th scope="col" style="width: 15%;">Status</th>
+                            <th scope="col" style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prompt in user_prompts %}
+                            <tr>
+                                <th>{{ forloop.counter }}</th>
+                                <td>
+                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
+                                        <span class="prompt-name">{{ prompt.name }}</span>
+                                    </a>
+                                </td>
+                                <td> {{ prompt.dataset_subset }} </td>
+                                <td>{{ prompt.created_by }}</td>
+                                <td>{{ prompt.created_on }}</td>
+                                <td>{{ prompt.get_status_display }}</td>
+                                <td class="text-center">
+                                    {% if prompt.updateable %}
+                                        <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
+                                            delete
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="submitted-prompts" role="tabpanel" aria-labelledby="submitted-prompts-tab">
+            <!-- Submitted Prompts to Review Table -->
+                <table class="my-4 table table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%;">#</th>
+                            <th scope="col" style="width: 15%;">Name</th>
+                            <th scope="col" style="width: 15%;">Dataset Subset</th>
+                            <th scope="col" style="width: 15%;">Created By</th>
+                            <th scope="col" style="width: 20%;">Created On</th>
+                            <th scope="col" style="width: 15%;">Status</th>
+                            <th scope="col" style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prompt in prompts_to_review %}
+                            <tr>
+                                <th>{{ forloop.counter }}</th>
+                                <td>
+                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
+                                        <span class="prompt-name">{{ prompt.name }}</span>
+                                    </a>
+                                </td>
+                                <td> {{ prompt.dataset_subset }} </td>
+                                <td>{{ prompt.created_by }}</td>
+                                <td>{{ prompt.created_on }}</td>
+                                <td>{{ prompt.get_status_display }}</td>
+                                <td class="text-center">
+                                    {% if prompt.updateable %}
+                                        <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
+                                            delete
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="all-prompts" role="tabpanel" aria-labelledby="all-prompts-tab">
+            <!-- All Prompts Table -->
+                <table class="my-4 table table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%;">#</th>
+                            <th scope="col" style="width: 15%;">Name</th>
+                            <th scope="col" style="width: 15%;">Dataset Subset</th>
+                            <th scope="col" style="width: 15%;">Created By</th>
+                            <th scope="col" style="width: 20%;">Created On</th>
+                            <th scope="col" style="width: 15%;">Status</th>
+                            <th scope="col" style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prompt in all_prompts %}
+                            <tr>
+                                <th>{{ forloop.counter }}</th>
+                                <td>
+                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
+                                        <span class="prompt-name">{{ prompt.name }}</span>
+                                    </a>
+                                </td>
+                                <td> {{ prompt.dataset_subset }} </td>
+                                <td>{{ prompt.created_by }}</td>
+                                <td>{{ prompt.created_on }}</td>
+                                <td>{{ prompt.get_status_display }}</td>
+                                <td class="text-center">
+                                    {% if prompt.updateable %}
+                                        <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
+                                            delete
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     <!-- Utilize Bootstrap grid system to align the button to the right -->
         <div class="row">
             <div class="col text-end">
@@ -70,7 +165,7 @@
                 var button = this;
                 var spinner = document.getElementById('spinner');
 
-                // Show spinner and disable button
+            // Show spinner and disable button
                 spinner.style.display = 'inline-block';
                 button.classList.add('disabled');
                 button.style.pointerEvents = 'none';
@@ -78,7 +173,7 @@
                 var textHelper = document.getElementById('loadingHelper');
                 textHelper.style.display = 'inline-block';
 
-                // Redirect to the href of the button after showing the spinner
+            // Redirect to the href of the button after showing the spinner
                 window.location.href = button.href;
             });
         </script>
