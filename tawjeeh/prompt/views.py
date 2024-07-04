@@ -193,12 +193,23 @@ class PromptDeleteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         return reverse_lazy(
             "prompt:prompt_list",
-            kwargs={"dataset_pk": self.object.dataset.pk},
+            kwargs={"dataset_pk": self.dataset.pk},
         )
 
     def get(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         return self.delete(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        prompt = self.get_object()
+        if not prompt.updateable:
+            messages.error(
+                request,
+                "prompt cannot be deleted after submission.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
+        return super().delete(request, *args, **kwargs)
 
 
 class PromptListView(ListView):
