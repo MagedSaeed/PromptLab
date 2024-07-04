@@ -221,7 +221,7 @@
                                     Apply Template
                                     <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                 </button>
-                                {% if prompt.status == 'DRAFT' %}
+                                {% if prompt.updateable %}
                                     <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary my-4">
                                         <span>Save</span>
                                         <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>

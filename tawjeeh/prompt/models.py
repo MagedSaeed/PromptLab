@@ -193,3 +193,7 @@ class Prompt(models.Model):
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"
+
+    @property
+    def updateable(self):
+        return self.status == self.PromptStatus.DRAFT

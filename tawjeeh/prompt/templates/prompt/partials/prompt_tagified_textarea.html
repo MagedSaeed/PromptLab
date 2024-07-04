@@ -33,7 +33,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         var input = document.getElementById('tagifyTextarea');
         var directionSwitcher = document.getElementById('directionSwitcher');
-        {% if prompt.status != 'DRAFT' %}
+        {% if not prompt.updateable %}
             currentText = input.value;
             currentText = currentText.trim()
             input.value = currentText
