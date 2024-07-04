@@ -139,105 +139,111 @@
 {% endblock style %}
 
 {% block main_content %}
-    <div class="container-fluid w-85">
-        <div class="row">
-            <div class="fixed-sidebar" id="sidebar">
-                <div class="sidebar-header">
-                    <h4 class="pt-2">Dataset Information</h4>
-                    <button class="sidebar-toggle" id="toggleSidebar">☰</button>
-                </div>
-                <hr>
-                <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}?subset={{ object.dataset_subset }}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#sidebar-spinner">
-                    <div id="sidebar-spinner">
-                        <div class="d-flex flex-column align-items-center">
-                            <div class="spinner-border text-secondary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p>Loading...</p>
+    {% block html_content %}
+        <div class="container-fluid w-85">
+            <div class="row">
+                {% block left_sidebar %}
+                    <div class="fixed-sidebar" id="sidebar">
+                        <div class="sidebar-header">
+                            <h4 class="pt-2">Dataset Information</h4>
+                            <button class="sidebar-toggle" id="toggleSidebar">☰</button>
                         </div>
-                    </div>
-                    <div
-                        id="dataset-details"
-                        style="margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;"
-                    >
-                    </div>
-                </div>
-            </div>
-        <!-- Main Content -->
-            <div class="main-content col" id="mainContent">
-                <div class="accordion" id="instructionsAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
-                                <h4 style="margin: 0;">Creating Diverse Prompts for dataset: {{dataset}}</h4>
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
-                            <div class="accordion-body">
-                                <p>
-                                    Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
-                                    Ultimately, the hope is that exposing the model to such a diversity will have a non-trivial impact on the model's robustness to the prompt formulation.
-                                </p>
-                                <p>
-                                    <strong>To get various prompts, you can try moving the cursor along these axes:</strong>
-                                </p>
-                                <ul>
-                                    <li>
-                                        <strong>Interrogative vs affirmative form:</strong> Ask a question about an attribute of the inputs or tell the model to decide something about the input.
-                                    </li>
-                                    <li>
-                                        <strong>Task description localization:</strong> Where is the task description blended with the inputs? In the beginning, in the middle, at the end?
-                                    </li>
-                                    <li>
-                                        <strong>Implicit situation or contextualization:</strong> How explicit is the query? For instance, <em>Given this review, would you buy this product?</em> is an indirect way to ask whether the review is positive.
-                                    </li>
-                                </ul>
+                        <hr>
+                        <div class="card-body" hx-get="{% url 'prompt:dataset_details' dataset.pk %}?subset={{ object.dataset_subset }}" hx-trigger="load" hx-target="#dataset-details" hx-indicator="#sidebar-spinner">
+                            <div id="sidebar-spinner">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="spinner-border text-secondary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p>Loading...</p>
+                                </div>
+                            </div>
+                            <div
+                                id="dataset-details"
+                                style="margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;"
+                            >
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endblock %}
+                <!-- Main Content -->
+                <div class="main-content col" id="mainContent">
+                    {% block prompt_template_content %}
+                        <div class="accordion" id="instructionsAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
+                                        <h4 style="margin: 0;">Creating Diverse Prompts for dataset: {{dataset}}</h4>
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
+                                    <div class="accordion-body">
+                                        <p>
+                                            Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
+                                            Ultimately, the hope is that exposing the model to such a diversity will have a non-trivial impact on the model's robustness to the prompt formulation.
+                                        </p>
+                                        <p>
+                                            <strong>To get various prompts, you can try moving the cursor along these axes:</strong>
+                                        </p>
+                                        <ul>
+                                            <li>
+                                                <strong>Interrogative vs affirmative form:</strong> Ask a question about an attribute of the inputs or tell the model to decide something about the input.
+                                            </li>
+                                            <li>
+                                                <strong>Task description localization:</strong> Where is the task description blended with the inputs? In the beginning, in the middle, at the end?
+                                            </li>
+                                            <li>
+                                                <strong>Implicit situation or contextualization:</strong> How explicit is the query? For instance, <em>Given this review, would you buy this product?</em> is an indirect way to ask whether the review is positive.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="card my-4">
-                    <div class="card-body">
-                        <form id="promptForm" method="POST">
-                            {% csrf_token %}
-                            <div class="row justify-content-center">
-                                <div class="mb-3 col-12 full-width" id="templateFieldContainer">
-                                    {{ form.name|as_crispy_field }}
-                                    {{ form.answer_choices|as_crispy_field }}
-                                    {% include 'prompt/partials/prompt_tagified_textarea.html' %}
-                                    {{ form.template|as_crispy_field }}
-                                    {{ form.dataset_subset }}
-                                    {{ form.text_direction }}
-                                </div>
-                                <div class="template-result hidden rounded" id="templateResultContainer">
-                                    <div class="close-btn" id="closeTemplateResult">✖</div>
-                                    <div id="mergeTemplateResult"></div>
-                                </div>
+                        <div class="card my-4">
+                            <div class="card-body">
+                                <form id="promptForm" method="POST">
+                                    {% csrf_token %}
+                                    <div class="row justify-content-center">
+                                        <div class="mb-3 col-12 full-width" id="templateFieldContainer">
+                                            {{ form.name|as_crispy_field }}
+                                            {{ form.answer_choices|as_crispy_field }}
+                                            {% include 'prompt/partials/prompt_tagified_textarea.html' %}
+                                            {{ form.template|as_crispy_field }}
+                                            {{ form.dataset_subset }}
+                                            {{ form.text_direction }}
+                                        </div>
+                                        <div class="template-result hidden rounded" id="templateResultContainer">
+                                            <div class="close-btn" id="closeTemplateResult">✖</div>
+                                            <div id="mergeTemplateResult"></div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-outline-primary" id="applyButton">
+                                            Apply Template
+                                            <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
+                                        </button>
+                                        {% if prompt.updateable %}
+                                            <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
+                                                <span>Save</span>
+                                                <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                            </button>
+                                            <button type="submit" name="submit" value="submit_for_review" class="btn btn-success">
+                                                <span >Submit for review</span>
+                                                <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </form>
                             </div>
-                            <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
-                            <div class="text-end">
-                                <button type="button" class="btn btn-outline-primary my-4" id="applyButton">
-                                    Apply Template
-                                    <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
-                                </button>
-                                {% if prompt.updateable %}
-                                    <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary my-4">
-                                        <span>Save</span>
-                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
-                                    </button>
-                                    <button type="submit" name="submit" value="submit_for_review" class="btn btn-success my-4">
-                                        <span >Submit for review</span>
-                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
-                                    </button>
-                                {% endif %}
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                    {% endblock %}
                 </div>
             </div>
         </div>
-    </div>
+    {% endblock html_content %}
 
     <script>
         window.onpageshow = function(event) {

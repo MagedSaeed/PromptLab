@@ -187,6 +187,35 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
+class PromptReviewView(LoginRequiredMixin, UpdateView):
+    model = Prompt
+    form_class = PromptCreateUpdateForm
+    template_name = "prompt/prompt_review.html"
+    context_object_name = "prompt"
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.dataset.pk},
+        )
+
+    def setup(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        return super().setup(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dataset"] = self.dataset
+        context["dataset_columns"] = self.dataset.get_columns_names()
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["dataset"] = self.dataset
+        kwargs["instance"] = self.object
+        return kwargs
+
+
 class PromptDeleteView(LoginRequiredMixin, DeleteView):
     model = Prompt
 
