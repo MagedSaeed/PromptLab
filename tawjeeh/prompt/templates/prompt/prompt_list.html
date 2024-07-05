@@ -75,7 +75,7 @@
                             <th scope="col" style="width: 15%;">Created By</th>
                             <th scope="col" style="width: 20%;">Created On</th>
                             <th scope="col" style="width: 15%;">Status</th>
-                            <th scope="col" style="width: 10%;"></th>
+                            {% comment %} <th scope="col" style="width: 10%;"></th> {% endcomment %}
                         </tr>
                     </thead>
                     <tbody>
@@ -83,7 +83,7 @@
                             <tr>
                                 <th>{{ forloop.counter }}</th>
                                 <td>
-                                    <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk pk=prompt.pk %}">
+                                    <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}">
                                         <span class="prompt-name">{{ prompt.name }}</span>
                                     </a>
                                 </td>
@@ -91,6 +91,7 @@
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
                                 <td>{{ prompt.get_status_display }}</td>
+                                {% comment %} <td></td> {% endcomment %}
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -107,7 +108,7 @@
                             <th scope="col" style="width: 15%;">Created By</th>
                             <th scope="col" style="width: 20%;">Created On</th>
                             <th scope="col" style="width: 15%;">Status</th>
-                            <th scope="col" style="width: 10%;"></th>
+                            {% comment %} <th scope="col" style="width: 10%;"></th> {% endcomment %}
                         </tr>
                     </thead>
                     <tbody>
@@ -121,6 +122,7 @@
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
                                 <td>{{ prompt.get_status_display }}</td>
+                                {% comment %} <td></td> {% endcomment %}
                             </tr>
                         {% endfor %}
                     </tbody>

@@ -220,25 +220,46 @@
                                         </div>
                                     </div>
                                     <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
-                                    <div class="text-end">
-                                        <button type="button" class="btn btn-outline-primary" id="applyButton">
-                                            Apply Template
-                                            <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
-                                        </button>
-                                        {% if prompt.updateable %}
-                                            <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
-                                                <span>Save</span>
-                                                <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                    <div class="row my-2">
+                                        <div class="col col-6">
+                                            {% if prompt.review_decisions %}
+                                                <span>
+                                                    this prompt has been reviewed.
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                                        See full review history
+                                                    </a>
+                                                </span>
+                                                {% include 'prompt/partials/review_history_modal.html' with reviews=prompt.review_decisions.all %}
+                                                {% if prompt.review_decisions.last.reviewer_comment %}
+                                                    <hr>
+                                                    <p>
+                                                        <u>Latest reviewer comment:</u>
+                                                        <p>
+                                                            {{ prompt.review_decisions.last.reviewer_comment }}
+                                                        </p>
+                                                    </p>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        <div class="col col-6 text-end">
+                                            <button type="button" class="btn btn-outline-primary" id="applyButton">
+                                                Apply Template
+                                                <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                             </button>
-                                            <button type="submit" name="submit" value="submit_for_review" class="btn btn-success">
-                                                <span >Submit for review</span>
-                                                <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
-                                            </button>
-                                        {% endif %}
-                                    </div>
-                                </form>
+                                            {% if prompt.updateable %}
+                                                <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
+                                                    <span>Save</span>
+                                                    <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                                </button>
+                                                <button type="submit" name="submit" value="submit_for_review" class="btn btn-success">
+                                                    <span >Submit for review</span>
+                                                    <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
                     {% endblock %}
                 </div>
             </div>
