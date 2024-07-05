@@ -196,4 +196,41 @@ class Prompt(models.Model):
 
     @property
     def updateable(self):
-        return self.status == self.PromptStatus.DRAFT
+        return self.status in (
+            self.PromptStatus.DRAFT,
+            self.PromptStatus.RETURNED_FOR_MODIFICATION,
+        )
+
+
+class PromptReviewDecision(models.Model):
+    class DecisionChoices(models.TextChoices):
+        APPROVED = "APPROVED", "Approved"
+        RETURNED_FOR_MODIFICATION = (
+            "RETURNED_FOR_MODIFICATION",
+            "Returned for modification",
+        )
+
+    reviewer = models.ForeignKey(User, on_delete=models.RESTRICT)
+    prompt = models.ForeignKey(
+        Prompt,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="review_decisions",
+    )
+    reviewer_comment = models.CharField(
+        max_length=10_000,
+        null=True,
+        blank=True,
+    )
+    reviewer_decision = models.CharField(
+        max_length=256,
+        choices=DecisionChoices.choices,
+    )
+    # this field is a json field that will
+    # save the old prompt fields before reviewer modification.
+    # only changedfields will be kept
+    prompt_before_modifications = models.JSONField(null=True, blank=True)
+    reviewed_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review made by {self.reviewer} on {self.prompt}."

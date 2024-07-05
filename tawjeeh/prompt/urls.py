@@ -37,7 +37,7 @@ urlpatterns = [
         name="prompt_update",
     ),
     path(
-        "dataset/<int:dataset_pk>/prompt/<int:pk>/review",
+        "dataset/<int:dataset_pk>/prompt/<int:prompt_pk>/review",
         PromptReviewView.as_view(),
         name="prompt_review",
     ),

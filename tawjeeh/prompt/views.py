@@ -7,8 +7,8 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView, V
 from django_filters.views import FilterView
 from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
-from prompt.forms import PromptCreateUpdateForm
-from prompt.models import Dataset, Prompt, Task
+from prompt.forms import PromptCreateUpdateForm, PromptReviewForm
+from prompt.models import Dataset, Prompt, PromptReviewDecision, Task
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -119,7 +119,7 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
         instance = form.save(commit=False)
         instance.created_by = self.request.user
         if self.request.POST.get("submit") == "submit_for_review":
-            instance.status = Prompt.PromptStatus.SUBMITTED
+            instance.status = PromptReviewDecision.PromptStatus.SUBMITTED
         instance.save()
         messages.success(self.request, "prompt saved successfully.")
         return super().form_valid(form)
@@ -149,7 +149,7 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.status != Prompt.PromptStatus.DRAFT:
+        if not instance.updateable:
             messages.error(
                 self.request,
                 "prompt cannot be updated while being reviewed.",
@@ -187,11 +187,10 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class PromptReviewView(LoginRequiredMixin, UpdateView):
-    model = Prompt
-    form_class = PromptCreateUpdateForm
+class PromptReviewView(LoginRequiredMixin, CreateView):
+    model = PromptReviewDecision
+    form_class = PromptReviewForm
     template_name = "prompt/prompt_review.html"
-    context_object_name = "prompt"
 
     def get_success_url(self):
         return reverse_lazy(
@@ -201,6 +200,7 @@ class PromptReviewView(LoginRequiredMixin, UpdateView):
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        self.prompt = get_object_or_404(Prompt, pk=kwargs["prompt_pk"])
         return super().setup(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -212,8 +212,13 @@ class PromptReviewView(LoginRequiredMixin, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["dataset"] = self.dataset
-        kwargs["instance"] = self.object
+        kwargs["prompt"] = self.prompt
+        kwargs["reviewer"] = self.request.user
         return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, "Review added successfully")
+        return super().form_valid(form)
 
 
 class PromptDeleteView(LoginRequiredMixin, DeleteView):
