@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django.core.management import call_command
-from prompt.models import Dataset, Prompt, PromptReviewDecision, Task
+from prompt.models import Dataset, Prompt, PromptReviewAction, Task
 
 # Register your models here.
 
@@ -38,4 +38,4 @@ class PromptAdmin(admin.ModelAdmin):
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Prompt, PromptAdmin)
-admin.site.register(PromptReviewDecision)
+admin.site.register(PromptReviewAction)

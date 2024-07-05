@@ -8,7 +8,8 @@ from django_filters.views import FilterView
 from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import PromptCreateUpdateForm, PromptReviewForm
-from prompt.models import Dataset, Prompt, PromptReviewDecision, Task
+from prompt.models import Dataset, Prompt, PromptReviewAction, Task
+from django.db.models import OuterRef, Subquery, Q
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -118,9 +119,15 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         instance = form.save(commit=False)
         instance.created_by = self.request.user
-        if self.request.POST.get("submit") == "submit_for_review":
-            instance.status = PromptReviewDecision.PromptStatus.SUBMITTED
         instance.save()
+        if self.request.POST.get("submit") == "submit_for_review":
+            # create a submission action
+            submission = PromptReviewAction(
+                prompt=instance,
+                submitter=self.request.user,
+                prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+            )
+            submission.save()
         messages.success(self.request, "prompt saved successfully.")
         return super().form_valid(form)
 
@@ -152,7 +159,7 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         if not instance.updateable:
             messages.error(
                 self.request,
-                "prompt cannot be updated while being reviewed.",
+                "prompt cannot be updated after submission.",
                 extra_tags="danger",
             )
             return redirect(self.get_success_url())
@@ -175,10 +182,15 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         instance = form.save(commit=False)
         success_message = "prompt updated successfully."
-        if self.request.POST.get("submit") == "submit_for_review":
-            instance.status = Prompt.PromptStatus.SUBMITTED
-            success_message = "prompt submitted for review successfully."
         instance.save()
+        if self.request.POST.get("submit") == "submit_for_review":
+            # create a submission action
+            submission = PromptReviewAction(
+                prompt=instance,
+                submitter=self.request.user,
+                prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+            )
+            submission.save()
         messages.success(self.request, success_message)
         return super().form_valid(form)
 
@@ -188,7 +200,7 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class PromptReviewView(LoginRequiredMixin, CreateView):
-    model = PromptReviewDecision
+    model = PromptReviewAction
     form_class = PromptReviewForm
     template_name = "prompt/prompt_review.html"
 
@@ -265,9 +277,26 @@ class PromptListView(ListView):
         context = super().get_context_data()
         context["dataset"] = self.dataset
         context["user_prompts"] = Prompt.objects.filter(created_by=self.request.user)
-        context["prompts_to_review"] = Prompt.objects.filter(
-            status=Prompt.PromptStatus.SUBMITTED
+
+        # get prompts that are available to review
+
+        # Subquery to get the last review action for each prompt
+        review_actions = PromptReviewAction.objects.filter(
+            prompt=OuterRef("pk")
+        ).order_by("-taken_on")
+
+        # Annotate each prompt with the last review action's submitter_decision
+        prompts_with_last_action = Prompt.objects.annotate(
+            last_submitter_decision=Subquery(
+                review_actions.values("submitter_decision")[:1]
+            )
         )
+
+        # Filter prompts where the last submitter_decision is None
+        ready_to_review_prompts = prompts_with_last_action.filter(
+            last_submitter_decision__isnull=True
+        )
+        context["prompts_to_review"] = ready_to_review_prompts
         return context
 
 

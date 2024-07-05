@@ -51,9 +51,9 @@
                                 <td> {{ prompt.dataset_subset }} </td>
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
-                                <td>{{ prompt.get_status_display }}</td>
+                                <td>{{ prompt.status }}</td>
                                 <td class="text-center">
-                                    {% if prompt.updateable %}
+                                    {% if prompt and prompt.updateable %}
                                         <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
                                             delete
                                         </a>
@@ -90,7 +90,7 @@
                                 <td> {{ prompt.dataset_subset }} </td>
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
-                                <td>{{ prompt.get_status_display }}</td>
+                                <td>{{ prompt.status }}</td>
                                 {% comment %} <td></td> {% endcomment %}
                             </tr>
                         {% endfor %}
@@ -121,7 +121,7 @@
                                 <td> {{ prompt.dataset_subset }} </td>
                                 <td>{{ prompt.created_by }}</td>
                                 <td>{{ prompt.created_on }}</td>
-                                <td>{{ prompt.get_status_display }}</td>
+                                <td>{{ prompt.status }}</td>
                                 {% comment %} <td></td> {% endcomment %}
                             </tr>
                         {% endfor %}

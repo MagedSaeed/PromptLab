@@ -222,20 +222,20 @@
                                     <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
                                     <div class="row my-2">
                                         <div class="col col-6">
-                                            {% if prompt.review_decisions %}
+                                            {% if prompt.review_actions.exists %}
                                                 <span>
-                                                    this prompt has been reviewed.
+                                                    Review actions on this prompt has been taken.
                                                     <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                                         See full review history
                                                     </a>
                                                 </span>
-                                                {% include 'prompt/partials/review_history_modal.html' with reviews=prompt.review_decisions.all %}
-                                                {% if prompt.review_decisions.last.reviewer_comment %}
+                                                {% include 'prompt/partials/review_history_modal.html' with review_actions=prompt.review_actions.all %}
+                                                {% if prompt.review_actions.last.submitter_comment %}
                                                     <hr>
                                                     <p>
                                                         <u>Latest reviewer comment:</u>
                                                         <p>
-                                                            {{ prompt.review_decisions.last.reviewer_comment }}
+                                                            {{ prompt.review_actions.last.submitter_comment }}
                                                         </p>
                                                     </p>
                                                 {% endif %}
@@ -246,7 +246,7 @@
                                                 Apply Template
                                                 <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                             </button>
-                                            {% if prompt.updateable %}
+                                            {% if not prompt or prompt.updateable %}
                                                 <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
                                                     <span>Save</span>
                                                     <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
