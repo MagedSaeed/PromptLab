@@ -1,6 +1,6 @@
 import datasets
 from django import forms
-from prompt.models import Prompt, PromptReviewDecision
+from prompt.models import Prompt, PromptReviewAction
 
 
 class PromptCreateUpdateForm(forms.ModelForm):
@@ -52,7 +52,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
 
 class PromptReviewForm(forms.ModelForm):
     # these are prompt fields,
-    # names are chosen to match the prompt dields in the prompt_create_update html template
+    # names are chosen to match the prompt fields in the prompt_create_update html template
     name = forms.CharField()
     template = forms.CharField(widget=forms.HiddenInput())
     text_direction = forms.ChoiceField(
@@ -63,15 +63,15 @@ class PromptReviewForm(forms.ModelForm):
     dataset_subset = forms.CharField(widget=forms.HiddenInput())
 
     class Meta:
-        model = PromptReviewDecision
-        fields = ["reviewer_comment", "reviewer_decision"]
+        model = PromptReviewAction
+        fields = ["submitter_comment", "submitter_decision"]
 
     def __init__(self, *args, **kwargs):
         self.prompt = kwargs.pop("prompt")
         self.reviewer = kwargs.pop("reviewer")
         self.dataset = kwargs.pop("dataset")
         super().__init__(*args, **kwargs)
-        self.fields["reviewer_comment"].widget = forms.Textarea(attrs={"rows": 3})
+        self.fields["submitter_comment"].widget = forms.Textarea(attrs={"rows": 3})
         # set fields initials from the prompt
         self.fields["name"].initial = self.prompt.name
         self.fields["template"].initial = self.prompt.template
@@ -81,32 +81,28 @@ class PromptReviewForm(forms.ModelForm):
 
     def set_prompt_status(self):
         data = self.cleaned_data
-        if data["reviewer_decision"] == PromptReviewDecision.DecisionChoices.APPROVED:
-            self.prompt.status = Prompt.PromptStatus.APPROVED
-        elif (
-            data["reviewer_decision"]
-            == PromptReviewDecision.DecisionChoices.RETURNED_FOR_MODIFICATION
+        if (
+            data["submitter_decision"]
+            == PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION
         ):
-            self.prompt.status = Prompt.PromptStatus.RETURNED_FOR_MODIFICATION
-        else:
-            raise ValueError("Invalid decision.")
+            self.instance.prompt_status = PromptReviewAction.PromptStatus.DRAFT
 
     def clean(self):
         data = self.cleaned_data
         if (
-            data["reviewer_decision"]
-            == PromptReviewDecision.DecisionChoices.RETURNED_FOR_MODIFICATION
+            data["submitter_decision"]
+            == PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION
         ):
-            if not data["reviewer_comment"]:
+            if not data["submitter_comment"]:
                 self.add_error(
-                    "reviewer_comment",
+                    "submitter_comment",
                     "Please add a comment when returning a prompt for modifications.",
                 )
 
     def get_prompt_reviewer_modifications(self):
         data = self.cleaned_data
         prompt_modifications = {}
-        prompt_fields = set(self.fields) - {"reviewer_comment", "reviewer_decision"}
+        prompt_fields = set(self.fields) - {"submitter_comment", "submitter_decision"}
         for key in data:
             if key in prompt_fields:
                 if data[key] != getattr(self.prompt, key):
@@ -118,9 +114,8 @@ class PromptReviewForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.set_prompt_status()
-        self.prompt.save()
-        self.instance.reviewer = self.reviewer
-        prompt_modifications = self.get_prompt_reviewer_modifications()
         self.instance.prompt = self.prompt
+        self.instance.submitter = self.reviewer
+        prompt_modifications = self.get_prompt_reviewer_modifications()
         self.instance.prompt_before_modifications = prompt_modifications
         return super().save(commit=commit)

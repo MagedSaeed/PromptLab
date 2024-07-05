@@ -7,20 +7,20 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        {% for review in reviews %}
+        {% for action in review_actions %}
           <div class="row">
             <p>
-              <b>reviewer:</b> {{review.reviewer}}
+              <b>Submitter:</b> {{action.submitter}}
             </p>
             <p>
-              <b>decision:</b> <u>{{review.get_reviewer_decision_display}}</u>
+              <b>Decision:</b> <u>{{action.get_submitter_decision_display}}</u>
             </p>
             <p>
-              <b>Reviewed on:</b> <u>{{review.reviewed_on}}</u>
+              <b>Submitted on:</b> <u>{{action.taken_on}}</u>
             </p>
-            {% if review.reviewer_comment %}
+            {% if action.submitter_comment %}
               <p>
-                <b>comment:</b> {{review.reviewer_comment}}
+                <b>Comment:</b> {{action.submitter_comment}}
               </p>
             {% endif %}
           </div>

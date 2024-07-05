@@ -10,7 +10,7 @@
                     <div class="mb-3 col-12 full-width" id="templateFieldContainer">
                         {{ form.name|as_crispy_field }}
                         {{ form.answer_choices|as_crispy_field }}
-                        {% include 'prompt/partials/prompt_tagified_textarea.html' with is_review=True %}
+                        {% include 'prompt/partials/prompt_tagified_textarea.html' %}
                         {{ form.template|as_crispy_field }}
                         {{ form.dataset_subset }}
                         {{ form.text_direction }}
@@ -30,11 +30,11 @@
                 <hr>
                 <div class="row">
                     <div class="row">
-                        {{ form.reviewer_comment|as_crispy_field }}
+                        {{ form.submitter_comment|as_crispy_field }}
                     </div>
                     <div class="row my-4">
                         <div class="col col-2">
-                            {{ form.reviewer_decision|as_crispy_field }}
+                            {{ form.submitter_decision|as_crispy_field }}
                         </div>
                     </div>
                     <div class="row">
