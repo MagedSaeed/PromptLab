@@ -8,6 +8,8 @@ pip install -r requirements.txt
 # Navigate to the project directory
 cd tawjeeh
 
+# migrate django sites first
+python manage.py migrate sites
 
 # Run Django management commands
 python manage.py migrate
