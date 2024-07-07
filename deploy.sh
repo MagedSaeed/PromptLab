@@ -24,6 +24,7 @@ python manage.py sync_with_hf --datasets-urls ./datasets.urls
 # collect static
 python manage.py collectstatic --noinput
 
+pip install pip install gunicorn
 
 export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
 
