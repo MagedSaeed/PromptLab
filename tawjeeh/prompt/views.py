@@ -1,14 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import OuterRef, Subquery
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
 from django_filters.views import FilterView
 from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
-from prompt.forms import PromptCreateUpdateForm
-from prompt.models import Dataset, Prompt, Task
+from prompt.forms import PromptCreateUpdateForm, PromptReviewForm
+from prompt.models import Dataset, Prompt, PromptReviewAction, Task
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -119,6 +120,14 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
         instance = form.save(commit=False)
         instance.created_by = self.request.user
         instance.save()
+        if self.request.POST.get("submit") == "submit_for_review":
+            # create a submission action
+            submission = PromptReviewAction(
+                prompt=instance,
+                submitter=self.request.user,
+                prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+            )
+            submission.save()
         messages.success(self.request, "prompt saved successfully.")
         return super().form_valid(form)
 
@@ -131,11 +140,12 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
     model = Prompt
     form_class = PromptCreateUpdateForm
     template_name = "prompt/prompt_create_update.html"
+    context_object_name = "prompt"
 
     def get_success_url(self):
         return reverse_lazy(
             "prompt:prompt_list",
-            kwargs={"dataset_pk": self.object.dataset.pk},
+            kwargs={"dataset_pk": self.dataset.pk},
         )
 
     def setup(self, request, *args, **kwargs):
@@ -143,6 +153,17 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         self.subset = request.GET.get("subset")
         self.split = request.GET.get("split")
         return super().setup(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not instance.updateable:
+            messages.error(
+                self.request,
+                "prompt cannot be updated after submission.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
+        return super().post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -159,12 +180,63 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, "prompt updated successfully.")
+        instance = form.save(commit=False)
+        success_message = "prompt updated successfully."
+        instance.save()
+        if self.request.POST.get("submit") == "submit_for_review":
+            # create a submission action
+            submission = PromptReviewAction(
+                prompt=instance,
+                submitter=self.request.user,
+                prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+            )
+            submission.save()
+        messages.success(self.request, success_message)
         return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.error(self.request, form.errors, extra_tags="danger")
         return super().form_invalid(form)
+
+
+class PromptReviewView(LoginRequiredMixin, CreateView):
+    model = PromptReviewAction
+    form_class = PromptReviewForm
+    template_name = "prompt/prompt_review.html"
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.dataset.pk},
+        )
+
+    def setup(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        self.prompt = get_object_or_404(Prompt, pk=kwargs["prompt_pk"])
+        if not request.user.is_modirator:
+            messages.error(
+                request,
+                "Only modirators can review prompts. Please contact admins for further dtails.",
+            )
+            return redirect(self.get_success_url())
+        return super().setup(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dataset"] = self.dataset
+        context["dataset_columns"] = self.dataset.get_columns_names()
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["dataset"] = self.dataset
+        kwargs["prompt"] = self.prompt
+        kwargs["reviewer"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, "Review action added successfully")
+        return super().form_valid(form)
 
 
 class PromptDeleteView(LoginRequiredMixin, DeleteView):
@@ -173,23 +245,36 @@ class PromptDeleteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         return reverse_lazy(
             "prompt:prompt_list",
-            kwargs={"dataset_pk": self.object.dataset.pk},
+            kwargs={"dataset_pk": self.dataset.pk},
         )
 
     def get(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         return self.delete(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        prompt = self.get_object()
+        if not prompt.updateable:
+            messages.error(
+                request,
+                "prompt cannot be deleted after submission.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
+        return super().delete(request, *args, **kwargs)
+
 
 class PromptListView(ListView):
     model = Prompt
     paginate_by = 10
-    context_object_name = "prompts"
+    context_object_name = "all_prompts"
     template_name = "prompt/prompt_list.html"
 
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
+        if not self.request.user.is_modirator:
+            queryset = queryset[:5]
         return queryset
 
     def setup(self, request, *args, **kwargs):
@@ -199,6 +284,27 @@ class PromptListView(ListView):
     def get_context_data(self):
         context = super().get_context_data()
         context["dataset"] = self.dataset
+        context["user_prompts"] = Prompt.objects.filter(created_by=self.request.user)
+
+        # get prompts that are available to review
+
+        # Subquery to get the last review action for each prompt
+        review_actions = PromptReviewAction.objects.filter(
+            prompt=OuterRef("pk")
+        ).order_by("-taken_on")
+
+        # Annotate each prompt with the last review action's submitter_decision
+        prompts_with_last_action = Prompt.objects.annotate(
+            last_submitter_decision=Subquery(
+                review_actions.values("submitter_decision")[:1]
+            )
+        )
+
+        # Filter prompts where the last submitter_decision is None
+        ready_to_review_prompts = prompts_with_last_action.filter(
+            last_submitter_decision__isnull=True
+        )
+        context["prompts_to_review"] = ready_to_review_prompts
         return context
 
 

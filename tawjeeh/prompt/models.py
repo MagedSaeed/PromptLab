@@ -5,6 +5,8 @@ import datasets
 from core.utils import redis_cache
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db import models
+from django.db.models import Subquery, OuterRef
 
 User = get_user_model()
 
@@ -149,6 +151,7 @@ class Dataset(models.Model):
 
 
 class Prompt(models.Model):
+
     class TextDirectionChoices(models.TextChoices):
         LTR = "ltr", "Left-to-Right"
         RTL = "rtl", "Right-to-Left"
@@ -165,17 +168,83 @@ class Prompt(models.Model):
         Dataset,
         null=True,
         related_name="prompts",
-        on_delete=models.SET_NULL,
+        on_delete=models.SET_NULL,  # TODO: change to protect
     )
     dataset_subset = models.CharField(max_length=10_000, null=True, blank=True)
     created_by = models.ForeignKey(
         to=User,
         null=True,
         related_name="prompts",
-        on_delete=models.SET_NULL,
+        on_delete=models.SET_NULL,  # TODO: change to protect
     )
     created_on = models.DateTimeField(auto_now_add=True)
     last_updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"
+
+    @property
+    def updateable(self):
+        # catch the case when the prompt is not yet created
+        # it should be updateable in this case
+        if not self.pk:
+            return True
+        return self.status in (
+            PromptReviewAction.PromptStatus.DRAFT,
+            PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION,
+        )
+
+    @property
+    def status(self):
+        status = PromptReviewAction.PromptStatus.DRAFT
+        if self.review_actions.exists():
+            last_review_action = self.review_actions.last()
+            status = last_review_action.prompt_status
+            if last_review_action.submitter_decision:
+                status = last_review_action.submitter_decision
+        return status
+
+
+class PromptReviewAction(models.Model):
+    class DecisionChoices(models.TextChoices):
+        APPROVED = "APPROVED", "Approved"
+        RETURNED_FOR_MODIFICATION = (
+            "RETURNED_FOR_MODIFICATION",
+            "Returned for modification",
+        )
+
+    class PromptStatus(models.TextChoices):
+        DRAFT = "DRAFT", "Draft"
+        SUBMITTED = "SUBMITTED", "Submitted"
+
+    submitter = models.ForeignKey(User, on_delete=models.RESTRICT)
+    prompt = models.ForeignKey(
+        Prompt,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="review_actions",
+    )
+    prompt_status = models.CharField(
+        max_length=256,
+        default=PromptStatus.DRAFT,
+        choices=PromptStatus.choices,
+    )
+    submitter_comment = models.CharField(
+        max_length=10_000,
+        null=True,
+        blank=True,
+    )
+    submitter_decision = models.CharField(
+        null=True,
+        blank=True,
+        max_length=256,
+        choices=DecisionChoices.choices,
+    )
+    # this field is a json field that will
+    # save the old prompt fields before reviewer modification.
+    # only changed fields will be kept
+    prompt_before_submitter_modifications = models.JSONField(null=True, blank=True)
+    taken_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review made by {self.submitter} on {self.prompt}."
