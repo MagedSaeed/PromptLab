@@ -8,6 +8,9 @@ pip install -r requirements.txt
 # Navigate to the project directory
 cd tawjeeh
 
+# set production settings as env variable
+export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
+
 # migrate django sites first
 python manage.py migrate sites
 
@@ -26,9 +29,9 @@ python manage.py sync_with_hf --datasets-urls ./datasets.urls
 # collect static
 python manage.py collectstatic --noinput
 
+# install gunicorn
 pip install pip install gunicorn
 
-export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
 
 # Start the Gunicorn server in the background
 gunicorn tawjeeh.wsgi --workers 4 --threads 4
