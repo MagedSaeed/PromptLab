@@ -2,7 +2,7 @@ import os
 
 from tawjeeh.settings import *  # noqa: F403
 
-DEBUG = False
+DEBUG = True
 
 SITE_ID = 1
 
@@ -18,20 +18,22 @@ DATABASES = {
 }
 
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}",  # Adjust the location as per your Redis server configuration
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SERIALIZER": "django_redis.serializers.pickle.PickleSerializer",
-        },
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": f"redis://{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}",  # Adjust the location as per your Redis server configuration
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             "SERIALIZER": "django_redis.serializers.pickle.PickleSerializer",
+#         },
+#     }
+# }
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")  # noqa: F405
-STATICFILES_DIRS = []
+CSRF_TRUSTED_ORIGINS = [
+    "https://tawjeeh-production.up.railway.app",
+    "https://*.127.0.0.1",
+]
 
 server_ip = os.getenv("SERVER_IP")
 if server_ip:
-    ALLOWED_HOSTS.append(server_ip)
+    ALLOWED_HOSTS.append(server_ip)  # noqa: F405
