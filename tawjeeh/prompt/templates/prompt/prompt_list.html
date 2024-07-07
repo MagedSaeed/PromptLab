@@ -17,9 +17,11 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link active" id="my-prompts-tab" data-bs-toggle="tab" href="#my-prompts" role="tab" aria-controls="my-prompts" aria-selected="true">My Prompts</a>
             </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="submitted-prompts-tab" data-bs-toggle="tab" href="#submitted-prompts" role="tab" aria-controls="submitted-prompts" aria-selected="false">Submitted Prompts to Review</a>
-            </li>
+            {% if request.user.is_modirator %}
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="submitted-prompts-tab" data-bs-toggle="tab" href="#submitted-prompts" role="tab" aria-controls="submitted-prompts" aria-selected="false">Submitted Prompts to Review</a>
+                </li>
+            {% endif %}
             <li class="nav-item" role="presentation">
                 <a class="nav-link" id="all-prompts-tab" data-bs-toggle="tab" href="#all-prompts" role="tab" aria-controls="all-prompts" aria-selected="false">All Prompts</a>
             </li>
@@ -62,39 +64,41 @@
                     </tbody>
                 </table>
             </div>
-            <div class="tab-pane fade" id="submitted-prompts" role="tabpanel" aria-labelledby="submitted-prompts-tab">
+            {% if request.user.is_modirator %}
+                <div class="tab-pane fade" id="submitted-prompts" role="tabpanel" aria-labelledby="submitted-prompts-tab">
             <!-- Submitted Prompts to Review Table -->
-                <table class="my-4 table table-striped text-center">
-                    <thead>
-                        <tr>
-                            <th scope="col" style="width: 10%;">#</th>
-                            <th scope="col" style="width: 15%;">Name</th>
-                            <th scope="col" style="width: 15%;">Dataset Subset</th>
-                            <th scope="col" style="width: 15%;">Created By</th>
-                            <th scope="col" style="width: 20%;">Created On</th>
-                            <th scope="col" style="width: 15%;">Status</th>
-                            {% comment %} <th scope="col" style="width: 10%;"></th> {% endcomment %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for prompt in prompts_to_review %}
+                    <table class="my-4 table table-striped text-center">
+                        <thead>
                             <tr>
-                                <th>{{ forloop.counter }}</th>
-                                <td>
-                                    <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}">
-                                        <span class="prompt-name">{{ prompt.name }}</span>
-                                    </a>
-                                </td>
-                                <td> {{ prompt.dataset_subset }} </td>
-                                <td>{{ prompt.created_by }}</td>
-                                <td>{{ prompt.created_on }}</td>
-                                <td>{{ prompt.status }}</td>
-                                {% comment %} <td></td> {% endcomment %}
+                                <th scope="col" style="width: 10%;">#</th>
+                                <th scope="col" style="width: 15%;">Name</th>
+                                <th scope="col" style="width: 15%;">Dataset Subset</th>
+                                <th scope="col" style="width: 15%;">Created By</th>
+                                <th scope="col" style="width: 20%;">Created On</th>
+                                <th scope="col" style="width: 15%;">Status</th>
+                            {% comment %} <th scope="col" style="width: 10%;"></th> {% endcomment %}
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {% for prompt in prompts_to_review %}
+                                <tr>
+                                    <th>{{ forloop.counter }}</th>
+                                    <td>
+                                        <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}">
+                                            <span class="prompt-name">{{ prompt.name }}</span>
+                                        </a>
+                                    </td>
+                                    <td> {{ prompt.dataset_subset }} </td>
+                                    <td>{{ prompt.created_by }}</td>
+                                    <td>{{ prompt.created_on }}</td>
+                                    <td>{{ prompt.status }}</td>
+                                {% comment %} <td></td> {% endcomment %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
             <div class="tab-pane fade" id="all-prompts" role="tabpanel" aria-labelledby="all-prompts-tab">
             <!-- All Prompts Table -->
                 <table class="my-4 table table-striped text-center">
