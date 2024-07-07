@@ -6,9 +6,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Navigate to the project directory
-cd tawseem
+cd tawjeeh
 
-export DJANGO_SETTINGS_MODULE=tawseem.production_settings
 
 # Run Django management commands
 python manage.py migrate
@@ -25,5 +24,8 @@ python manage.py sync_with_hf --datasets-urls ./datasets.urls
 # collect static
 python manage.py collectstatic --noinput
 
+
+export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
+
 # Start the Gunicorn server in the background
-gunicorn tawseem.wsgi --workers 4 --threads 4
+gunicorn tawjeeh.wsgi --workers 4 --threads 4
