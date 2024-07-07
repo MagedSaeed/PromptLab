@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+
 import dotenv
 
 dotenv.load_dotenv()
@@ -70,7 +71,11 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     # htmx
     "django_htmx.middleware.HtmxMiddleware",
+    # whitenoise
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
+
 
 ROOT_URLCONF = "tawjeeh.urls"
 
@@ -167,7 +172,21 @@ AUTH_USER_MODEL = "core.TawjeehUser"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+DEFAULT_FROM_EMAIL = "tawjeeh-app <no-reply@tawjeeh-app.info>"
+
+
+# EMAIL_HOST = "smtp.sendgrid.net"
+# EMAIL_HOST_USER = "apikey"  # this is exactly the value 'apikey'
+# EMAIL_HOST_PASSWORD = (
+#     "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"
+# )
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
 
 # all-auth settings
 AUTHENTICATION_BACKENDS = [
