@@ -9,3 +9,7 @@ class TawjeehUser(AbstractUser):
     # Override any methods from AbstractUser if needed
     def __str__(self):
         return self.username
+
+    @property
+    def is_modirator(self):
+        return self.is_superuser

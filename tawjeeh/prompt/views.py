@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import OuterRef, Subquery
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -9,7 +10,6 @@ from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import PromptCreateUpdateForm, PromptReviewForm
 from prompt.models import Dataset, Prompt, PromptReviewAction, Task
-from django.db.models import OuterRef, Subquery, Q
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -213,6 +213,12 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.prompt = get_object_or_404(Prompt, pk=kwargs["prompt_pk"])
+        if not request.user.is_modirator:
+            messages.error(
+                request,
+                "Only modirators can review prompts. Please contact admins for further dtails.",
+            )
+            return redirect(self.get_success_url())
         return super().setup(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -229,7 +235,7 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
-        messages.success(self.request, "Review added successfully")
+        messages.success(self.request, "Review action added successfully")
         return super().form_valid(form)
 
 
@@ -267,6 +273,8 @@ class PromptListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
+        if not self.request.user.is_modirator:
+            queryset = queryset[:5]
         return queryset
 
     def setup(self, request, *args, **kwargs):
