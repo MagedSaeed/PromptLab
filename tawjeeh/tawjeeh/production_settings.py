@@ -36,6 +36,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.127.0.0.1",
 ]
 
+EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+
 server_ip = os.getenv("SERVER_IP")
 if server_ip:
     ALLOWED_HOSTS.append(server_ip)  # noqa: F405
