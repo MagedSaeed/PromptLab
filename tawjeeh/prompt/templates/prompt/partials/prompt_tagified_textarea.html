@@ -88,6 +88,7 @@
             directionSwitcher.addEventListener('change', function () {
                 var direction = directionSwitcher.value;
                 $('#tagifyTextarea').parent().attr('dir', direction);
+                $('#id_answer_choices').attr('dir', direction);
 
                 if (promptTempateTagified) {
                     promptTempateTagified.destroy();
@@ -95,8 +96,10 @@
 
                 if (direction === 'rtl') {
                     input.placeholder = 'أدخل التعليمات هنا...';
+                    $('#id_answer_choices').attr('placeholder', "أدخل الإجابات الاختيارية هنا، من الممكن ترك هذا فارغا، لا تنس الفصل بين الخيارات بإدخال الرمز ||");
                 } else {
                     input.placeholder = 'Enter your prompt here...';
+                    $('#id_answer_choices').attr('placeholder', "Enter choices separated by ||. You may leave this empty if the choices are already in the template");
                 }
 
                 initializeTagify();

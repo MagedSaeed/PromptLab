@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import OuterRef, Subquery
@@ -26,15 +25,6 @@ class TaskListView(LoginRequiredMixin, FilterView, ListView):
         filterset = self.filterset_class(self.request.GET, queryset=queryset)
         filtered_qs = filterset.qs
         search_term = self.request.GET.get("name", "")
-        from django.core.mail import send_mail
-
-        send_mail(
-            subject="Testing Message",
-            message="Here is the message.",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["mageedsaeed1@gmail.com"],
-            fail_silently=False,
-        )
         if search_term:
             terms = list(filter(None, search_term.split()))
             for term in terms:
