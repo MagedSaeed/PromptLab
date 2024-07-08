@@ -19,7 +19,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
             {
-                "placeholder": "Enter choices separated by ||. You may leave this empty if the choices are already in the template"
+                "placeholder": "Enter choices here pressing Enter after each choice. You may leave this empty if the choices are already in the templat"
             }
         )
         self.fields["name"].widget.attrs.update(
@@ -40,6 +40,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
+        self.fields["answer_choices"].label = False
 
     def save(self, commit=True):
         if not len(self.instance.dataset.subsets_with_splits) > 1:

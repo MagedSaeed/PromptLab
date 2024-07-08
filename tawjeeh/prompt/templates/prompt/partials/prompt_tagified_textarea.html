@@ -1,5 +1,6 @@
+{% load crispy_forms_tags %}
 <style>
-    .tagify__input {
+    #PromptTemplateTagifyContainer .tagify__input {
         min-height: 300px; /* Set a specific minimum height */
     }
     .tagify__dropdown {
@@ -11,7 +12,10 @@
         display: inline-block;
     }
 </style>
-
+<div id="answer_choices_div" class="my-2">
+    <label for="tagifyTextarea" class="form-label">Answer Choices</label>
+    {{ form.answer_choices|as_crispy_field }}
+</div>
 <div class="my-2">
     <label for="directionSwitcher" class="form-label">Text Direction: </label>
     <select id="directionSwitcher" class="form-select form-select-small mb-2 mx-2">
@@ -20,7 +24,7 @@
     </select>
     <br>
     <label for="tagifyTextarea" class="form-label">Prompt Template</label>
-    <div dir="{{ form.text_direction.value }}">
+    <div dir="{{ form.text_direction.value }}" id="PromptTemplateTagifyContainer">
         <textarea id="tagifyTextarea" class="form-control" placeholder="Enter your prompt here..." rows="5">
             {% if form.template.value %}
                 {{ form.template.value }}
@@ -31,19 +35,21 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var input = document.getElementById('tagifyTextarea');
+        var answer_choices_input = document.getElementById('id_answer_choices');
+        answerChoicesTagified = new Tagify(answer_choices_input)
+        var prompt_textarea = document.getElementById('tagifyTextarea');
         var directionSwitcher = document.getElementById('directionSwitcher');
         {% if prompt and not prompt.updateable %}
-            currentText = input.value;
+            currentText = prompt_textarea.value;
             currentText = currentText.trim()
-            input.value = currentText
-            input.disabled = true;
+            prompt_textarea.value = currentText
+            prompt_textarea.disabled = true;
             directionSwitcher.disabled = true;
         {% else %}
             var whitelist = [{% for column in dataset_columns %} '{{column}}', {% endfor %}];
             var promptTempateTagified;
             function initializeTagify() {
-                promptTempateTagified = new Tagify(input, {
+                promptTempateTagified = new Tagify(prompt_textarea, {
                     enforceWhitelist: true,
                     delimiters: "//",
                     whitelist: whitelist,
@@ -56,7 +62,7 @@
                         highlightFirst: true,           // automatically highlights the first suggestion item
                         includeSelectedTags: true,      // include selected tags in the dropdown
                         position: 'text',               // dropdown position
-                        maxHeight: '150px'              // max height of the dropdown
+                        maxHeight: '500px'              // max height of the dropdown
                     }
                 });
 
@@ -88,18 +94,18 @@
             directionSwitcher.addEventListener('change', function () {
                 var direction = directionSwitcher.value;
                 $('#tagifyTextarea').parent().attr('dir', direction);
-                $('#id_answer_choices').attr('dir', direction);
+                $('#answer_choices_div').attr('dir', direction);
 
                 if (promptTempateTagified) {
                     promptTempateTagified.destroy();
                 }
 
                 if (direction === 'rtl') {
-                    input.placeholder = 'أدخل التعليمات هنا...';
-                    $('#id_answer_choices').attr('placeholder', "أدخل الإجابات الاختيارية هنا، من الممكن ترك هذا فارغا، لا تنس الفصل بين الخيارات بإدخال الرمز ||");
+                    prompt_textarea.placeholder = 'أدخل التعليمات هنا...';
+                    $('#id_answer_choices .tagify__input').attr('placeholder', "أدخل اختيارات الإجابات هنا، اضغط enter بعد كل إجابة، من الممكن ترك هذا فارغا إذا كانت الإجابات في قالب التوجيه");
                 } else {
-                    input.placeholder = 'Enter your prompt here...';
-                    $('#id_answer_choices').attr('placeholder', "Enter choices separated by ||. You may leave this empty if the choices are already in the template");
+                    prompt_textarea.placeholder = 'Enter your prompt here...';
+                    $('#id_answer_choices .tagify__input').attr('placeholder', "Enter choices here pressing Enter after each choice. You may leave this empty if the choices are already in the templat");
                 }
 
                 initializeTagify();

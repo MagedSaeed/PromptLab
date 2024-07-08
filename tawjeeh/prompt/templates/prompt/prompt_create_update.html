@@ -208,7 +208,6 @@
                                     <div class="row justify-content-center">
                                         <div class="mb-3 col-12 full-width" id="templateFieldContainer">
                                             {{ form.name|as_crispy_field }}
-                                            {{ form.answer_choices|as_crispy_field }}
                                             {% include 'prompt/partials/prompt_tagified_textarea.html' %}
                                             {{ form.template|as_crispy_field }}
                                             {{ form.dataset_subset }}
@@ -288,6 +287,7 @@
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 text_direction = document.getElementById('directionSwitcher').value;
                 answer_choices = $('#id_answer_choices').val();
+                answer_choices = JSON.parse(answer_choices).map((choice)=>{return choice.value}).join('||')
                 $('#apply-spinner').addClass('visible');
                 let split = $('#splitDropdown').text().trim();
                 let subset = $('#subsetDropdown').text().trim();

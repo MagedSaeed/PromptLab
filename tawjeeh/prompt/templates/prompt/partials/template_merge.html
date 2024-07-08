@@ -9,8 +9,8 @@
         <label for="templteMergeSampleRanger">Select Sample Index:</label>
         <div class="d-flex justify-content-between">
             <span>0</span>
-            <input type="range" id="templteMergeSampleRanger" min="0" max="{{ max_samples }}" value="{{ sample_index }}" class="form-range">
-            <span>{{ max_samples }}</span>
+            <input type="range" id="templteMergeSampleRanger" min="0" max='{{ max_samples|add:'-1' }}' value="{{ sample_index|add:'-1' }}" class="form-range">
+            <span>{{ max_samples|add:"-1" }}</span>
         </div>
         <p>Selected Sample Index: <span id="tempelateMergeSelectedSampleIndex">{{ sample_index }}</span>
             <div id="sampleIndexSpinner" class="spinner-border spinner-border-sm text-secondary" role="status" style="display: none;">
@@ -21,11 +21,15 @@
 </div>
 
 <script>
-    document.getElementById('templteMergeSampleRanger').addEventListener('input', function() {
-        document.getElementById('tempelateMergeSelectedSampleIndex').innerText = this.value;
-    });
 
-    document.getElementById('templteMergeSampleRanger').addEventListener('change', function() {
+    $('#templteMergeSampleRanger').on('change', function(event) {
+        document.getElementById('tempelateMergeSelectedSampleIndex').innerText = this.value;
+        if(!samplesSlidersSync){
+            samplesSlidersSync=true;
+            $('#sampleRange').val(this.value);
+            $('#sampleRange').change();
+            samplesSlidersSync=false;
+        }
         const sampleIndex = this.value;
         const slider = this;
         const spinner = document.getElementById('sampleIndexSpinner');
@@ -52,6 +56,8 @@
             sampleIndexText.style.display = 'inline'; // Show the sample index text
         });
     });
+
+
 </script>
 
 <style>
