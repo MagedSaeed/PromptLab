@@ -308,6 +308,18 @@ class PromptListView(ListView):
         return context
 
 
+class UserPromptsListView(ListView):
+    model = Prompt
+    paginate_by = 10
+    context_object_name = "prompts"
+    template_name = "prompt/user_prompts_list.html"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(created_by=self.request.user)
+        return queryset
+
+
 class DatasetDetailsView(LoginRequiredMixin, View):
     def get(self, request, dataset_pk, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=dataset_pk)

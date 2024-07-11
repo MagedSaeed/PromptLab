@@ -9,6 +9,7 @@ from prompt.views import (
     PromptReviewView,
     PromptUpdateView,
     TaskListView,
+    UserPromptsListView,
 )
 
 app_name = "prompt"
@@ -25,6 +26,11 @@ urlpatterns = [
         "dataset/<int:dataset_pk>/prompt/list",
         PromptListView.as_view(),
         name="prompt_list",
+    ),
+    path(
+        "prompts-list",
+        UserPromptsListView.as_view(),
+        name="user_prompts_list",
     ),
     path(
         "dataset/<int:dataset_pk>/prompt/<int:pk>/delete",

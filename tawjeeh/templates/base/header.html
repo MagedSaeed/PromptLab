@@ -9,7 +9,7 @@
             <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link">
+                        <a href="{% url 'prompt:user_prompts_list' %}" class="nav-link" title="view my prompts">
                             {% if user.socialaccount_set.exists %}
                                 {% with account=user.socialaccount_set.all.0 %}
                                     <img src="{{ account.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle mx-2" width="30" height="30">
