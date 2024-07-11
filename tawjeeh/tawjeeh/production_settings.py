@@ -33,6 +33,7 @@ CACHES = {
 
 CSRF_TRUSTED_ORIGINS = [
     "https://tawjeeh-production.up.railway.app",
+    "https://*.railway.app",
     "https://*.127.0.0.1",
 ]
 
