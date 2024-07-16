@@ -19,7 +19,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
             {
-                "placeholder": "Enter choices here pressing Enter after each choice. You may leave this empty if the choices are already in the templat"
+                "placeholder": "Enter choices here pressing Enter after each choice (optional)."
             }
         )
         self.fields["name"].widget.attrs.update(

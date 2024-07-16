@@ -287,7 +287,10 @@
                 promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
                 text_direction = document.getElementById('directionSwitcher').value;
                 answer_choices = $('#id_answer_choices').val();
-                answer_choices = JSON.parse(answer_choices).map((choice)=>{return choice.value}).join('||')
+                if(answer_choices)
+                    answer_choices = JSON.parse(answer_choices).map((choice)=>{return choice.value}).join('||')
+                else
+                    answer_choices = []
                 $('#apply-spinner').addClass('visible');
                 let split = $('#splitDropdown').text().trim();
                 let subset = $('#subsetDropdown').text().trim();
