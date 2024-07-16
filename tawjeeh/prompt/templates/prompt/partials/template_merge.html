@@ -1,83 +1,87 @@
-<div class="content-container">
-    <span class=""> <b>subset:</b> {{ subset }}, <b>split:</b> {{ split }}.</span>
-    <span class="text-muted"> change these configurations from the dataset information (left sidebar) then click apply</span>
-    <hr>
-    <div class="template-content" dir="{{ text_direction }}">
-        {{ rendered_template|safe|linebreaks }}
-    </div>
-    <div class="slider-container">
-        <label for="templteMergeSampleRanger">Select Sample Index:</label>
-        <div class="d-flex justify-content-between">
-            <span>0</span>
-            <input type="range" id="templteMergeSampleRanger" min="0" max='{{ max_samples|add:'-1' }}' value="{{ sample_index|add:'-1' }}" class="form-range">
-            <span>{{ max_samples|add:"-1" }}</span>
+{% if merge_error %}
+    <span class="text-danger"> Error happened while trying to merge: {{merge_error}}</span>
+{% else %}
+    <div class="content-container">
+        <span class=""> <b>subset:</b> {{ subset }}, <b>split:</b> {{ split }}.</span>
+        <span class="text-muted"> change these configurations from the dataset information (left sidebar) then click apply</span>
+        <hr>
+        <div class="template-content" dir="{{ text_direction }}">
+            {{ rendered_template|safe|linebreaks }}
         </div>
-        <p>Selected Sample Index: <span id="tempelateMergeSelectedSampleIndex">{{ sample_index }}</span>
-            <div id="sampleIndexSpinner" class="spinner-border spinner-border-sm text-secondary" role="status" style="display: none;">
-                <span class="visually-hidden">Loading...</span>
+        <div class="slider-container">
+            <label for="templteMergeSampleRanger">Select Sample Index:</label>
+            <div class="d-flex justify-content-between">
+                <span>0</span>
+                <input type="range" id="templteMergeSampleRanger" min="0" max='{{ max_samples|add:'-1' }}' value="{{ sample_index|add:'-1' }}" class="form-range">
+                <span>{{ max_samples|add:"-1" }}</span>
             </div>
-        </p>
+            <p>Selected Sample Index: <span id="tempelateMergeSelectedSampleIndex">{{ sample_index }}</span>
+                <div id="sampleIndexSpinner" class="spinner-border spinner-border-sm text-secondary" role="status" style="display: none;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </p>
+        </div>
     </div>
-</div>
 
-<script>
+    <script>
 
-    $('#templteMergeSampleRanger').on('change', function(event) {
-        document.getElementById('tempelateMergeSelectedSampleIndex').innerText = this.value;
-        if(!samplesSlidersSync){
-            samplesSlidersSync=true;
-            $('#sampleRange').val(this.value);
-            $('#sampleRange').change();
-            samplesSlidersSync=false;
-        }
-        const sampleIndex = this.value;
-        const slider = this;
-        const spinner = document.getElementById('sampleIndexSpinner');
-        const sampleIndexText = document.getElementById('tempelateMergeSelectedSampleIndex');
-
-        slider.disabled = true; // Disable the slider
-        sampleIndexText.style.display = 'none'; // Hide the sample index text
-        spinner.style.display = 'inline-block'; // Show the spinner
-        let split = $('#splitDropdown').text().trim();
-        let subset = $('#subsetDropdown').text().trim();
-        htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}`, {
-            target: 'div.content-container',
-            swap: 'outerHTML',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            values: {
-                'template': '{{ template_content|linebreaksbr }}',
-                'sample_index': sampleIndex,
+        $('#templteMergeSampleRanger').on('change', function(event) {
+            document.getElementById('tempelateMergeSelectedSampleIndex').innerText = this.value;
+            if(!samplesSlidersSync){
+                samplesSlidersSync=true;
+                $('#sampleRange').val(this.value);
+                $('#sampleRange').change();
+                samplesSlidersSync=false;
             }
-        }).then(function() {
-            slider.disabled = false; // Re-enable the slider after the response is received
-            spinner.style.display = 'none'; // Hide the spinner
-            sampleIndexText.style.display = 'inline'; // Show the sample index text
+            const sampleIndex = this.value;
+            const slider = this;
+            const spinner = document.getElementById('sampleIndexSpinner');
+            const sampleIndexText = document.getElementById('tempelateMergeSelectedSampleIndex');
+
+            slider.disabled = true; // Disable the slider
+            sampleIndexText.style.display = 'none'; // Hide the sample index text
+            spinner.style.display = 'inline-block'; // Show the spinner
+            let split = $('#splitDropdown').text().trim();
+            let subset = $('#subsetDropdown').text().trim();
+            htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}`, {
+                target: 'div.content-container',
+                swap: 'outerHTML',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                values: {
+                    'template': '{{ template_content|linebreaksbr }}',
+                    'sample_index': sampleIndex,
+                }
+            }).then(function() {
+                slider.disabled = false; // Re-enable the slider after the response is received
+                spinner.style.display = 'none'; // Hide the spinner
+                sampleIndexText.style.display = 'inline'; // Show the sample index text
+            });
         });
-    });
 
 
-</script>
+    </script>
 
-<style>
-    .content-container {
-        display: flex;
-        flex-direction: column;
-        height: 38vh;
-    }
+    <style>
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            height: 38vh;
+        }
 
-    .template-content {
-        flex: 1 1 auto;
-        overflow-y: auto;
-        padding: 1px;
+        .template-content {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 1px;
         {% comment %} white-space: pre-wrap; /* Ensures text wrapping */ {% endcomment %}
-        word-wrap: break-word; /* Break long words */
-    }
+            word-wrap: break-word; /* Break long words */
+        }
 
-    .slider-container {
-        flex: 0 0 10%; /* Occupy 10% of the height */
-        padding: 10px;
-        border-top: 1px solid #ddd;
-    }
-</style>
+        .slider-container {
+            flex: 0 0 10%; /* Occupy 10% of the height */
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+{% endif %}

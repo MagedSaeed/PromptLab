@@ -362,6 +362,17 @@ class DatasetDetailsView(LoginRequiredMixin, View):
 
 
 class ApplyTemplateView(LoginRequiredMixin, View):
+
+    def apply_template(self, template_content, sample):
+        template_content = template_content.replace("<br>", "\n")
+        template = Template(template_content)
+        answer_choices = self.request.POST.get("answer_choices", [])
+        if answer_choices:
+            answer_choices = answer_choices.split("||")
+        sample["answer_choices"] = answer_choices
+        rendered_sample = template.render(**sample)
+        return rendered_sample
+
     def post(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         split = request.GET.get("split")
@@ -373,17 +384,18 @@ class ApplyTemplateView(LoginRequiredMixin, View):
             subset=subset,
         )[sample_index]
         template_content = request.POST.get("template", "")
-        template_content = template_content.replace("<br>", "\n")
-        template = Template(template_content)
-        answer_choices = request.POST.get("answer_choices", [])
-        if answer_choices:
-            answer_choices = answer_choices.split("||")
-        sample["answer_choices"] = answer_choices
-        rendered_sample = template.render(**sample)
+        merge_error = ""
+        rendered_sample = {}
+        try:
+            rendered_sample = self.apply_template(template_content, sample)
+        except Exception as e:
+            merge_error = str(e)
+
         return render(
             request,
             "prompt/partials/template_merge.html",
             {
+                "merge_error": merge_error,
                 "dataset": self.dataset,
                 "sample_index": sample_index,
                 "rendered_template": rendered_sample,
