@@ -111,7 +111,7 @@ class Command(BaseCommand):
             )
 
             # Iterate over dataset URLs and fetch their details
-            for dataset_url, primary_task in dataset_info_list:
+            for dataset_url, primary_tasks in dataset_info_list:
                 path_parts = dataset_url.split("/")
                 if len(path_parts) >= 2:
                     author = path_parts[-2]
@@ -148,10 +148,16 @@ class Command(BaseCommand):
                 description = dataset.get("description", "")
                 huggingface_raw = dataset
 
-                # Create or get the primary task
-                task, created = Task.objects.get_or_create(name=primary_task)
-                if created:
-                    tasks_created += 1
+                # Split tasks by comma and create or get each task
+                task_names = [
+                    task.strip() for task in primary_tasks.split(",") if task.strip()
+                ]
+                tasks = []
+                for task_name in task_names:
+                    task, created = Task.objects.get_or_create(name=task_name)
+                    if created:
+                        tasks_created += 1
+                    tasks.append(task)
 
                 # Create or update the dataset
                 dataset, dataset_created = Dataset.objects.update_or_create(
@@ -163,8 +169,8 @@ class Command(BaseCommand):
                     },
                 )
 
-                # Set the primary task to the dataset
-                dataset.tasks.set([task])
+                # Set the primary tasks to the dataset
+                dataset.tasks.set(tasks)
 
                 # Count newly created datasets
                 if dataset_created:
