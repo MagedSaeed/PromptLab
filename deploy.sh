@@ -30,7 +30,7 @@ python manage.py sync_with_hf --sheet_id 1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0J
 python manage.py collectstatic --noinput
 
 # install gunicorn
-python -m pip install pip install gunicorn
+pip install gunicorn
 
 
 # Start the Gunicorn server in the background
