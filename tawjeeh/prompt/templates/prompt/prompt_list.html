@@ -118,7 +118,7 @@
                             <tr>
                                 <th>{{ forloop.counter }}</th>
                                 <td>
-                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
+                                    <a {% if not prompt.updateable %} href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}" {% else %} title="prompt still under design" {% endif %}>
                                         <span class="prompt-name">{{ prompt.name }}</span>
                                     </a>
                                 </td>
