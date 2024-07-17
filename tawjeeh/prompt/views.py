@@ -154,6 +154,17 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         self.split = request.GET.get("split")
         return super().setup(request, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        prompt = self.get_object()
+        if prompt.created_by != user:
+            messages.error(
+                self.request,
+                "You are not allowed to update this prompt.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
+
     def post(self, request, *args, **kwargs):
         instance = self.get_object()
         if not instance.updateable:
@@ -220,6 +231,16 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
             )
             return redirect(self.get_success_url())
         return super().setup(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        if self.prompt.updateable:
+            messages.error(
+                request,
+                "The prompt is still under design and not submitted yet.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -298,7 +319,7 @@ class PromptListView(ListView):
             last_submitter_decision=Subquery(
                 review_actions.values("submitter_decision")[:1]
             )
-        )
+        ).filter(review_actions__isnull=False)
 
         # Filter prompts where the last submitter_decision is None
         ready_to_review_prompts = prompts_with_last_action.filter(
@@ -362,7 +383,6 @@ class DatasetDetailsView(LoginRequiredMixin, View):
 
 
 class ApplyTemplateView(LoginRequiredMixin, View):
-
     def apply_template(self, template_content, sample):
         template_content = template_content.replace("<br>", "\n")
         template = Template(template_content)
