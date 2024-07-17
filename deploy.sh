@@ -24,7 +24,7 @@ python manage.py import_superusers ../docker/django-site/admins.yml
 python manage.py setup_allauth
 
 # sync with hf
-python manage.py sync_with_hf --datasets-urls ./datasets.urls
+python manage.py sync_with_hf --sheet_id 1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k --sheet_name final-list
 
 # collect static
 python manage.py collectstatic --noinput

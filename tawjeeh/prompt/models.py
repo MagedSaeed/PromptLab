@@ -5,8 +5,6 @@ import datasets
 from core.utils import redis_cache
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db import models
-from django.db.models import Subquery, OuterRef
 
 User = get_user_model()
 
@@ -28,6 +26,11 @@ class Dataset(models.Model):
     huggingface_name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     huggingface_raw = models.JSONField(null=True, blank=True)
+
+    @property
+    def primary_task(self):
+        if self.tasks.exists():
+            return self.tasks.first()
 
     @cached_property
     def hf_object(self):

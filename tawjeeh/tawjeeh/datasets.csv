@@ -1,0 +1,168 @@
+dataset_name,task_name,link,example_template,has_answer_choices,subset,Notes,,,,,,,,,,,,,,
+xcsr,commonsense reasoning,https://huggingface.co/datasets/xcsr,,,,machine translated,,,,,,,,,,,,,,
+Commonsense validation,commonsense validation,https://huggingface.co/datasets/arbml/Commonsense_Validation,"Do the following two sentences talk about the same thing:
+first sentence: {{first_sentence}}
+second sentence: {{second_sentence}}
+{{answer_choices | join('or')}}?
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+Arabic Text Diacritization,diacritization,https://huggingface.co/datasets/arbml/arabic_text_diacritization,"Diacritize the following text:
+{{text}}
+|||
+{{diaritized}}",no,,,,,,,,,,,,,,,,
+Shakkelha,diacritization,https://huggingface.co/datasets/arbml/shakkelha,"Given an undiaritized text {{text}}, what is the diaritization form of it?
+|||
+{{diaritized}}",no,,,,,,,,,,,,,,,,
+AraBench,dialect identification,https://huggingface.co/datasets/arbml/AraBench_dev,"Given the following Arabic text {{Arabic}}, in what dialect was it written, choose from the following
+{{answer_choices | join(',')}}
+|||
+{{answer_choices[label]}}",yes,,dev and test set has diferent number of labels,,,,,,,,,,,,,,
+Arabic - Egyptian comparable Wikipedia corpus,dialect identification,https://huggingface.co/datasets/arbml/Comparable_Wikipedia,,,,not correct format,,,,,,,,,,,,,,
+Arabic Dialects Dataset,dialect identification,https://huggingface.co/datasets/arbml/Arabic_Dialects_Dataset,"Given the following Arabic text {{Text}}, in what dialect was it written, choose from the following
+{{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+araData,dialect identification,https://huggingface.co/datasets/arbml/araData,"Given the following Arabic text {{Sentence}}, in what dialect was it written, choose from the following
+{{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+Shami,dialect identification,https://huggingface.co/datasets/arbml/Shami,"Given the following Arabic text {{Arabic}}, in what dialect was it written, choose from the following
+{{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+Twt15DA_Lists,dialect identification,https://huggingface.co/datasets/arbml/Twt15DA_Lists,"Given the following Arabic word {{word}}, in what dialect was it written, choose from the following
+{{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+Emotional-Tone,emotion classification,https://huggingface.co/datasets/emotone_ar,"What feeling does the following tweet {{Tweet}} imply. Choose from the following  {{answer_choices | join('or')}}? 
+|||
+{{answer_choices [label] }}",yes,,,,,,,,,,,,,,,,
+SemEval-2018 Task 1,emotion classification,https://huggingface.co/datasets/sem_eval_2018_task_1,"Given the following Tweet {{Tweet}}. Does it show anger? options:  {{answer_choices | join('or')}}? 
+|||
+{{answer_choices [anger] }}",yes,subtask5.arabic,,,,,,,,,,,,,,,
+ArMATH,math solving,https://huggingface.co/datasets/arbml/ArMATH,"Givent the following Math Questions {{question}}. Represent it as an equation? 
+|||
+{{equation}}",no,,,,,,,,,,,,,,,,
+APCD,meter classification,https://huggingface.co/datasets/arbml/APCD_remap,"Given the following verse from a poem {{first_shatr}} and {{second_shatr}}. What it's meter, chooose from the following  {{answer_choices | join('or')}}
+|||
+{{answer_choices [meter] }}",yes,,,,,,,,,,,,,,,,
+APCD2,meter classification,https://huggingface.co/datasets/arbml/APCDv2,"Given the following verse from a poem {{poem}}. What it's meter, chooose from the following  {{answer_choices | join('or')}}
+|||
+{{answer_choices [label] }}",yes,,,,,,,,,,,,,,,,
+ashaar,"meter classification, poetry era classification, poetry theme classification",https://huggingface.co/datasets/MagedSaeed/ashaar,,,,,,,,,,,,,,,,,,
+ArabicMMLU,multiple choice,https://huggingface.co/datasets/Zaid/ammlu,"You have the following question: {{Question}} and the following options: A. {{A}} B. {{B}} C. {{C}} D. {{D}} E. {{E}}, the correct answer is 
+|||
+{{answer}}
+",no,Humanities,,,,,,,,,,,,,,,
+cidar-mcq,multiple choice,https://huggingface.co/datasets/arbml/CIDAR-MCQ-100,"You have the following question: {{Question}} and the following options: A. {{A}} B. {{B}} C. {{C}} D. {{D}} E. {{E}}, the correct answer is 
+|||
+{{answer}}
+",no,,needs to convert the data to labels,,,,,,,,,,,,,,
+belebele,multiple choice,https://huggingface.co/datasets/facebook/belebele,"Given the following document : {{flores_passage}} and the question {{question}} and the following options: 1. {{mc_answer1}} 2. {{mc_answer2}} 3. {{mc_answer3}} 4. {{mc_answer4}}, the correct answer is 
+|||
+{{correct_answer_num}}
+",no,acm_Arab,,,,,,,,,,,,,,,
+QA4MRE,multiple choice,https://huggingface.co/datasets/qa4mre,"Given the following document : {{document_str}} and the question {{question_str}} and the following options: 1. {{answer_options['answer_str'][0]}} 2. {{answer_options['answer_str'][1]}} 3. {{answer_options['answer_str'][2]}} 4. {{answer_options['answer_str'][3]}} 5. {{answer_options['answer_str'][4]}}, the correct answer is 
+|||
+{{correct_answer_id}}
+",no,2012.main.AR,,,,,,,,,,,,,,,
+AQMAR,named entity recognition,https://huggingface.co/datasets/arbml/AQMAR,,,,,,,,,,,,,,,,,,
+CANERCorpus,named entity recognition,https://huggingface.co/datasets/caner,,,,,,,,,,,,,,,,,,
+Cross-lingual NER,named entity recognition,https://huggingface.co/datasets/arbml/Zero_Shot_Cross_Lingual_NER_ar,,,,,,,,,,,,,,,,,,
+Disease NER,named entity recognition,https://huggingface.co/datasets/arbml/Disease_NER,,,,,,,,,,,,,,,,,,
+Named Entities Lexicon,named entity recognition,https://huggingface.co/datasets/arbml/Named_Entities_Lexicon,,,,,,,,,,,,,,,,,,
+WDC,named entity recognition,https://huggingface.co/datasets/arbml/WDC,,,,,,,,,,,,,,,,,,
+ArEntail,NLI,https://huggingface.co/datasets/arbml/ArEntail,"Given the {{premise}}, is it true that {{hypothesis}}? {{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+Textual Entailment,NLI,https://huggingface.co/datasets/arbml/ArabicTE,"Given the {{Premise}}, is it true that {{Hypothesis}}? {{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+XTREME,"NLI,part of speech tagging,named entity recognition,question answering,machine translation",https://huggingface.co/datasets/xtreme,,,,machine translated,,,,,,,,,,,,,,
+Arabic OSACT4 : Offensive Language Detection,offensive language detection,https://huggingface.co/datasets/arbml/OSACT4_hatespeech,"Is the following tweet {{tweet}} offensive?  {{answer_choices | join('or')}}
+|||
+{{answer_choices[offensive]}} ",yes,,,,,,,,,,,,,,,,
+MLMA hate speech,offensive language detection,https://huggingface.co/datasets/arbml/MLMA_hate_speech_ar,,,,,,,,,,,,,,,,,,
+MPOLD: Multi Platforms Offensive Language Dataset,offensive language detection,https://huggingface.co/datasets/arbml/MPOLD,,,,,,,,,,,,,,,,,,
+OffensEval 2020,offensive language detection,https://huggingface.co/datasets/strombergnlp/offenseval_2020,,,,,,,,,,,,,,,,,,
+Understanding and Detecting Dangerous Speech in Social Media,offensive language detection,https://huggingface.co/datasets/arbml/Dangerous_Dataset,,,,,,,,,,,,,,,,,,
+Arabic Hate Speech 2022 Shared Task,offensive language detection,https://huggingface.co/datasets/arbml/Arabic_Hate_Speech,,,,,,,,,,,,,,,,,,
+Arabic POS Dialect,part of speech tagging,https://huggingface.co/datasets/arabic_pos_dialect,,,,,,,,,,,,,,,,,,
+Arabic senti-lexicon,"part of speech tagging, sentiment analysis",https://huggingface.co/datasets/arbml/Senti_Lexicon,,,,,,,,,,,,,,,,,,
+Universal Dependencies,"parts of speech tagging, morphological features, and syntactic dependencies",https://huggingface.co/datasets/universal_dependencies,,,,,,,,,,,,,,,,,,
+AQAD: Arabic Question-Answer dataset,question answering,https://huggingface.co/datasets/arbml/AQAD,,,,,,,,,,,,,,,,,,
+Arabic RC datasets,question answering,https://huggingface.co/datasets/arbml/Arabic_RC_AQA,,,,,,,,,,,,,,,,,,
+ARCD,question answering,https://huggingface.co/datasets/arcd,,,,,,,,,,,,,,,,,,
+DAWQAS: A Dataset for Arabic Why Question Answering System,question answering,https://huggingface.co/datasets/arbml/DAWQAS,,,,,,,,,,,,,,,,,,
+EXAMS,question answering,https://huggingface.co/datasets/exams,,,,,,,,,,,,,,,,,,
+khalidalt/tydiqa-goldp,question answering,https://huggingface.co/datasets/khalidalt/tydiqa-goldp,,,,,,,,,,,,,,,,,,
+MKQA,question answering,https://huggingface.co/datasets/mkqa,,,,,,,,,,,,,,,,,,
+Mr. TyDi,question answering,https://huggingface.co/datasets/castorini/mr-tydi,,,,,,,,,,,,,,,,,,
+xquad,question answering,https://huggingface.co/datasets/xquad,,,,,,,,,,,,,,,,,,
+TYDIQA,question answering,https://huggingface.co/datasets/tydiqa,,,,,,,,,,,,,,,,,,
+ACVA,question answering (yes/no),https://huggingface.co/datasets/OALL/ACVA,,,,,,,,,,,,,,,,,,
+BRAD 1.0,review classification,https://huggingface.co/datasets/arbml/BRAD,,,,,,,,,,,,,,,,,,
+ArSarcasm,sarcasm detection,https://huggingface.co/datasets/ar_sarcasm,,,,,,,,,,,,,,,,,,
+Sa`7r,sarcasm detection,https://huggingface.co/datasets/arbml/SaudiIrony,,,,,,,,,,,,,,,,,,
+ArSarcasm-v2,sarcasm detection,https://huggingface.co/datasets/arbml/ArSarcasm_v2,,,,,,,,,,,,,,,,,,
+iSarcasmEval: SemEval-2022 Task 6,sarcasm detection,https://huggingface.co/datasets/arbml/iSarcasmEval_task_A,,,,,,,,,,,,,,,,,,
+nsurl,semantic question similarity,https://huggingface.co/datasets/arbml/nsurl_2019_task8_test,,,,,,,,,,,,,,,,,,
+Quran Hadith Datasets,semantic similarity,https://huggingface.co/datasets/arbml/Quran_Hadith,,,,,,,,,,,,,,,,,,
+AJGT,sentiment analysis,https://huggingface.co/datasets/ajgt_twitter_ar,,,,,,,,,,,,,,,,,,
+Arabic Sentiment Lexicons,sentiment analysis,https://huggingface.co/datasets/arbml/Sentiment_Lexicons,,,,,,,,,,,,,,,,,,
+ArSAS,sentiment analysis,https://huggingface.co/datasets/arbml/ArSAS,,,,,,,,,,,,,,,,,,
+ArSenTD-LEV,sentiment analysis,https://huggingface.co/datasets/arsentd_lev,,,,,,,,,,,,,,,,,,
+ArSentiment,sentiment analysis,https://huggingface.co/datasets/ar_res_reviews,,,,,,,,,,,,,,,,,,
+ASTAD,sentiment analysis,https://huggingface.co/datasets/arbml/Sentiment_Analysis_Tweets,,,,,,,,,,,,,,,,,,
+ASTD,sentiment analysis,https://huggingface.co/datasets/arbml/ASTD,,,,,,,,,,,,,,,,,,
+BBN Blog Posts Sentiment Corpus,sentiment analysis,https://huggingface.co/datasets/arbml/BBN_Blog_Posts,,,,,,,,,,,,,,,,,,
+ElecMorocco2016,sentiment analysis,https://huggingface.co/datasets/arbml/ElecMorocco,,,,,,,,,,,,,,,,,,
+HARD,sentiment analysis,https://huggingface.co/datasets/hard,,,,,,,,,,,,,,,,,,
+LABR,sentiment analysis,https://huggingface.co/datasets/labr,,,,,,,,,,,,,,,,,,
+Large Multi-Domain Resources for Arabic Sentiment Analysis,sentiment analysis,https://huggingface.co/datasets/arbml/ATT,,,,,,,,,,,,,,,,,,
+MSAC,sentiment analysis,https://huggingface.co/datasets/arbml/MSAC,,,,,,,,,,,,,,,,,,
+NileULex,sentiment analysis,https://huggingface.co/datasets/arbml/NileULex,,,,,,,,,,,,,,,,,,
+OCLAR,sentiment analysis,https://huggingface.co/datasets/oclar,,,,,,,,,,,,,,,,,,
+Senti lex,sentiment analysis,https://huggingface.co/datasets/senti_lex,,,,,,,,,,,,,,,,,,
+Sentiment Lexicons for 81 Languages,sentiment analysis,https://huggingface.co/datasets/senti_lex,,,,,,,,,,,,,,,,,,
+Sudanese Dialect tweets about ridesharing companies,sentiment analysis,https://huggingface.co/datasets/arbml/Sudanese_Dialect_Tweet,,,,,,,,,,,,,,,,,,
+Sudanese Dialect tweets about telecommunication companies,sentiment analysis,https://huggingface.co/datasets/arbml/Sudanese_Dialect_Tweet_Tele,,,,,,,,,,,,,,,,,,
+Syria Tweets Sentiment Corpus,sentiment analysis,https://huggingface.co/datasets/arbml/Syria_Tweet_Sentiment,,,,,,,,,,,,,,,,,,
+TSAC,sentiment analysis,https://huggingface.co/datasets/arbml/TSAC,,,,,,,,,,,,,,,,,,
+AT-ODTSA,sentiment Analysis (open-domain targeted),https://huggingface.co/datasets/arbml/AT_ODSTA,,,,,,,,,,,,,,,,,,
+Spam ham detection,spam detection,https://huggingface.co/datasets/arbml/arabic_spam_ham_twitter,,,,,,,,,,,,,,,,,,
+AraStance,stance detection,https://huggingface.co/datasets/arbml/arastance,,,,,,,,,,,,,,,,,,
+Mawqif,stance detection,https://huggingface.co/datasets/NoraAlt/Mawqif_Stance-Detection,,,,,,,,,,,,,,,,,,
+ANS CORPUS: claim verification,"stance detection, claim verification",https://huggingface.co/datasets/arbml/ANS_stance,,,,,,,,,,,,,,,,,,
+ArCovidVac,"stance detection, informativeness, text classification",https://huggingface.co/datasets/arbml/ArCovidVac,,,,,,,,,,,,,,,,,,
+AraSum,summarization,https://huggingface.co/datasets/arbml/AraSum,"Summarize the following article {{article}}
+|||
+{{summary}}",no,,,,,,,,,,,,,,,"ok, english labels",https://huggingface.co/datasets/arbml/MLMA_hate_speech_ar
+CrossSum,summarization,https://huggingface.co/datasets/csebuetnlp/CrossSum,,,,cross lingual summaries,,,,,,,,,,,,,,
+GEM - WikiLingua,summarization,https://huggingface.co/datasets/wiki_lingua,"Summarize the following article {{article['document'][0]}}
+|||
+{{article['summary'][0]}}",no,arabic,,,,,,,,,,,,,,,
+GEM - XLSum,summarization,https://huggingface.co/datasets/GEM/xlsum,"Generate a title for the following document: {{text}}
+|||
+{{title}}",no,arabic,,,,,,,,,,,,,,,
+AGS-Corpus,summarization,https://huggingface.co/datasets/FahdSeddik/AGS-Corpus,"Summarize the following article {{text}}
+|||
+{{summary}}",no,,,,,,,,,,,,,,,,
+Goud-sum,summarization,https://huggingface.co/datasets/Goud/Goud-sum,"Create a headline for the following article {{article}}
+|||
+{{headline}}",no,,,,,,,,,,,,,,,,
+ARGEN,title generation,https://huggingface.co/datasets/arbml/ARGEN_title_generation,"Generate a title for the following document: {{document}}
+|||
+{{title}}",no,,,,,,,,,,,,,,,,
+ANTCORPUS,topic classification,https://huggingface.co/datasets/arbml/antcorpus,"Given the following text {{TEXT}}, what topic it discusses? Choose from the following  {{answer_choices | join('or')}}
+|||
+{{answer_choices[label]}}",yes,,,,,,,,,,,,,,,,
+DataSet for Arabic Classification,topic classification,https://huggingface.co/datasets/arbml/DataSet_Arabic_Classification,,,,,,,,,,,,,,,,,,
+Khaleej-2004,topic classification,https://huggingface.co/datasets/arbml/khaleej_2004,,,,,,,,,,,,,,,,,,
+OSAC,topic classification,https://huggingface.co/datasets/arbml/OSAC_CNN,,,,,,,,,,,,,,,,,,
+PAAD,topic classification,https://huggingface.co/datasets/arbml/PAAD,,,,,,,,,,,,,,,,,,
+SANAD,topic classification,https://huggingface.co/datasets/arbml/SANAD,,,,,,,,,,,,,,,,,,
+SNAD,topic classification,https://huggingface.co/datasets/arbml/SNAD,,,,,,,,,,,,,,,,,,
+TALAA,topic classification,https://huggingface.co/datasets/arbml/TALAA,,,,,,,,,,,,,,,,,,
+Ultimate Arabic News Dataset,topic classification,https://huggingface.co/datasets/khalidalt/ultimate_arabic_news,,,,,,,,,,,,,,,,,,
+Watan-2004,topic classification,https://huggingface.co/datasets/arbml/watan_2004,,,,,,,,,,,,,,,,,,

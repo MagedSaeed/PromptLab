@@ -1,5 +1,7 @@
+import csv
 import os
 
+import pandas as pd
 import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -8,37 +10,92 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 
 class Command(BaseCommand):
-    help = "Populate datasets and tasks from Hugging Face"
+    help = (
+        "Populate datasets and tasks from Hugging Face.\n"
+        "The CSV file or Google Sheet should have at least two columns: 'link' and 'task_name'.\n"
+        "You can optionally specify the column names using --link-column and --task-column."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--datasets-urls",
+            "--datasets_file",
             type=str,
-            help="Path to the file containing dataset URLs (tab, comma, or newline separated). Path should be passed relative to settings.BASE_DIR/tawjeeh directory. If not provided, datasets will be fetched from Hugging Face.",
+            default="./datasets.csv",
+            help="Path to the CSV file containing dataset URLs and primary tasks. Path should be passed relative to settings.BASE_DIR/tawjeeh directory. Default is './datasets.csv'.",
+        )
+        parser.add_argument(
+            "--sheet_id",
+            type=str,
+            help="ID of the Google Sheet containing dataset URLs and primary tasks.",
+        )
+        parser.add_argument(
+            "--sheet_name",
+            type=str,
+            help="Name of the sheet in the Google Sheet. If not provided, the first sheet will be used.",
+        )
+        parser.add_argument(
+            "--link_column",
+            type=str,
+            default="link",
+            help="Name of the column in the CSV or Google Sheet that contains the dataset URLs. Default is 'link'.",
+        )
+        parser.add_argument(
+            "--task_column",
+            type=str,
+            default="task_name",
+            help="Name of the column in the CSV or Google Sheet that contains the dataset primary tasks. Default is 'task_name'.",
         )
 
     def handle(self, *args, **options):
-        file_path = options.get("datasets_urls")
-        if file_path:
-            file_path = os.path.join(f"{settings.BASE_DIR}/tawjeeh", file_path)
+        file_path = options.get("datasets_file")
+        sheet_id = options.get("sheet_id")
+        sheet_name = options.get("sheet_name")
+        link_column = options.get("link_column")
+        task_column = options.get("task_column")
 
-        if file_path and os.path.exists(file_path):
-            with open(file_path, "r") as file:
-                content = file.read()
-                if "\t" in content:
-                    delimiter = "\t"
-                elif "," in content:
-                    delimiter = ","
-                else:
-                    delimiter = "\n"
-                dataset_urls = [line.strip() for line in content.split(delimiter)]
+        dataset_info_list = None
+
+        if sheet_id:
+            dataset_info_list = self.fetch_from_google_sheet(
+                sheet_id, sheet_name, link_column, task_column
+            )
+        elif file_path:
+            file_path = os.path.join(f"{settings.BASE_DIR}/tawjeeh", file_path)
+            if os.path.exists(file_path):
+                with open(file_path, "r") as file:
+                    reader = csv.DictReader(file)
+                    if (
+                        link_column not in reader.fieldnames
+                        or task_column not in reader.fieldnames
+                    ):
+                        self.stdout.write(
+                            self.style.ERROR(
+                                f"CSV file must contain columns '{link_column}' and '{task_column}'."
+                            )
+                        )
+                        return
+
+                    dataset_info_list = [
+                        (row[link_column].strip(), row[task_column].strip())
+                        for row in reader
+                    ]
+            else:
+                self.stdout.write(
+                    self.style.ERROR(
+                        "No valid dataset CSV file provided or file not found."
+                    )
+                )
+                return
         else:
             self.stdout.write(
-                self.style.ERROR("No valid dataset URLs provided or file not found.")
+                self.style.ERROR(
+                    "Either --datasets_file or --sheet-id option must be provided."
+                )
             )
             return
 
-        dataset_info_list = self.extract_dataset_info(dataset_urls)
+        if dataset_info_list is None:
+            return
 
         tasks_created = 0
         datasets_created = 0
@@ -54,8 +111,18 @@ class Command(BaseCommand):
             )
 
             # Iterate over dataset URLs and fetch their details
-            for author, dataset_name in dataset_info_list:
-                # catch the case where the url does not provide the author
+            for dataset_url, primary_task in dataset_info_list:
+                path_parts = dataset_url.split("/")
+                if len(path_parts) >= 2:
+                    author = path_parts[-2]
+                    dataset_name = path_parts[-1]
+                else:
+                    self.stdout.write(
+                        self.style.ERROR(f"Invalid URL format: {dataset_url}")
+                    )
+                    progress.advance(progress_task)
+                    continue
+
                 if author == "datasets":
                     response = requests.get(
                         f"https://huggingface.co/api/datasets/{dataset_name}"
@@ -74,7 +141,6 @@ class Command(BaseCommand):
                     continue
 
                 dataset = response.json()
-                tags = dataset.get("tags", [])
                 if author == "datasets":
                     huggingface_name = dataset_name
                 else:
@@ -82,22 +148,10 @@ class Command(BaseCommand):
                 description = dataset.get("description", "")
                 huggingface_raw = dataset
 
-                task_categories = []
-                for tag in tags:
-                    if tag.startswith("task_categories:"):
-                        task_names = tag.replace("task_categories:", "").split(",")
-                        task_categories.extend(task_names)
-
-                tasks = []
-                for task_name in task_categories:
-                    task_name = task_name.strip()
-                    task, created = Task.objects.get_or_create(name=task_name)
-
-                    # Count newly created tasks
-                    if created:
-                        tasks_created += 1
-
-                    tasks.append(task)
+                # Create or get the primary task
+                task, created = Task.objects.get_or_create(name=primary_task)
+                if created:
+                    tasks_created += 1
 
                 # Create or update the dataset
                 dataset, dataset_created = Dataset.objects.update_or_create(
@@ -109,8 +163,8 @@ class Command(BaseCommand):
                     },
                 )
 
-                # Add tasks to the dataset
-                dataset.tasks.set(tasks)
+                # Set the primary task to the dataset
+                dataset.tasks.set([task])
 
                 # Count newly created datasets
                 if dataset_created:
@@ -125,51 +179,38 @@ class Command(BaseCommand):
             )
         )
 
-    def extract_dataset_info(self, dataset_urls):
-        dataset_info_list = []
-        for url in dataset_urls:
-            path_parts = url.split("/")
-            if len(path_parts) >= 2:
-                author = path_parts[-2]
-                dataset_name = path_parts[-1]
-                dataset_info_list.append((author, dataset_name))
+    def fetch_from_google_sheet(self, sheet_id, sheet_name, link_column, task_column):
+        try:
+            if sheet_name:
+                # Construct the export CSV URL using sheet name
+                csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
             else:
-                self.stdout.write(self.style.ERROR(f"Invalid URL format: {url}"))
-        return dataset_info_list
-
-    def fetch_all_datasets(self, max_to_fetch=10_000):
-        datasets = []
-        url = "https://huggingface.co/api/datasets"
-        params = {"limit": 1000, "offset": 0}
-
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("{task.fields[total_datasets]} datasets fetched"),
-        ) as progress:
-            progress_task = progress.add_task(
-                f"[cyan]Fetching datasets (maximum {max_to_fetch} datasets)...",
-                total=None,
-                total_datasets="0",
-            )
-
-            while True:
-                response = requests.get(url, params=params)
-                if response.status_code != 200:
-                    break
-                data = response.json()
-                if not data:
-                    break
-                datasets.extend(dataset["id"] for dataset in data)
-                if len(datasets) >= max_to_fetch:
-                    break
-                params["offset"] += params["limit"]
-                progress.update(
-                    progress_task,
-                    advance=params["limit"],
-                    total_datasets=str(len(datasets)),
+                # Default to the first sheet
+                csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        "No sheet name provided. Using the first sheet by default."
+                    )
                 )
 
-        progress.remove_task(progress_task)
-        return datasets
+            # Read the data from the CSV export URL
+            sheet = pd.read_csv(csv_url, header=0)
+            # Convert to list of records
+            records = sheet.to_dict(orient="list")
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f"Failed to fetch data from Google Sheet: {e}")
+            )
+            return None
+
+        if link_column not in sheet.columns or task_column not in sheet.columns:
+            self.stdout.write(
+                self.style.ERROR(
+                    f"Google Sheet must contain columns '{link_column}' and '{task_column}'."
+                )
+            )
+            return None
+
+        dataset_info_list = list(zip(records[link_column], records[task_column]))
+
+        return dataset_info_list
