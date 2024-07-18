@@ -64,23 +64,32 @@ class Dataset(models.Model):
 
         # Function to fetch splits for a given config name
         def fetch_splits(config_name):
-            config_info = datasets.get_dataset_config_info(
-                self.huggingface_name,
-                config_name,
-                trust_remote_code=True,
-            )
-            splits = list(config_info.splits.keys())
-            return config_name, splits
+            try:
+                dataset = datasets.load_dataset(
+                    self.huggingface_name,
+                    config_name,
+                    trust_remote_code=True,
+                )
+                splits = list(dataset.keys())
+                return config_name, splits
+            except Exception as e:
+                print(
+                    f"Error retrieving {self.huggingface_name}'s splits with config: {config_name}. The error is: {e}"
+                )
+                return None
 
         # Process configs in parallel if there are more than 10
         if len(config_names) > 10:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 future_to_config = {
                     executor.submit(fetch_splits, config_name): config_name
                     for config_name in config_names
                 }
                 for future in concurrent.futures.as_completed(future_to_config):
-                    config_name, splits = future.result()
+                    results = future.results()
+                    if results is None:
+                        continue
+                    config_name, splits = results
                     configs_and_splits[config_name] = splits
         else:
             # Process configs sequentially if there are 10 or fewer
@@ -154,7 +163,6 @@ class Dataset(models.Model):
 
 
 class Prompt(models.Model):
-
     class TextDirectionChoices(models.TextChoices):
         LTR = "ltr", "Left-to-Right"
         RTL = "rtl", "Right-to-Left"
