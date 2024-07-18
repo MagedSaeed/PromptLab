@@ -44,3 +44,6 @@ SENDGRID_SANDBOX_MODE_IN_DEBUG = False
 server_ip = os.getenv("SERVER_IP")
 if server_ip:
     ALLOWED_HOSTS.append(server_ip)  # noqa: F405
+
+
+CELERY_BROKER_URL = f"redis://{os.environ['REDIS_USER']}:{os.environ['REDIS_PASSWORD']}{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}"
