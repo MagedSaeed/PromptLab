@@ -45,10 +45,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # installed
-    "crispy_forms",
-    "crispy_bootstrap4",
-    "django_filters",
     "django_htmx",
+    "crispy_forms",
+    "django_filters",
+    "crispy_bootstrap4",
+    "django_celery_beat",
+    "django_celery_results",
     # allauth
     "allauth",
     "allauth.account",
@@ -210,3 +212,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+
+# celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_CACHE_BACKEND = "django-cache"
+CELERY_RESULT_EXTENDED = True
