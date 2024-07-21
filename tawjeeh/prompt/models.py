@@ -5,6 +5,7 @@ import datasets
 from core.utils import redis_cache
 from django.contrib.auth import get_user_model
 from django.db import models
+from taggit.managers import TaggableManager
 
 User = get_user_model()
 
@@ -96,6 +97,9 @@ class Dataset(models.Model):
         else:
             # Process configs sequentially if there are 10 or fewer
             for config_name in config_names:
+                fetch_results = fetch_splits(config_name)
+                if not fetch_results:
+                    continue
                 config_name, splits = fetch_splits(config_name)
                 configs_and_splits[config_name] = splits
 
@@ -163,6 +167,57 @@ class Dataset(models.Model):
     def __str__(self):
         return self.name
 
+    def create_example_prompt(
+        self,
+        prompt_template,
+        created_by,
+        subset=None,
+        text_direction="ltr",
+        name="Example Prompt",
+    ):
+        example_template_tag = "Example Prompt"
+        # check first if the dataset has already an example prompt
+        if Prompt.objects.filter(
+            dataset=self,
+            tags__name__icontains=example_template_tag,
+        ).exists():
+            "example prompt already exists"
+            return None
+        if not subset:
+            subset = list(self.subsets_with_splits.keys())[0]
+        if User.objects.filter(username__iexact=created_by).exists():
+            created_by_user = User.objects.get(username__iexact=created_by)
+        else:
+            created_by_user = User.objects.create(username=created_by)
+        prompt = Prompt(
+            template=prompt_template,
+            dataset=self,
+            dataset_subset=subset,
+            created_by=created_by_user,
+            text_direction=text_direction,
+            name=name,
+        )
+        prompt.save()
+        # add example prompt tag
+        prompt.tags.add(example_template_tag)
+        prompt.save()
+        # create an action for submitting the prompt by the creator
+        submission_action = PromptReviewAction(
+            prompt=prompt,
+            submitter=created_by_user,
+            prompt_status=PromptReviewAction.PromptStatus.DRAFT,
+        )
+        submission_action.save()
+        # create an acceptance action
+        approval_action = PromptReviewAction(
+            prompt=prompt,
+            submitter=created_by_user,
+            prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+            submitter_decision=PromptReviewAction.DecisionChoices.APPROVED,
+        )
+        approval_action.save()
+        return prompt
+
 
 class Prompt(models.Model):
     class TextDirectionChoices(models.TextChoices):
@@ -192,6 +247,8 @@ class Prompt(models.Model):
     )
     created_on = models.DateTimeField(auto_now_add=True)
     last_updated_on = models.DateTimeField(auto_now=True)
+
+    tags = TaggableManager(blank=True)
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"
