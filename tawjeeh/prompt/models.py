@@ -86,6 +86,8 @@ class Dataset(models.Model):
                     for config_name in config_names
                 }
                 for future in concurrent.futures.as_completed(future_to_config):
+                    if not hasattr(future, "results"):
+                        continue
                     results = future.results()
                     if results is None:
                         continue
