@@ -25,3 +25,15 @@ def refresh_datasets_info():
         "failed datasets count": len(failed_datasets),
         "failed datasets": failed_datasets,
     }
+
+
+# check if we are getting the timezone right:
+# @shared_task
+# def print_current_time():
+#     from django.utils import timezone
+#     import pytz
+
+#     local_tz = pytz.timezone("Asia/Riyadh")
+#     current_time = timezone.now().astimezone(local_tz)
+#     print(f"Current local time: {current_time}")
+#     return current_time
