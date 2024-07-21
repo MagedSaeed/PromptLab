@@ -47,7 +47,21 @@ class PromptAdmin(admin.ModelAdmin):
     list_filter = ["dataset", "dataset__tasks"]
 
 
+class PromptReviewActionAdmin(admin.ModelAdmin):
+    search_fields = [
+        "prompt__name",
+        "prompt__dataset__name",
+        "prompt__dataset__tasks__name",
+    ]
+    list_filter = [
+        "prompt__name",
+        "prompt__dataset",
+        "prompt__dataset__tasks",
+        "submitter",
+    ]
+
+
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Prompt, PromptAdmin)
-admin.site.register(PromptReviewAction)
+admin.site.register(PromptReviewAction, PromptReviewActionAdmin)

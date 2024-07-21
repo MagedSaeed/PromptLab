@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # installed
+    "taggit",
     "django_htmx",
     "crispy_forms",
     "django_filters",
@@ -222,3 +223,6 @@ CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_CACHE_BACKEND = "django-cache"
 CELERY_RESULT_EXTENDED = True
+
+# django-taggit settings
+TAGGIT_CASE_INSENSITIVE = True

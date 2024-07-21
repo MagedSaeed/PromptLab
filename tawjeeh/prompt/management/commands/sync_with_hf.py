@@ -45,6 +45,24 @@ class Command(BaseCommand):
             default="task_name",
             help="Name of the column in the CSV or Google Sheet that contains the dataset primary tasks. Default is 'task_name'.",
         )
+        parser.add_argument(
+            "--example_template_column",
+            type=str,
+            default="",
+            help="If the source contains an example template, give the column name here. This is useful to add an example prompt to the dataset IF IT DOES NOT HAVE ONE ALREADY.",
+        )
+        parser.add_argument(
+            "--example_template_created_by_column",
+            type=str,
+            default="",
+            help="If the source contains an example template, it should also contain a column for the creator.",
+        )
+        parser.add_argument(
+            "--example_template_subset_column",
+            type=str,
+            default="",
+            help="If the source contains an example template, it can also contain a column for the subset (config). If this is empty, it will take the default subset then.",
+        )
 
     def handle(self, *args, **options):
         file_path = options.get("datasets_file")
@@ -52,12 +70,23 @@ class Command(BaseCommand):
         sheet_name = options.get("sheet_name")
         link_column = options.get("link_column")
         task_column = options.get("task_column")
+        example_template_column = options.get("example_template_column")
+        example_template_created_by_column = options.get(
+            "example_template_created_by_column"
+        )
+        example_template_subset_column = options.get("example_template_subset_column")
 
         dataset_info_list = None
 
         if sheet_id:
             dataset_info_list = self.fetch_from_google_sheet(
-                sheet_id, sheet_name, link_column, task_column
+                sheet_id,
+                sheet_name,
+                link_column,
+                task_column,
+                example_template_column,
+                example_template_created_by_column,
+                example_template_subset_column,
             )
         elif file_path:
             file_path = os.path.join(f"{settings.BASE_DIR}/tawjeeh", file_path)
@@ -74,11 +103,45 @@ class Command(BaseCommand):
                             )
                         )
                         return
+                    if example_template_column:
+                        assert example_template_created_by_column, (
+                            "If the source contains an example template, "
+                            "it should also contain a column for the creator."
+                        )
+                        if example_template_subset_column:
+                            dataset_info_list = [
+                                (
+                                    row[link_column].strip(),
+                                    row[task_column].strip(),
+                                    row[example_template_column].strip(),
+                                    row[example_template_created_by_column].strip(),
+                                    row[example_template_subset_column].strip(),
+                                )
+                                for row in reader
+                            ]
+                        else:
+                            dataset_info_list = [
+                                (
+                                    row[link_column].strip(),
+                                    row[task_column].strip(),
+                                    row[example_template_column].strip(),
+                                    row[example_template_created_by_column].strip(),
+                                    None,
+                                )
+                                for row in reader
+                            ]
+                    else:
+                        dataset_info_list = [
+                            (
+                                row[link_column].strip(),
+                                row[task_column].strip(),
+                                None,
+                                None,
+                                None,
+                            )
+                            for row in reader
+                        ]
 
-                    dataset_info_list = [
-                        (row[link_column].strip(), row[task_column].strip())
-                        for row in reader
-                    ]
             else:
                 self.stdout.write(
                     self.style.ERROR(
@@ -111,7 +174,13 @@ class Command(BaseCommand):
             )
 
             # Iterate over dataset URLs and fetch their details
-            for dataset_url, primary_tasks in dataset_info_list:
+            for (
+                dataset_url,
+                primary_tasks,
+                example_template,
+                example_template_created_by,
+                example_template_subset,
+            ) in dataset_info_list:
                 path_parts = dataset_url.split("/")
                 if len(path_parts) >= 2:
                     author = path_parts[-2]
@@ -172,6 +241,23 @@ class Command(BaseCommand):
                 # Set the primary tasks to the dataset
                 dataset.tasks.set(tasks)
 
+                # manage the created templates examples
+                if example_template_column:
+                    assert example_template_created_by_column, (
+                        "example_template_created_by_column must be provided "
+                        "when example_template_column is provided"
+                    )
+                    if example_template_subset_column:
+                        dataset.create_example_prompt(
+                            prompt_template=example_template,
+                            created_by=example_template_created_by,
+                            subset=example_template_subset,
+                        )
+                    else:
+                        dataset.create_example_prompt(
+                            prompt_template=example_template,
+                            created_by=example_template_created_by,
+                        )
                 # Count newly created datasets
                 if dataset_created:
                     datasets_created += 1
@@ -185,7 +271,16 @@ class Command(BaseCommand):
             )
         )
 
-    def fetch_from_google_sheet(self, sheet_id, sheet_name, link_column, task_column):
+    def fetch_from_google_sheet(
+        self,
+        sheet_id,
+        sheet_name,
+        link_column,
+        task_column,
+        example_template_column,
+        example_template_created_by_column,
+        example_template_subset_column,
+    ):
         try:
             if sheet_name:
                 # Construct the export CSV URL using sheet name
@@ -217,6 +312,39 @@ class Command(BaseCommand):
             )
             return None
 
-        dataset_info_list = list(zip(records[link_column], records[task_column]))
+        if example_template_column:
+            assert (
+                example_template_created_by_column
+            ), "example_template_created_by_column must be provided if example_template_column is provided."
+            if example_template_subset_column:
+                dataset_info_list = list(
+                    zip(
+                        records[link_column],
+                        records[task_column],
+                        records[example_template_column],
+                        records[example_template_created_by_column],
+                        records[example_template_subset_column],
+                    )
+                )
+            else:
+                dataset_info_list = list(
+                    zip(
+                        records[link_column],
+                        records[task_column],
+                        records[example_template_column],
+                        records[example_template_created_by_column],
+                        [None] * len(records[link_column]),
+                    )
+                )
+        else:
+            dataset_info_list = list(
+                zip(
+                    records[link_column],
+                    records[task_column],
+                    [None] * len(records[link_column]),
+                    [None] * len(records[link_column]),
+                    [None] * len(records[link_column]),
+                )
+            )
 
         return dataset_info_list
