@@ -213,6 +213,9 @@ SOCIALACCOUNT_PROVIDERS = {
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+USE_TZ = True  # Ensure timezone-aware datetimes
+TIME_ZONE = "Asia/Riyadh"  # Set to Riyadh timezone
+
 
 # celery settings
 CELERY_BROKER_URL = "redis://localhost:6379"

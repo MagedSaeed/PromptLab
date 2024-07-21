@@ -13,5 +13,10 @@ app = Celery("tawjeeh")
 #   should have a `CELERY_` prefix.
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
+# Set timezone for Celery
+app.conf.timezone = "Asia/Riyadh"  # Set to Riyadh timezone
+app.conf.enable_utc = True  # Ensure UTC is enabled for proper timezone conversion
+
+
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
