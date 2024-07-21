@@ -265,6 +265,17 @@ class Prompt(models.Model):
         )
 
     @property
+    def reviewable(self):
+        if not self.review_actions.exists():
+            return False
+
+        return (
+            self.status == PromptReviewAction.PromptStatus.SUBMITTED
+            and self.review_actions.last().submitter_decision
+            != PromptReviewAction.DecisionChoices.APPROVED
+        )
+
+    @property
     def status(self):
         status = PromptReviewAction.PromptStatus.DRAFT
         if self.review_actions.exists():

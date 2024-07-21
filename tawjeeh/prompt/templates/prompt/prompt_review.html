@@ -27,22 +27,24 @@
                         <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                     </button>
                 </div>
-                <hr>
-                <div class="row">
+                {% if form.instance.reviewable %}
+                    <hr>
                     <div class="row">
-                        {{ form.submitter_comment|as_crispy_field }}
-                    </div>
-                    <div class="row my-4">
-                        <div class="col col-2">
-                            {{ form.submitter_decision|as_crispy_field }}
+                        <div class="row">
+                            {{ form.submitter_comment|as_crispy_field }}
+                        </div>
+                        <div class="row my-4">
+                            <div class="col col-2">
+                                {{ form.submitter_decision|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-2">
+                                <input type="submit" class="btn btn-primary" value="Submit">
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col col-2">
-                            <input type="submit" class="btn btn-primary" value="Submit">
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
             </form>
         </div>
     </div>
