@@ -1,4 +1,5 @@
 import concurrent.futures
+import json
 from functools import cached_property
 
 import datasets
@@ -172,6 +173,7 @@ class Dataset(models.Model):
         prompt_template,
         created_by,
         subset=None,
+        answer_choices=None,
         text_direction="ltr",
         name="Example Prompt",
     ):
@@ -189,12 +191,19 @@ class Dataset(models.Model):
             created_by_user = User.objects.get(username__iexact=created_by)
         else:
             created_by_user = User.objects.create(username=created_by)
+        if answer_choices:
+            assert isinstance(answer_choices, list), "answer_choices must be a list"
+            answer_choices = list(map(lambda choice: {"value": choice}, answer_choices))
+            answer_choices = json.dumps(answer_choices)
+        else:
+            answer_choices = None
         prompt = Prompt(
             template=prompt_template,
             dataset=self,
             dataset_subset=subset,
             created_by=created_by_user,
             text_direction=text_direction,
+            answer_choices=answer_choices,
             name=name,
         )
         prompt.save()
@@ -209,13 +218,13 @@ class Dataset(models.Model):
         )
         submission_action.save()
         # create an acceptance action
-        approval_action = PromptReviewAction(
-            prompt=prompt,
-            submitter=created_by_user,
-            prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
-            submitter_decision=PromptReviewAction.DecisionChoices.APPROVED,
-        )
-        approval_action.save()
+        # approval_action = PromptReviewAction(
+        #     prompt=prompt,
+        #     submitter=created_by_user,
+        #     prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+        #     submitter_decision=PromptReviewAction.DecisionChoices.APPROVED,
+        # )
+        # approval_action.save()
         return prompt
 
 

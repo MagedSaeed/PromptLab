@@ -164,6 +164,7 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
                 extra_tags="danger",
             )
             return redirect(self.get_success_url())
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -291,12 +292,12 @@ class PromptListView(ListView):
     context_object_name = "all_prompts"
     template_name = "prompt/prompt_list.html"
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
-        if not self.request.user.is_modirator:
-            queryset = queryset[:5]
-        return queryset
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
+    #     if not self.request.user.is_modirator:
+    #         queryset = queryset[:5]
+    #     return queryset
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
@@ -305,7 +306,10 @@ class PromptListView(ListView):
     def get_context_data(self):
         context = super().get_context_data()
         context["dataset"] = self.dataset
-        context["user_prompts"] = Prompt.objects.filter(created_by=self.request.user)
+        context["user_prompts"] = Prompt.objects.filter(
+            created_by=self.request.user,
+            dataset=self.dataset,
+        )
 
         # get prompts that are available to review
 
