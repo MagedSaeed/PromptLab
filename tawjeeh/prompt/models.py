@@ -37,7 +37,16 @@ class Dataset(models.Model):
 
     @cached_property
     def hf_object(self):
-        return datasets.load_dataset(self.dataset.huggingface_name)
+        cache_key = f"{self.huggingface_name}_hf_object"
+        hf_object = cache.get(cache_key)
+        if hf_object:
+            return hf_object
+        hf_object = datasets.load_dataset(
+            self.huggingface_name,
+            trust_remote_code=True,
+        )
+        cache.set(cache_key, hf_object, timeout=60 * 60 * 24)
+        return hf_object
 
     def get_columns_names(self):
         cache_key = f"{self.huggingface_name}_columns_names"
