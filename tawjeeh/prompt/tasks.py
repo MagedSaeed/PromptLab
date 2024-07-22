@@ -1,5 +1,6 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.core.cache import cache
 from prompt.models import Dataset
 
 logger = get_task_logger(__name__)
@@ -25,6 +26,14 @@ def refresh_datasets_info():
         "failed datasets count": len(failed_datasets),
         "failed datasets": failed_datasets,
     }
+
+
+@shared_task
+def reset_redis_cache():
+    for key in cache.keys("*"):
+        cache.delete(key)
+    refresh_datasets_info()
+    return "cache invalidation finished and datasets info are refreshed."
 
 
 # check if we are getting the timezone right:
