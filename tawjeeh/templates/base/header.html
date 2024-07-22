@@ -8,26 +8,34 @@
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
+                    <li class="nav-item mt-2">
+                        <a class="nav-link" href="{% url 'prompt:user_prompts_list' %}">
+                            {% if user.first_name %}
+                                Welcome, {{ user.first_name }} {{ user.last_name }}
+                            {% else %}
+                                Welcome, {{user.username}}
+                            {% endif %}
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="{% url 'prompt:user_prompts_list' %}" class="nav-link" title="view my prompts">
                             {% if user.socialaccount_set.exists %}
                                 {% with account=user.socialaccount_set.all.0 %}
-                                    <img src="{{ account.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle mx-2" width="30" height="30">
+                                    <img src="{{ account.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle mt-1" width="30" height="30">
                                 {% endwith %}
                             {% else %}
-                                <img src="{% static 'img/user_placeholder.jpg' %}" class="rounded-circle mx-2" width="30" height="30">
+                                <img src="{% static 'img/user_placeholder.jpg' %}" class="rounded-circle mt-1" width="30" height="30">
                             {% endif %}
-                            {{ user.first_name }} {{ user.last_name }}
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item mt-2">
                         <a class="nav-link" href="{% url 'account_logout' %}">Log out</a>
                     </li>
                 {% else %}
-                    <li class="nav-item">
+                    <li class="nav-item mt-2">
                         <a class="nav-link" href="{% url "account_login" %}">Log in</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item mt-2">
                         <a class="nav-link" href="{% url "account_signup" %}">Sign up</a>
                     </li>
                 {% endif %}
