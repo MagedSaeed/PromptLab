@@ -1,14 +1,22 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.management import call_command
 from django.db.models import OuterRef, Subquery
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView, View
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    FormView,
+    ListView,
+    UpdateView,
+    View,
+)
 from django_filters.views import FilterView
 from jinja2 import Template
 from prompt.filters import DatasetFilter, TaskFilter
-from prompt.forms import PromptCreateUpdateForm, PromptReviewForm
+from prompt.forms import HFSyncForm, PromptCreateUpdateForm, PromptReviewForm
 from prompt.models import Dataset, Prompt, PromptReviewAction, Task
 
 
@@ -443,3 +451,29 @@ class ApplyTemplateView(LoginRequiredMixin, View):
                 "text_direction": text_direction,
             },
         )
+
+
+class HFSynchView(LoginRequiredMixin, FormView):
+    form_class = HFSyncForm
+    template_name = "prompt/hf_sync.html"
+    success_url = reverse_lazy("core:home")
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(
+                request,
+                "You do not have permission to access this page.",
+                extra_tags="danger",
+            )
+            return redirect("core:home")
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        try:
+            call_command("sync_with_hf", **data)
+        except Exception as e:
+            messages.error(self.request, str(e), extra_tags="danger")
+            return super().form_invalid(form)
+        messages.success(self.request, "HF datasets synchronized successfully")
+        return super().form_valid(form)

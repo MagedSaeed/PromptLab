@@ -3,6 +3,7 @@ from prompt.views import (
     ApplyTemplateView,
     DatasetDetailsView,
     DatasetListView,
+    HFSynchView,
     PromptCreateView,
     PromptDeleteView,
     PromptListView,
@@ -60,5 +61,10 @@ urlpatterns = [
         "dataset/<int:dataset_pk>/prompt/apply-template/",
         ApplyTemplateView.as_view(),
         name="apply_template",
+    ),
+    path(
+        "hf-sync",
+        HFSynchView.as_view(),
+        name="hf_sync",
     ),
 ]

@@ -29,7 +29,7 @@ python manage.py sync_with_hf \
     --sheet_name final-list \
     --example_template_column example_template \
     --example_template_created_by_column example_template_created_by \
-    --example_template_subset subset \
+    --example_template_subset_column subset \
     --answer_choices_column answer_choices \
     --clear_datasets True
 

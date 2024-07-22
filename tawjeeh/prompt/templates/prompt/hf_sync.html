@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block main_content %}
+    <div class="container mt-4">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.sheet_id|as_crispy_field }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.sheet_name|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.link_column|as_crispy_field }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.task_column|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.example_template_column|as_crispy_field }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.example_template_created_by_column|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.example_template_subset_column|as_crispy_field }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.answer_choices_column|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <hr>
+                <div class="col-md-6 mb-3">
+                    <span class="text-danger">
+                        This will erase all datasets and create them again. This will do full sync with the sheet.
+                        Do not use it if you just need to import additional datasets
+                    </span>
+                    {{ form.clear_datasets|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <hr>
+                <div class="col-12">
+                    <input type="submit" class="btn btn-primary mt-3" />
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

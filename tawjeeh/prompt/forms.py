@@ -120,3 +120,17 @@ class PromptReviewForm(forms.ModelForm):
         prompt_modifications = self.get_prompt_reviewer_modifications()
         self.instance.prompt_before_modifications = prompt_modifications
         return super().save(commit=commit)
+
+
+class HFSyncForm(forms.Form):
+    sheet_id = forms.CharField(initial="1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k")
+    sheet_name = forms.CharField(initial="final-list")
+    link_column = forms.CharField(initial="link")
+    task_column = forms.CharField(initial="task_name")
+    example_template_column = forms.CharField(initial="example_template")
+    example_template_created_by_column = forms.CharField(
+        initial="example_template_created_by"
+    )
+    example_template_subset_column = forms.CharField(initial="subset")
+    answer_choices_column = forms.CharField(initial="answer_choices")
+    clear_datasets = forms.BooleanField(required=False)
