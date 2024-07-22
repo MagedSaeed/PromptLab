@@ -3,6 +3,15 @@
 
     <div class="container mt-5">
         <h2 class="mb-4">{{ request.user|title }}'s Prompts</h2>
+        {% if user.is_superuser %}
+            <div class="my-4 text-end">
+                <a href="{% url 'prompt:hf_sync' %}">
+                    <button class="btn btn-outline-primary">
+                        Sync with huggingface
+                    </button>
+                </a>
+            </div>
+        {% endif %}
         <div id="user-prompts-list-table">
             {% include 'prompt/partials/user_prompts_list_table.html' %}
         </div>
