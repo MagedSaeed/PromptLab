@@ -37,6 +37,11 @@
             const slider = this;
             const spinner = document.getElementById('sampleIndexSpinner');
             const sampleIndexText = document.getElementById('tempelateMergeSelectedSampleIndex');
+            answer_choices = $('#id_answer_choices').val();
+            if(answer_choices)
+                answer_choices = JSON.parse(answer_choices).map((choice)=>{return choice.value}).join('||')
+            else
+                answer_choices = []
 
             slider.disabled = true; // Disable the slider
             sampleIndexText.style.display = 'none'; // Hide the sample index text
@@ -52,6 +57,7 @@
                 values: {
                     'template': `{{ template_content|safe|linebreaksbr }}`,
                     'sample_index': sampleIndex,
+                    'answer_choices': answer_choices,
                 }
             }).then(function() {
                 slider.disabled = false; // Re-enable the slider after the response is received
