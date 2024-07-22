@@ -288,16 +288,17 @@ class PromptDeleteView(LoginRequiredMixin, DeleteView):
 
 class PromptListView(ListView):
     model = Prompt
-    paginate_by = 10
+    # paginate_by = 10
     context_object_name = "all_prompts"
     template_name = "prompt/prompt_list.html"
 
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-    #     queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
-    #     if not self.request.user.is_modirator:
-    #         queryset = queryset[:5]
-    #     return queryset
+    def get_queryset(self):
+        # filter all prompts by dataset
+        queryset = super().get_queryset()
+        queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
+        if not self.request.user.is_modirator:
+            queryset = queryset[:5]
+        return queryset
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
@@ -323,7 +324,10 @@ class PromptListView(ListView):
             last_submitter_decision=Subquery(
                 review_actions.values("submitter_decision")[:1]
             )
-        ).filter(review_actions__isnull=False)
+        ).filter(
+            review_actions__isnull=False,
+            dataset=self.dataset,
+        )
 
         # Filter prompts where the last submitter_decision is None
         ready_to_review_prompts = prompts_with_last_action.filter(

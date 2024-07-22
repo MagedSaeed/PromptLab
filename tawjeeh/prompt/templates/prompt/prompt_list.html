@@ -84,7 +84,7 @@
                                 <tr>
                                     <th>{{ forloop.counter }}</th>
                                     <td>
-                                        <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}">
+                                        <a {% if prompt.reviewable %} href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}" {% endif %}>
                                             <span class="prompt-name">{{ prompt.name }}</span>
                                         </a>
                                     </td>
@@ -167,6 +167,6 @@
                 window.location.href = button.href;
             });
         </script>
-        {% include 'base/pagination.html' with target_id="prompts-list" %}
+        {% comment %} {% include 'base/pagination.html' with target_id="prompts-list" %} {% endcomment %}
     </div>
 {% endblock %}
