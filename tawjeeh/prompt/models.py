@@ -3,9 +3,10 @@ import json
 from functools import cached_property
 
 import datasets
-from core.utils import redis_cache
+from core.utils import redis_cache  # noqa: F401
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import cache
 from taggit.managers import TaggableManager
 
 User = get_user_model()
@@ -38,8 +39,11 @@ class Dataset(models.Model):
     def hf_object(self):
         return datasets.load_dataset(self.dataset.huggingface_name)
 
-    @redis_cache()
     def get_columns_names(self):
+        cache_key = f"{self.huggingface_name}_columns_names"
+        columns = cache.get(cache_key)
+        if columns:
+            return columns
         try:
             # Assuming the default configuration
             default_config_name = list(self.subsets_with_splits.keys())[0]
@@ -50,14 +54,18 @@ class Dataset(models.Model):
 
             # Extract and return column names
             columns = list(features.keys())
+            cache.set(cache_key, columns)
             return columns
         except Exception as e:
             print(f"Error retrieving dataset columns: {e}")
             raise e
 
     @property
-    @redis_cache()
     def subsets_with_splits(self):
+        cache_key = f"{self.huggingface_name}_subsets_with_splits"
+        configs_and_splits = cache.get(cache_key)
+        if configs_and_splits:
+            return configs_and_splits
         configs_and_splits = {}
         config_names = datasets.get_dataset_config_names(
             self.huggingface_name,
@@ -103,11 +111,14 @@ class Dataset(models.Model):
                     continue
                 config_name, splits = fetch_splits(config_name)
                 configs_and_splits[config_name] = splits
-
+        cache.set(cache_key, configs_and_splits)
         return configs_and_splits
 
-    @redis_cache()
     def get_huggingface_info(self, subset=None):
+        cache_key = f"{self.huggingface_name}_huggingface_info"
+        details = cache.get(cache_key)
+        if details:
+            return details
         try:
             # Load the dataset information without loading the entire dataset
             if len(self.subsets_with_splits) > 1:
@@ -138,12 +149,16 @@ class Dataset(models.Model):
                 "huggingface_link": huggingface_link,
                 "full_info": info,
             }
+            cache.set(cache_key, details)
             return details
         except Exception as e:
             return {"error": str(e)}
 
-    @redis_cache()
     def load_samples(self, split=None, subset=None, max_samples=10_000):
+        cache_key = f"{self.huggingface_name}_samples"
+        samples = cache.get(cache_key)
+        if samples:
+            return samples
         try:
             args = [self.huggingface_name]
             if len(self.subsets_with_splits) > 1:
@@ -157,6 +172,7 @@ class Dataset(models.Model):
                     split = list(self.subsets_with_splits.values())[0][0]
             kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
             dataset = datasets.load_dataset(*args, **kwargs)
+            cache.set(cache_key, dataset)
             return dataset
         except Exception as e:
             return {"error": str(e)}

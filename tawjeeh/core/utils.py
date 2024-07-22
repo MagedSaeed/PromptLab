@@ -14,6 +14,7 @@ def pickle_deserialize(serialized_obj):
 
 
 def redis_cache(timeout=60 * 60 * 24, refresh=False):  # refresh results
+    # this function is used to cache on the function level
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
