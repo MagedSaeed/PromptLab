@@ -456,7 +456,7 @@ class ApplyTemplateView(LoginRequiredMixin, View):
 class HFSynchView(LoginRequiredMixin, FormView):
     form_class = HFSyncForm
     template_name = "prompt/hf_sync.html"
-    success_url = reverse_lazy("core:home")
+    success_url = reverse_lazy("home")
 
     def get(self, request, *args, **kwargs):
         if not request.user.is_superuser:

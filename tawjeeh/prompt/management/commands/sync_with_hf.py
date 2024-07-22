@@ -319,6 +319,7 @@ class Command(BaseCommand):
             records = sheet.to_dict(orient="records")
         except Exception as e:
             print(f"Failed to fetch data from Google Sheet: {e}")
+            raise e
             return None
 
         if link_column not in sheet.columns or task_column not in sheet.columns:

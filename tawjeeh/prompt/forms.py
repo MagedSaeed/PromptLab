@@ -123,14 +123,36 @@ class PromptReviewForm(forms.ModelForm):
 
 
 class HFSyncForm(forms.Form):
-    sheet_id = forms.CharField(initial="1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k")
-    sheet_name = forms.CharField(initial="final-list")
-    link_column = forms.CharField(initial="link")
-    task_column = forms.CharField(initial="task_name")
-    example_template_column = forms.CharField(initial="example_template")
-    example_template_created_by_column = forms.CharField(
-        initial="example_template_created_by"
+    sheet_id = forms.CharField(
+        initial="1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k",
+        required=True,
     )
-    example_template_subset_column = forms.CharField(initial="subset")
-    answer_choices_column = forms.CharField(initial="answer_choices")
+    sheet_name = forms.CharField(
+        initial="final-list",
+        required=True,
+    )
+    link_column = forms.CharField(
+        initial="link",
+        required=True,
+    )
+    task_column = forms.CharField(
+        initial="task_name",
+        required=True,
+    )
+    example_template_column = forms.CharField(
+        initial="example_template",
+        required=False,
+    )
+    example_template_created_by_column = forms.CharField(
+        initial="example_template_created_by",
+        required=False,
+    )
+    example_template_subset_column = forms.CharField(
+        initial="subset",
+        required=False,
+    )
+    answer_choices_column = forms.CharField(
+        initial="answer_choices",
+        required=False,
+    )
     clear_datasets = forms.BooleanField(required=False)
