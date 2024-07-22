@@ -41,8 +41,9 @@
                 <hr>
                 <div class="col-md-6 mb-3">
                     <span class="text-danger">
-                        This will erase all datasets and create them again. This will do full sync with the sheet.
-                        Do not use it if you just need to import additional datasets
+                        This will erase all datasets, prompts, tasks, and everything related to them, and create them again.
+                        This will do full sync with the sheet.
+                        DO NOT USE IT if you just need to import additional datasets with their prompts
                     </span>
                     {{ form.clear_datasets|as_crispy_field }}
                 </div>
