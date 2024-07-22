@@ -348,6 +348,15 @@ class UserPromptsListView(ListView):
         queryset = queryset.filter(created_by=self.request.user)
         return queryset
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.htmx:
+            return render(
+                self.request,
+                "prompt/partials/user_prompts_list_table.html",
+                context,
+            )
+        return super().render_to_response(context, **response_kwargs)
+
 
 class DatasetDetailsView(LoginRequiredMixin, View):
     def get(self, request, dataset_pk, *args, **kwargs):
