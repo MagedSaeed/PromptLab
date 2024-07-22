@@ -59,6 +59,7 @@ class Dataset(models.Model):
             features = datasets.get_dataset_config_info(
                 self.huggingface_name,
                 config_name=default_config_name,
+                trust_remote_code=True,
             ).features
 
             # Extract and return column names
