@@ -5,8 +5,8 @@ from functools import cached_property
 import datasets
 from core.utils import redis_cache  # noqa: F401
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db import models
-from django.utils import cache
 from taggit.managers import TaggableManager
 
 User = get_user_model()
@@ -54,7 +54,7 @@ class Dataset(models.Model):
 
             # Extract and return column names
             columns = list(features.keys())
-            cache.set(cache_key, columns)
+            cache.set(cache_key, columns, timeout=60 * 60 * 24)
             return columns
         except Exception as e:
             print(f"Error retrieving dataset columns: {e}")
@@ -111,7 +111,7 @@ class Dataset(models.Model):
                     continue
                 config_name, splits = fetch_splits(config_name)
                 configs_and_splits[config_name] = splits
-        cache.set(cache_key, configs_and_splits)
+        cache.set(cache_key, configs_and_splits, timeout=60 * 60 * 24)
         return configs_and_splits
 
     def get_huggingface_info(self, subset=None):
@@ -149,7 +149,7 @@ class Dataset(models.Model):
                 "huggingface_link": huggingface_link,
                 "full_info": info,
             }
-            cache.set(cache_key, details)
+            cache.set(cache_key, details, timeout=60 * 60 * 24)
             return details
         except Exception as e:
             return {"error": str(e)}
@@ -172,7 +172,7 @@ class Dataset(models.Model):
                     split = list(self.subsets_with_splits.values())[0][0]
             kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
             dataset = datasets.load_dataset(*args, **kwargs)
-            cache.set(cache_key, dataset)
+            cache.set(cache_key, dataset, timeout=60 * 60 * 24)
             return dataset
         except Exception as e:
             return {"error": str(e)}
