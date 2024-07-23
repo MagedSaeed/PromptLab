@@ -157,7 +157,6 @@ class Dataset(models.Model):
 
     def load_samples(self, split=None, subset=None, max_samples=100):
         cache_key = f"{self.huggingface_name}_samples"
-        cache.delete(cache_key)
         samples = cache.get(cache_key)
         if samples:
             return samples
@@ -174,13 +173,14 @@ class Dataset(models.Model):
                     split = list(self.subsets_with_splits.values())[0][0]
             kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
             with tempfile.TemporaryDirectory() as tmp_cache_dir:
-                kwargs.update(dict(diccache_dir=tmp_cache_dir))
+                kwargs.update(dict(cache_dir=tmp_cache_dir))
                 dataset = datasets.load_dataset(
                     *args,
                     **kwargs,
                 )
-                cache.set(cache_key, dataset, timeout=60 * 60 * 24)
-                return samples
+            dataset = datasets.Dataset.from_dict(dataset[:max_samples])
+            cache.set(cache_key, dataset, timeout=60 * 60 * 24)
+            return dataset
         except Exception as e:
             return {"error": str(e)}
 
