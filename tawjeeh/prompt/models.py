@@ -1,6 +1,5 @@
 import concurrent.futures
 import json
-import tempfile
 
 import datasets
 from core.utils import redis_cache  # noqa: F401
@@ -72,16 +71,13 @@ class Dataset(models.Model):
         # Function to fetch splits for a given config name
         def fetch_splits(config_name):
             try:
-                # Create a temporary directory
-                with tempfile.TemporaryDirectory() as tmp_cache_dir:
-                    # Load the dataset and specify the temporary cache directory
-                    dataset = datasets.load_dataset(
-                        self.huggingface_name,
-                        config_name,
-                        trust_remote_code=True,
-                        cache_dir=tmp_cache_dir,
-                    )
-                    splits = list(dataset.keys())
+                dataset = datasets.load_dataset(
+                    self.huggingface_name,
+                    config_name,
+                    trust_remote_code=True,
+                )
+                splits = list(dataset.keys())
+                dataset.cleanup_cache_files()  # because we only need the splits here, otherwise, this is costly storage-wise
                 return config_name, splits
             except Exception as e:
                 print(
@@ -130,6 +126,7 @@ class Dataset(models.Model):
                     subset,
                     trust_remote_code=True,
                 ).info
+                info.clean
             else:
                 info = datasets.load_dataset_builder(
                     self.huggingface_name,
