@@ -3,6 +3,7 @@ from prompt.views import (
     ApplyTemplateView,
     DatasetDetailsView,
     DatasetListView,
+    DatasetResetCacheView,
     HFSynchView,
     PromptCreateView,
     PromptDeleteView,
@@ -52,6 +53,11 @@ urlpatterns = [
         "dataset/<int:dataset_pk>/details/",
         DatasetDetailsView.as_view(),
         name="dataset_details",
+    ),
+    path(
+        "dataset/<int:dataset_pk>/reset_cache",
+        DatasetResetCacheView.as_view(),
+        name="reset_dataset_cache",
     ),
     path(
         "dataset/prompt/merge/",

@@ -32,8 +32,8 @@ def refresh_datasets_info():
 def reset_redis_cache():
     for key in cache.keys("*"):
         cache.delete(key)
-    refresh_datasets_info()
-    return "cache invalidation finished and datasets info are refreshed."
+    refresh_results = refresh_datasets_info()
+    return f"cache invalidation finished and datasets info are refreshed. refresh results: {refresh_results}"
 
 
 # check if we are getting the timezone right:

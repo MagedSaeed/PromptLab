@@ -250,6 +250,13 @@ class Dataset(models.Model):
         # approval_action.save()
         return prompt
 
+    def reset_cache(self):
+        cache.delete(f"{self.huggingface_name}_samples")
+        cache.delete(f"{self.huggingface_name}_huggingface_info")
+        cache.delete(f"{self.huggingface_name}_columns_names")
+        cache.delete(f"{self.huggingface_name}__subsets_with_splits")
+        return True
+
 
 class Prompt(models.Model):
     class TextDirectionChoices(models.TextChoices):

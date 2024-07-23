@@ -23,6 +23,12 @@
             </div>
         {% endif %}
 
+        <a href="{% url 'prompt:reset_dataset_cache' dataset_pk=dataset.pk %}" class="my-3" title="reset splits, configs, and other cached information to get them again from huggingface">
+            Reset dataset cached info
+        </a>
+
+        <hr>
+
         {% if subset %}
             <hr>
             <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">

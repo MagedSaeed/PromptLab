@@ -477,3 +477,11 @@ class HFSynchView(LoginRequiredMixin, FormView):
             return super().form_invalid(form)
         messages.success(self.request, "HF datasets synchronized successfully")
         return super().form_valid(form)
+
+
+class DatasetResetCacheView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        dataset.reset_cache()
+        messages.success(request, "Dataset cache reset successfully")
+        return redirect("prompt:prompt_list", dataset_pk=dataset.pk)
