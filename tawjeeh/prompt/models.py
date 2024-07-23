@@ -1,6 +1,6 @@
 import concurrent.futures
 import json
-from functools import cached_property
+import tempfile
 
 import datasets
 from core.utils import redis_cache  # noqa: F401
@@ -34,19 +34,6 @@ class Dataset(models.Model):
     def primary_task(self):
         if self.tasks.exists():
             return self.tasks.first()
-
-    @cached_property
-    def hf_object(self):
-        cache_key = f"{self.huggingface_name}_hf_object"
-        hf_object = cache.get(cache_key)
-        if hf_object:
-            return hf_object
-        hf_object = datasets.load_dataset(
-            self.huggingface_name,
-            trust_remote_code=True,
-        )
-        cache.set(cache_key, hf_object, timeout=60 * 60 * 24)
-        return hf_object
 
     def get_columns_names(self):
         cache_key = f"{self.huggingface_name}_columns_names"
@@ -85,12 +72,17 @@ class Dataset(models.Model):
         # Function to fetch splits for a given config name
         def fetch_splits(config_name):
             try:
-                dataset = datasets.load_dataset(
-                    self.huggingface_name,
-                    config_name,
-                    trust_remote_code=True,
-                )
-                splits = list(dataset.keys())
+                # Create a temporary directory
+                with tempfile.TemporaryDirectory() as tmp_cache_dir:
+                    # Load the dataset and specify the temporary cache directory
+
+                    dataset = datasets.load_dataset(
+                        self.huggingface_name,
+                        config_name,
+                        trust_remote_code=True,
+                        cache_dir=tmp_cache_dir,
+                    )
+                    splits = list(dataset.keys())
                 return config_name, splits
             except Exception as e:
                 print(
@@ -164,7 +156,7 @@ class Dataset(models.Model):
         except Exception as e:
             return {"error": str(e)}
 
-    def load_samples(self, split=None, subset=None, max_samples=10_000):
+    def load_samples(self, split=None, subset=None, max_samples=100):
         cache_key = f"{self.huggingface_name}_samples"
         samples = cache.get(cache_key)
         if samples:
