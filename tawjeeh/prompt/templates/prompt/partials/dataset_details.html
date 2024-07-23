@@ -119,7 +119,7 @@
                     method: 'GET',
                     success: function(response) {
                         const splitSamples = response.len_samples;
-                        const lenSamples = Math.min(splitSamples, 10000);
+                        const lenSamples = Math.min(splitSamples, 100);
                         const firstSample = response.first_sample;
                         $('#splitDropdown').text(split);
                         $('#split-details').html(`
