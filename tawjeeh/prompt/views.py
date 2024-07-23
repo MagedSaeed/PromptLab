@@ -445,7 +445,7 @@ class ApplyTemplateView(LoginRequiredMixin, View):
                 "sample_index": sample_index,
                 "rendered_template": rendered_sample,
                 "template_content": template_content,
-                "max_samples": min(10_000, len(self.dataset.load_samples())),
+                "max_samples": min(100, len(self.dataset.load_samples())),
                 "subset": subset,
                 "split": split,
                 "text_direction": text_direction,
