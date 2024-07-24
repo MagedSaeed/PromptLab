@@ -7,6 +7,7 @@ from core.utils import redis_cache  # noqa: F401
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import models
+from prompt import constants
 from taggit.managers import TaggableManager
 
 User = get_user_model()
@@ -155,7 +156,13 @@ class Dataset(models.Model):
         except Exception as e:
             return {"error": str(e)}
 
-    def load_samples(self, split=None, subset=None, max_samples=100):
+    def load_samples(
+        self,
+        split=None,
+        subset=None,
+        max_samples=constants.MAX_SAMPLES,
+        shuffled=True,
+    ):
         cache_key = f"{self.huggingface_name}_samples"
         cached_data = cache.get(cache_key)
         if cached_data:
@@ -180,6 +187,8 @@ class Dataset(models.Model):
                     **kwargs,
                 )
                 all_samples_count = len(dataset)
+                if shuffled:
+                    dataset = dataset.shuffle(seed=constants.RANDOM_SEED)
             dataset = datasets.Dataset.from_dict(dataset[:max_samples])
             cache.set(cache_key, (dataset, all_samples_count), timeout=60 * 60 * 24)
             return dataset, all_samples_count
