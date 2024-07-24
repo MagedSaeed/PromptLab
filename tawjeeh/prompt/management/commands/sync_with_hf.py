@@ -1,3 +1,4 @@
+import argparse
 import ast
 import csv
 import os
@@ -8,6 +9,17 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from prompt.models import Dataset, Prompt, Task
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
+
+def str2bool(value):
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ("yes", "true"):
+        return True
+    elif value.lower() in ("no", "false"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value, "yes" or "no", expected.')
 
 
 class Command(BaseCommand):
@@ -74,7 +86,8 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "--clear_datasets",
-            type=bool,
+            # https://stackoverflow.com/questions/60999816/argparse-not-parsing-boolean-arguments
+            type=str2bool,
             default=False,
             help="BE CAREFUL! If this is set to True, it will clear any existing datasets, prompts, and tasks in the database. Default is False.",
         )
