@@ -119,7 +119,6 @@ class Dataset(models.Model):
         cache_key = f"{self.huggingface_name}_huggingface_info"
         details = cache.get(cache_key)
         if details:
-            print("getting from cache, details are:", details)
             return details
         try:
             # Load the dataset information without loading the entire dataset
@@ -151,7 +150,6 @@ class Dataset(models.Model):
                 "huggingface_link": huggingface_link,
                 "full_info": info,
             }
-            print("getting without cache, details are:", details)
             cache.set(cache_key, details, timeout=60 * 60 * 24)
             return details
         except Exception as e:
@@ -159,9 +157,10 @@ class Dataset(models.Model):
 
     def load_samples(self, split=None, subset=None, max_samples=100):
         cache_key = f"{self.huggingface_name}_samples"
-        samples = cache.get(cache_key)
-        if samples:
-            return samples
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            samples, all_samples_count = cached_data
+            return samples, all_samples_count
         try:
             args = [self.huggingface_name]
             if len(self.subsets_with_splits) > 1:
@@ -180,9 +179,10 @@ class Dataset(models.Model):
                     *args,
                     **kwargs,
                 )
+                all_samples_count = len(dataset)
             dataset = datasets.Dataset.from_dict(dataset[:max_samples])
-            cache.set(cache_key, dataset, timeout=60 * 60 * 24)
-            return dataset
+            cache.set(cache_key, (dataset, all_samples_count), timeout=60 * 60 * 24)
+            return dataset, all_samples_count
         except Exception as e:
             return {"error": str(e)}
 

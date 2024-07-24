@@ -376,7 +376,10 @@ class DatasetDetailsView(LoginRequiredMixin, View):
             # select the first one by default
             subset = list(dataset.subsets_with_splits.keys())[0]
         if split:
-            samples = dataset.load_samples(split=split, subset=subset)
+            samples, all_samples_count = dataset.load_samples(
+                split=split,
+                subset=subset,
+            )
             if sample_index is not None:
                 try:
                     sample_index = int(sample_index)
@@ -386,11 +389,7 @@ class DatasetDetailsView(LoginRequiredMixin, View):
                     return JsonResponse({"error": "Invalid sample index"}, status=400)
             return JsonResponse(
                 {
-                    "len_samples": dataset.get_huggingface_info(subset=subset)[
-                        "full_info"
-                    ]
-                    .splits[split]
-                    .num_examples,
+                    "len_samples": all_samples_count,
                     "first_sample": samples[0],
                 },
                 safe=False,
@@ -424,10 +423,11 @@ class ApplyTemplateView(LoginRequiredMixin, View):
         subset = request.GET.get("subset")
         text_direction = request.GET.get("text_direction", "ltr")
         sample_index = int(request.POST.get("sample_index", 0))
-        sample = self.dataset.load_samples(
+        samples, all_samples_count = self.dataset.load_samples(
             split=split,
             subset=subset,
-        )[sample_index]
+        )
+        sample = samples[sample_index]
         template_content = request.POST.get("template", "")
         merge_error = ""
         rendered_sample = {}
@@ -445,7 +445,7 @@ class ApplyTemplateView(LoginRequiredMixin, View):
                 "sample_index": sample_index,
                 "rendered_template": rendered_sample,
                 "template_content": template_content,
-                "max_samples": min(100, len(self.dataset.load_samples())),
+                "max_samples": len(samples),
                 "subset": subset,
                 "split": split,
                 "text_direction": text_direction,

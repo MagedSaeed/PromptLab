@@ -1,3 +1,4 @@
+{% load utils_tags %}
 {% if dataset_info.error %}
     <p class="text-danger">{{ dataset_info.error }}</p>
 {% else %}
@@ -59,21 +60,18 @@
             <hr>
         {% endif %}
 
-        splits: {{dataset_info.full_info.splits}}
 
-        {% if dataset_info.full_info.splits %}
+        {% if dataset.subsets_with_splits.values %}
             <div>
                 <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
                     <div class="d-grid">
                         <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
-                            {% for split, split_details in dataset_info.full_info.splits.items %}
-                                {% if forloop.first %}
-                                    {{ split }}
-                                {% endif %}
+                            {% for split in dataset.subsets_with_splits.values|listify|first %}
+                                {{ split }}
                             {% endfor %}
                         </button>
                         <ul class="dropdown-menu form-control" aria-labelledby="splitDropdown">
-                            {% for split, split_details in dataset_info.full_info.splits.items %}
+                            {% for split in dataset.subsets_with_splits.values|listify|first %}
                                 <li>
                                     <a
                                         data-split="{{ split }}"
