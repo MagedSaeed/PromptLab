@@ -277,7 +277,7 @@ class Command(BaseCommand):
                     # delete any example prompt for this dataset
                     Prompt.objects.filter(
                         dataset=dataset,
-                        tag__name__icontains="Example Prompt",
+                        tags__name__icontains="Example Prompt",
                     ).delete()
                     dataset.create_example_prompt(
                         prompt_template=example_template,
