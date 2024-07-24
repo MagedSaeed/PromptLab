@@ -390,6 +390,7 @@ class DatasetDetailsView(LoginRequiredMixin, View):
             return JsonResponse(
                 {
                     "len_samples": all_samples_count,
+                    "max_browse_samples": len(samples),
                     "first_sample": samples[0],
                 },
                 safe=False,
