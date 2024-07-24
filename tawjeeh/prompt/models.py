@@ -119,6 +119,7 @@ class Dataset(models.Model):
         cache_key = f"{self.huggingface_name}_huggingface_info"
         details = cache.get(cache_key)
         if details:
+            print("getting from cache, details are:", details)
             return details
         try:
             # Load the dataset information without loading the entire dataset
@@ -150,6 +151,7 @@ class Dataset(models.Model):
                 "huggingface_link": huggingface_link,
                 "full_info": info,
             }
+            print("getting without cache, details are:", details)
             cache.set(cache_key, details, timeout=60 * 60 * 24)
             return details
         except Exception as e:
