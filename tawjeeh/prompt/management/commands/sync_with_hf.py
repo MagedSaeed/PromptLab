@@ -274,6 +274,11 @@ class Command(BaseCommand):
                     if answer_choices:
                         # convert string to list, "['answer1', 'answer2']" -> ["answer1", "answer2"]
                         answer_choices = ast.literal_eval(answer_choices)
+                    # delete any example prompt for this dataset
+                    Prompt.objects.filter(
+                        dataset=dataset,
+                        tag__name__icontains="Example Prompt",
+                    ).delete()
                     dataset.create_example_prompt(
                         prompt_template=example_template,
                         created_by=example_template_created_by,
