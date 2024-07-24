@@ -254,7 +254,7 @@ class Dataset(models.Model):
         cache.delete(f"{self.huggingface_name}_samples")
         cache.delete(f"{self.huggingface_name}_huggingface_info")
         cache.delete(f"{self.huggingface_name}_columns_names")
-        cache.delete(f"{self.huggingface_name}__subsets_with_splits")
+        cache.delete(f"{self.huggingface_name}_subsets_with_splits")
         return True
 
 
