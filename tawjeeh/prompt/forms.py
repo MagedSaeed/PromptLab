@@ -50,6 +50,9 @@ class PromptCreateUpdateForm(forms.ModelForm):
             )
         return super().save(commit=commit)
 
+    def is_prompt_reviewable(self):
+        return self.instance.reviewable
+
 
 class PromptReviewForm(forms.ModelForm):
     # these are prompt fields,
@@ -120,6 +123,9 @@ class PromptReviewForm(forms.ModelForm):
         prompt_modifications = self.get_prompt_reviewer_modifications()
         self.instance.prompt_before_modifications = prompt_modifications
         return super().save(commit=commit)
+
+    def is_prompt_reviewable(self):
+        return self.prompt.reviewable
 
 
 class HFSyncForm(forms.Form):
