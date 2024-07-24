@@ -249,16 +249,17 @@ class Dataset(models.Model):
         submission_action = PromptReviewAction(
             prompt=prompt,
             submitter=created_by_user,
-            prompt_status=PromptReviewAction.PromptStatus.DRAFT,
+            prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
         )
         submission_action.save()
         # create an acceptance action
-        approval_action = PromptReviewAction(
-            prompt=prompt,
-            submitter=created_by_user,
-            prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
-        )
-        approval_action.save()
+        # approval_action = PromptReviewAction(
+        #     prompt=prompt,
+        #     submitter=created_by_user,
+        #     submitter_decision=PromptReviewAction.DecisionChoices.APPROVED,
+        #     prompt_status=PromptReviewAction.PromptStatus.SUBMITTED,
+        # )
+        # approval_action.save()
         return prompt
 
     def reset_cache(self):
