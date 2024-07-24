@@ -31,7 +31,7 @@ python manage.py sync_with_hf \
     --example_template_created_by_column example_template_created_by \
     --example_template_subset_column subset \
     --answer_choices_column answer_choices \
-    --clear_datasets True
+    --clear_datasets False
 
 # collect static
 python manage.py collectstatic --noinput
