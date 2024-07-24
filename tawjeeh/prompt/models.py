@@ -188,7 +188,8 @@ class Dataset(models.Model):
                 )
                 all_samples_count = len(dataset)
                 if shuffled:
-                    dataset = dataset.shuffle(seed=constants.RANDOM_SEED)
+                    # dataset = dataset.shuffle(seed=constants.RANDOM_SEED)
+                    dataset = dataset.shuffle()
             dataset = datasets.Dataset.from_dict(dataset[:max_samples])
             cache.set(cache_key, (dataset, all_samples_count), timeout=60 * 60 * 24)
             return dataset, all_samples_count
