@@ -26,7 +26,8 @@
                         <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                     </button>
                 </div>
-                {% if form.instance.reviewable %}
+
+                {% if form.is_prompt_reviewable %}
                     <hr>
                     <div class="row">
                         <div class="row">
