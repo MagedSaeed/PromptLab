@@ -294,7 +294,7 @@ class PromptDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class PromptListView(ListView):
+class PromptListView(LoginRequiredMixin, ListView):
     model = Prompt
     # paginate_by = 10
     context_object_name = "all_prompts"
@@ -345,7 +345,7 @@ class PromptListView(ListView):
         return context
 
 
-class UserPromptsListView(ListView):
+class UserPromptsListView(LoginRequiredMixin, ListView):
     model = Prompt
     paginate_by = 10
     context_object_name = "prompts"
