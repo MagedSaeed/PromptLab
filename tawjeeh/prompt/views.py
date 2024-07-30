@@ -410,6 +410,10 @@ class DatasetDetailsView(LoginRequiredMixin, View):
 class ApplyTemplateView(LoginRequiredMixin, View):
     def apply_template(self, template_content, sample):
         template_content = template_content.replace("<br>", "\n")
+        template_content = template_content.replace(
+            "{{", '<span class = "text-danger"> {{'
+        )
+        template_content = template_content.replace("}}", "}} </span>")
         template = Template(template_content)
         answer_choices = self.request.POST.get("answer_choices", [])
         if answer_choices:
