@@ -3,6 +3,7 @@ import pickle
 from functools import wraps
 
 from django.core.cache import cache
+from prompt import constants
 
 
 def pickle_serialize(obj):
@@ -13,7 +14,7 @@ def pickle_deserialize(serialized_obj):
     return pickle.loads(serialized_obj)
 
 
-def redis_cache(timeout=60 * 60 * 24, refresh=False):  # refresh results
+def redis_cache(timeout=constants.DEFAULT_TIMEOUT, refresh=False):  # refresh results
     # this function is used to cache on the function level
     def decorator(func):
         @wraps(func)
