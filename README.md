@@ -106,24 +106,32 @@ echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://pack
 sudo apt-get update
 sudo apt-get install -y redis
 sudo service redis-server restart
+
 # setup .env
 echo "SUPERUSER_PASSWORD=<change-me>
 GOOGLE_CLIENT_ID=<your-google-client-id>
 GOOGLE_CLIENT_SECRET=<your-google-client-secret>" > .env
+
 # install requirements
 pip install -r requirements.txt
 pip install -r requirements_dev.txt
+
 # setup pre-commit
 pre-commit install
+
 # cd into the application dir
 cd tawjeeh
+
 # migraste
 python manage.py migrate sites
 python manage.py migrate
+
 # setup superusers
 python manage.py import_superusers admins.yml
+
 # setup allauth for google auth
 python manage.py setup_allauth
+
 # sync with hf from gsheets
 python manage.py sync_with_hf \
     --sheet_id 1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k \
