@@ -52,7 +52,7 @@ class Dataset(models.Model):
 
             # Extract and return column names
             columns = list(features.keys())
-            cache.set(cache_key, columns, timeout=60 * 60 * 24)
+            cache.set(cache_key, columns, timeout=constants.DEFAULT_TIMEOUT)
             return columns
         except Exception as e:
             print(f"Error retrieving dataset columns: {e}")
@@ -113,7 +113,7 @@ class Dataset(models.Model):
                     continue
                 config_name, splits = fetch_splits(config_name)
                 configs_and_splits[config_name] = splits
-        cache.set(cache_key, configs_and_splits, timeout=60 * 60 * 24)
+        cache.set(cache_key, configs_and_splits, timeout=constants.DEFAULT_TIMEOUT)
         return configs_and_splits
 
     def get_huggingface_info(self, subset=None):
@@ -151,7 +151,7 @@ class Dataset(models.Model):
                 "huggingface_link": huggingface_link,
                 "full_info": info,
             }
-            cache.set(cache_key, details, timeout=60 * 60 * 24)
+            cache.set(cache_key, details, timeout=constants.DEFAULT_TIMEOUT)
             return details
         except Exception as e:
             return {"error": str(e)}
@@ -191,7 +191,11 @@ class Dataset(models.Model):
                     # dataset = dataset.shuffle(seed=constants.RANDOM_SEED)
                     dataset = dataset.shuffle()
             dataset = datasets.Dataset.from_dict(dataset[:max_samples])
-            cache.set(cache_key, (dataset, all_samples_count), timeout=60 * 60 * 24)
+            cache.set(
+                cache_key,
+                (dataset, all_samples_count),
+                timeout=constants.DEFAULT_TIMEOUT,
+            )
             return dataset, all_samples_count
         except Exception as e:
             return {"error": str(e)}
