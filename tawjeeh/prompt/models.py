@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import models
 from prompt import constants
+from sklearn.model_selection import train_test_split
 from taggit.managers import TaggableManager
 
 User = get_user_model()
@@ -191,18 +192,33 @@ class Dataset(models.Model):
                     split = list(self.subsets_with_splits[subset])[0]
                 else:
                     split = list(self.subsets_with_splits.values())[0][0]
-            kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
+            # kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
+            kwargs = dict(split=split, trust_remote_code=True)
             with tempfile.TemporaryDirectory() as tmp_cache_dir:
                 kwargs.update(dict(cache_dir=tmp_cache_dir))
                 dataset = datasets.load_dataset(
                     *args,
                     **kwargs,
                 )
-                all_samples_count = len(dataset)
+
                 if shuffled:
-                    # dataset = dataset.shuffle(seed=constants.RANDOM_SEED)
+                    # Shuffle the dataset
                     dataset = dataset.shuffle()
-            dataset = datasets.Dataset.from_dict(dataset[:max_samples])
+
+                all_samples_count = len(dataset)
+
+                df = dataset.to_pandas()
+
+                stratified_sample_df, _ = train_test_split(
+                    df,
+                    train_size=len(df) - len(set(df[self.target_column])),
+                    stratify=df[self.target_column],
+                    random_state=42,
+                )
+                stratified_sample_df = stratified_sample_df[:max_samples]
+            dataset = datasets.Dataset.from_pandas(
+                stratified_sample_df.reset_index(drop=True)
+            )
             cache.set(
                 cache_key,
                 (dataset, all_samples_count),
