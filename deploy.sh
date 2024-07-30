@@ -47,6 +47,9 @@ useradd -m -d /home/tawjeeh tawjeeh
 # Set permissions for the virtual environment and project directory
 chown -R tawjeeh:tawjeeh /app/venv /app/tawjeeh
 
+# Ensure the new user has execute permissions
+chmod -R u+x /app/venv/bin /app/tawjeeh
+
 # Run Celery worker as the non-root user
 sudo -u tawjeeh -E bash -c "source /app/venv/bin/activate && celery -A tawjeeh worker -l info &"
 
