@@ -1,31 +1,40 @@
 #!/bin/bash
 
+# Create a non-root user
+adduser --disabled-password --gecos '' tawjeeh
+
+# Give ownership of the app directory to the new user
+chown -R tawjeeh:tawjeeh /app
+
+# Switch to the new user
+su tawjeeh << EOF
+
 # Create and activate a virtual environment
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv /app/venv
+source /app/venv/bin/activate
 
 # Install Python dependencies
-pip install -r requirements.txt
+pip install -r /app/requirements.txt
 
 # Navigate to the project directory
-cd tawjeeh
+cd /app/tawjeeh
 
-# Set production settings as env variable
+# set production settings as env variable
 export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
 
-# Migrate Django sites first
+# migrate django sites first
 python manage.py migrate sites
 
 # Run Django management commands
 python manage.py migrate
 
-# Create superusers
+# create superusers
 python manage.py import_superusers ../docker/django-site/admins.yml
 
-# Setup allauth
+# setup allauth
 python manage.py setup_allauth
 
-# Sync with HF
+# sync with hf
 python manage.py sync_with_hf \
     --sheet_id 1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k \
     --sheet_name final-list \
@@ -35,28 +44,19 @@ python manage.py sync_with_hf \
     --answer_choices_column answer_choices \
     --clear_datasets False
 
-# Collect static
+# collect static
 python manage.py collectstatic --noinput
 
-# Install Gunicorn
+# install gunicorn
 pip install gunicorn
 
-# Create a non-root user
-useradd -m -d /home/tawjeeh tawjeeh
+# run celery worker
+celery -A tawjeeh worker -l info &
 
-# Set permissions for the virtual environment and project directory
-chown -R tawjeeh:tawjeeh /app/venv /app/tawjeeh
+# run celery beat
+celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 
-# Ensure the new user has execute permissions on the necessary directories and files
-chmod -R u+x /app/venv/bin
-chmod -R u+r /app/venv/bin
-chmod -R u+rx /app/venv/lib/python3
+# Start the Gunicorn server in the foreground
+exec gunicorn tawjeeh.wsgi --workers 4 --threads 4 --bind 0.0.0.0:8080
 
-# Run Celery worker as the non-root user
-sudo -u tawjeeh -E bash -c "source /app/venv/bin/activate && celery -A tawjeeh worker -l info &"
-
-# Run Celery beat as the non-root user
-sudo -u tawjeeh -E bash -c "source /app/venv/bin/activate && celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &"
-
-# Start the Gunicorn server in the background
-gunicorn tawjeeh.wsgi --workers 4 --threads 4 --bind 0.0.0.0:8080
+EOF
