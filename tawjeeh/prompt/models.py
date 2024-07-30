@@ -98,13 +98,17 @@ class Dataset(models.Model):
                     for config_name in config_names
                 }
                 for future in concurrent.futures.as_completed(future_to_config):
-                    if not hasattr(future, "results"):
+                    try:
+                        results = future.result()  # Use the result() method
+                        if results is None:
+                            continue
+                        config_name, splits = results
+                        configs_and_splits[config_name] = splits
+                    except Exception as e:
+                        print(
+                            f"Error occurred while processing config_name: {future_to_config[future]}: {e}"
+                        )
                         continue
-                    results = future.results()
-                    if results is None:
-                        continue
-                    config_name, splits = results
-                    configs_and_splits[config_name] = splits
         else:
             # Process configs sequentially if there are 10 or fewer
             for config_name in config_names:
