@@ -1,23 +1,12 @@
-#!/bin/bash
-
-# Create a non-root user
-adduser --disabled-password --gecos '' tawjeeh
-
-# Give ownership of the app directory to the new user
-chown -R tawjeeh:tawjeeh /app
-
-# Switch to the new user
-su tawjeeh << EOF
-
 # Create and activate a virtual environment
-python3 -m venv /app/venv
-source /app/venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 
 # Install Python dependencies
-pip install -r /app/requirements.txt
+pip install -r requirements.txt
 
 # Navigate to the project directory
-cd /app/tawjeeh
+cd tawjeeh
 
 # set production settings as env variable
 export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
@@ -56,7 +45,5 @@ celery -A tawjeeh worker -l info &
 # run celery beat
 celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 
-# Start the Gunicorn server in the foreground
-exec gunicorn tawjeeh.wsgi --workers 4 --threads 4 --bind 0.0.0.0:8080
-
-EOF
+# Start the Gunicorn server in the background
+gunicorn tawjeeh.wsgi --workers 4 --threads 4 --bind 0.0.0.0:8080
