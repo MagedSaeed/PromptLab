@@ -97,7 +97,7 @@ Finally, run the server:
 python manage.py runserver
 ```
 
-The full code in one shot:
+The full code of the above setup in one shot to easily copy and paste:
 
 ```bash
 curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
