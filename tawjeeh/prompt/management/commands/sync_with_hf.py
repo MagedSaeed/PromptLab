@@ -85,6 +85,20 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
+            "--is_single_classification_column",
+            type=str,
+            default="",
+            help="If the source contains a column that tells whether the dataset is singler classification dataset. Useful to preload the answer choices and other things",
+        )
+
+        parser.add_argument(
+            "--target_column",
+            type=str,
+            default="",
+            help="The column that specifies the target of the dataset. Useful to preload the answer choices and other things.",
+        )
+
+        parser.add_argument(
             "--clear_datasets",
             # https://stackoverflow.com/questions/60999816/argparse-not-parsing-boolean-arguments
             type=str2bool,
@@ -104,6 +118,8 @@ class Command(BaseCommand):
         )
         example_template_subset_column = options.get("example_template_subset_column")
         answer_choices_column = options.get("answer_choices_column")
+        is_single_classification_column = options.get("is_single_classification_column")
+        target_column = options.get("target_column")
         clear_datasets = options.get("clear_datasets")
 
         dataset_info_list = None
@@ -118,6 +134,8 @@ class Command(BaseCommand):
                 example_template_created_by_column,
                 example_template_subset_column,
                 answer_choices_column,
+                is_single_classification_column,
+                target_column,
             )
         elif file_path:
             file_path = os.path.join(f"{settings.BASE_DIR}/tawjeeh", file_path)
@@ -174,6 +192,22 @@ class Command(BaseCommand):
                                 info.append(None)
                         else:
                             info.append([None] * 4)
+                        if is_single_classification_column:
+                            info.append(
+                                row[is_single_classification_column].strip()
+                                if row[is_single_classification_column]
+                                else None
+                            )
+                        else:
+                            info.append(None)
+                        if target_column:
+                            info.append(
+                                row[target_column].strip()
+                                if row[target_column]
+                                else None
+                            )
+                        else:
+                            info.append(None)
                         dataset_info_list.append(info)
             else:
                 self.stdout.write(
@@ -221,6 +255,8 @@ class Command(BaseCommand):
                 example_template_created_by,
                 example_template_subset,
                 answer_choices,
+                is_single_classification,
+                target,
             ) in dataset_info_list:
                 path_parts = dataset_url.split("/")
                 if len(path_parts) >= 2:
@@ -276,6 +312,13 @@ class Command(BaseCommand):
                         "huggingface_name": huggingface_name,
                         "description": description,
                         "huggingface_raw": huggingface_raw,
+                        "target_column": target,
+                        "is_single_classification": (
+                            True
+                            if is_single_classification is True
+                            or is_single_classification.lower() in ("true", "yes")
+                            else False
+                        ),
                     },
                 )
 
@@ -321,6 +364,8 @@ class Command(BaseCommand):
         example_template_created_by_column=None,
         example_template_subset_column=None,
         answer_choices_column=None,
+        is_single_classification_column=None,
+        target_column=None,
     ):
         try:
             if sheet_name:
@@ -386,6 +431,22 @@ class Command(BaseCommand):
                     info.append(None)
             else:
                 info.extend([None] * 4)
+            if is_single_classification_column:
+                info.append(
+                    row.get(is_single_classification_column, "").strip()
+                    if not pd.isna(row[is_single_classification_column])
+                    else None
+                )
+            else:
+                info.append(None)
+            if target_column:
+                info.append(
+                    row.get(target_column, "").strip()
+                    if not pd.isna(row[target_column])
+                    else None
+                )
+            else:
+                info.append(None)
             dataset_info_list.append(tuple(info))
 
         return dataset_info_list

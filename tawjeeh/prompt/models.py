@@ -30,6 +30,14 @@ class Dataset(models.Model):
     huggingface_name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     huggingface_raw = models.JSONField(null=True, blank=True)
+    is_single_classification = models.BooleanField(default=False)
+    # determins the target label column name in the dataset
+    # for a sentiment anslysis with text column and label column, the value of this field should be label
+    target_column = models.CharField(
+        max_length=10_000,
+        null=True,
+        blank=True,
+    )
 
     @property
     def primary_task(self):
