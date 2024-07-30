@@ -18,7 +18,7 @@ python manage.py migrate sites
 python manage.py migrate
 
 # create superusers
-python manage.py import_superusers ../docker/django-site/admins.yml
+python manage.py import_superusers admins.yml
 
 # setup allauth
 python manage.py setup_allauth
