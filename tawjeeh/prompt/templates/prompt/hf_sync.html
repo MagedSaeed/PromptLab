@@ -38,6 +38,14 @@
                 </div>
             </div>
             <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.is_single_classification_column|as_crispy_field }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.target_column|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
                 <hr>
                 <div class="col-md-6 mb-3">
                     <span class="text-danger">

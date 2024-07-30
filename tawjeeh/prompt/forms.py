@@ -161,4 +161,12 @@ class HFSyncForm(forms.Form):
         initial="answer_choices",
         required=False,
     )
+    is_single_classification_column = forms.CharField(
+        initial="is_single_classification",
+        required=False,
+    )
+    target_column = forms.CharField(
+        initial="target_column",
+        required=False,
+    )
     clear_datasets = forms.BooleanField(required=False)
