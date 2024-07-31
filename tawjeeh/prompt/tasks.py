@@ -1,6 +1,6 @@
 import gc
 
-from celery import group, shared_task
+from celery import chord, group, shared_task
 from celery.utils.log import get_task_logger
 from django.core.cache import cache
 from prompt.models import Dataset
@@ -24,16 +24,11 @@ def process_single_dataset(dataset_id):
 
 
 @shared_task
-def refresh_datasets_info():
-    datasets = Dataset.objects.all()
-    tasks = group(process_single_dataset.s(dataset.id) for dataset in datasets)
-    result = tasks.apply_async()
-
-    # Collect results
+def handle_results(results):
     success_datasets = []
     failed_datasets = []
 
-    for res in result.get():
+    for res in results:
         if res["status"] == "success":
             success_datasets.append(res["dataset_id"])
         else:
@@ -46,6 +41,14 @@ def refresh_datasets_info():
         "failed datasets count": len(failed_datasets),
         "failed datasets": failed_datasets,
     }
+
+
+@shared_task
+def refresh_datasets_info():
+    datasets = Dataset.objects.all()
+    tasks = group(process_single_dataset.s(dataset.id) for dataset in datasets)
+    result = chord(tasks)(handle_results.s())
+    return result
 
 
 @shared_task
