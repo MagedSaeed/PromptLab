@@ -41,7 +41,7 @@ def handle_results(results):
     }
 
 
-@shared_task(time_limit=60 * 15)  # 15 minutes
+@shared_task(time_limit=60 * 30)  # 30 minutes maximum
 def refresh_datasets_info():
     datasets = Dataset.objects.all()
     tasks = group(process_single_dataset.s(dataset.id) for dataset in datasets)
