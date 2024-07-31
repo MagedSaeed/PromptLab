@@ -2,7 +2,7 @@ import os
 
 from tawjeeh.settings import *  # noqa: F403
 
-DEBUG = True
+DEBUG = False
 
 SITE_ID = 1
 
