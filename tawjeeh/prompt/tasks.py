@@ -8,6 +8,7 @@ from prompt.models import Dataset
 logger = get_task_logger(__name__)
 
 
+@shared_task
 def process_single_dataset(dataset_id):
     try:
         dataset = Dataset.objects.get(id=dataset_id)
@@ -22,6 +23,7 @@ def process_single_dataset(dataset_id):
         gc.collect()
 
 
+@shared_task
 def handle_results(results):
     success_datasets = []
     failed_datasets = []
