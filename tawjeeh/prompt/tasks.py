@@ -8,7 +8,6 @@ from prompt.models import Dataset
 logger = get_task_logger(__name__)
 
 
-@shared_task
 def process_single_dataset(dataset_id):
     try:
         dataset = Dataset.objects.get(id=dataset_id)
@@ -16,23 +15,13 @@ def process_single_dataset(dataset_id):
         dataset.subsets_with_splits
         dataset.get_huggingface_info()
         dataset.load_samples()
-        return {
-            "status": "success",
-            "dataset_id": dataset_id,
-            "dataset_name": dataset.name,
-        }
+        return {"status": "success", "dataset_id": dataset_id}
     except Exception as e:
-        return {
-            "status": "failed",
-            "dataset_id": dataset_id,
-            "dataset_name": dataset.name,
-            "error": str(e),
-        }
+        return {"status": "failed", "dataset_id": dataset_id, "error": str(e)}
     finally:
         gc.collect()
 
 
-@shared_task
 def handle_results(results):
     success_datasets = []
     failed_datasets = []
@@ -42,11 +31,7 @@ def handle_results(results):
             success_datasets.append(res["dataset_id"])
         else:
             failed_datasets.append(
-                {
-                    "dataset_id": res["dataset_id"],
-                    "dataset_name": res["dataset_name"],
-                    "error": res["error"],
-                }
+                {"dataset_id": res["dataset_id"], "error": res["error"]}
             )
 
     return {
@@ -56,7 +41,7 @@ def handle_results(results):
     }
 
 
-@shared_task
+@shared_task(time_limit=60 * 15)  # 15 minutes
 def refresh_datasets_info():
     datasets = Dataset.objects.all()
     tasks = group(process_single_dataset.s(dataset.id) for dataset in datasets)
