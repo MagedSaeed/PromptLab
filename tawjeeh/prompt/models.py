@@ -45,6 +45,30 @@ class Dataset(models.Model):
         if self.tasks.exists():
             return self.tasks.first()
 
+    def get_features(self):
+        """
+        Get the features of a given dataset and cache if needed
+        """
+        cache_key = f"{self.huggingface_name}_features"
+        features = cache.get(cache_key)
+        if features:
+            return features
+        try:
+            # Assuming the default configuration
+            default_config_name = list(self.subsets_with_splits.keys())[0]
+            features = datasets.get_dataset_config_info(
+                self.huggingface_name,
+                config_name=default_config_name,
+                trust_remote_code=True,
+            ).features
+
+            # Extract and return column names
+            cache.set(cache_key, features, timeout=constants.DEFAULT_TIMEOUT)
+            return features
+        except Exception as e:
+            print(f"Error retrieving dataset features: {e}")
+            raise e
+
     def get_columns_names(self):
         cache_key = f"{self.huggingface_name}_columns_names"
         columns = cache.get(cache_key)
