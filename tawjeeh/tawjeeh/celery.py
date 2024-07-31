@@ -23,8 +23,8 @@ app.autodiscover_tasks()
 
 app.conf.update(
     worker_max_memory_per_child=1048576,  # 1 GB in kilobytes
-    task_time_limit=60 * 60 * 3,  # 3 hours
-    task_soft_time_limit=60 * 60 * 4,  # 4 hours
-    worker_max_tasks_per_child=10,
+    task_time_limit=60 * 30,  # 0.5 hours
+    task_soft_time_limit=60 * 60,  # 1 hours
+    worker_max_tasks_per_child=1,
     worker_prefetch_multiplier=1,
 )
