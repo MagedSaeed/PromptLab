@@ -1,6 +1,6 @@
 import gc
 
-from celery import shared_task
+from celery import group, shared_task
 from celery.utils.log import get_task_logger
 from django.core.cache import cache
 from prompt.models import Dataset
@@ -9,21 +9,37 @@ logger = get_task_logger(__name__)
 
 
 @shared_task
+def process_single_dataset(dataset_id):
+    try:
+        dataset = Dataset.objects.get(id=dataset_id)
+        dataset.get_columns_names()
+        dataset.subsets_with_splits
+        dataset.get_huggingface_info()
+        dataset.load_samples()
+        return {"status": "success", "dataset_id": dataset_id}
+    except Exception as e:
+        return {"status": "failed", "dataset_id": dataset_id, "error": str(e)}
+    finally:
+        gc.collect()
+
+
+@shared_task
 def refresh_datasets_info():
+    datasets = Dataset.objects.all()
+    tasks = group(process_single_dataset.s(dataset.id) for dataset in datasets)
+    result = tasks.apply_async()
+
+    # Collect results
     success_datasets = []
     failed_datasets = []
 
-    for dataset in Dataset.objects.all():
-        try:
-            dataset.get_columns_names()
-            dataset.subsets_with_splits
-            dataset.get_huggingface_info()
-            dataset.load_samples()
-            success_datasets.append(dataset)
-        except Exception as e:
-            failed_datasets.append({dataset.huggingface_name: str(e)})
-
-    gc.collect()
+    for res in result.get():
+        if res["status"] == "success":
+            success_datasets.append(res["dataset_id"])
+        else:
+            failed_datasets.append(
+                {"dataset_id": res["dataset_id"], "error": res["error"]}
+            )
 
     return {
         "success datasets count": len(success_datasets),
