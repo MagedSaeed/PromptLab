@@ -1,3 +1,5 @@
+import gc
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.core.cache import cache
@@ -20,6 +22,8 @@ def refresh_datasets_info():
             success_datasets.append(dataset)
         except Exception as e:
             failed_datasets.append({dataset.huggingface_name: str(e)})
+
+    gc.collect()
 
     return {
         "success datasets count": len(success_datasets),
