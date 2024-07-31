@@ -25,6 +25,7 @@ app.conf.update(
     worker_max_memory_per_child=1048576 // 4,  # 0.25 GB in kilobytes
     task_time_limit=60 * 5,  # 5 minutes
     task_soft_time_limit=60 * 10,  # 10 minutes
-    worker_max_tasks_per_child=1,
+    worker_max_tasks_per_child=100,
     worker_prefetch_multiplier=1,
+    worker_concurrency=1,  # set only one worker
 )
