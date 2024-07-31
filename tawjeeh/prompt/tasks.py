@@ -16,9 +16,18 @@ def process_single_dataset(dataset_id):
         dataset.subsets_with_splits
         dataset.get_huggingface_info()
         dataset.load_samples()
-        return {"status": "success", "dataset_id": dataset_id}
+        return {
+            "status": "success",
+            "dataset_id": dataset_id,
+            "dataset_name": dataset.name,
+        }
     except Exception as e:
-        return {"status": "failed", "dataset_id": dataset_id, "error": str(e)}
+        return {
+            "status": "failed",
+            "dataset_id": dataset_id,
+            "dataset_name": dataset.name,
+            "error": str(e),
+        }
     finally:
         gc.collect()
 
@@ -33,7 +42,11 @@ def handle_results(results):
             success_datasets.append(res["dataset_id"])
         else:
             failed_datasets.append(
-                {"dataset_id": res["dataset_id"], "error": res["error"]}
+                {
+                    "dataset_id": res["dataset_id"],
+                    "dataset_name": res["dataset_name"],
+                    "error": res["error"],
+                }
             )
 
     return {
