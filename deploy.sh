@@ -42,7 +42,7 @@ python manage.py collectstatic --noinput
 pip install gunicorn
 
 # run celery worker
-celery -A tawjeeh worker -l info &
+celery -A tawjeeh worker -l info -pool solo &
 
 # run celery beat
 celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
