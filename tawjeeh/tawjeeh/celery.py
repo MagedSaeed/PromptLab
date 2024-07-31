@@ -20,3 +20,7 @@ app.conf.enable_utc = True  # Ensure UTC is enabled for proper timezone conversi
 
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
+
+app.conf.update(
+    worker_max_memory_per_child=1048576  # 1 GB in kilobytes
+)
