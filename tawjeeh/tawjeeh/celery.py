@@ -22,9 +22,9 @@ app.conf.enable_utc = True  # Ensure UTC is enabled for proper timezone conversi
 app.autodiscover_tasks()
 
 app.conf.update(
-    worker_max_memory_per_child=1048576 // 2,  # 0.5 GB in kilobytes
-    task_time_limit=60 * 30,  # 0.5 hours
-    task_soft_time_limit=60 * 60,  # 1 hours
+    worker_max_memory_per_child=1048576 // 4,  # 0.25 GB in kilobytes
+    task_time_limit=60 * 5,  # 5 minutes
+    task_soft_time_limit=60 * 10,  # 10 minutes
     worker_max_tasks_per_child=1,
     worker_prefetch_multiplier=1,
 )
