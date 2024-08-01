@@ -31,6 +31,9 @@ CACHES = {
     }
 }
 
+CELERY_BROKER_URL = f'redis://{os.environ["REDIS_USER"]}:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
+CELERY_RESULT_BACKEND = f'redis://{os.environ["REDIS_USER"]}:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
+
 CSRF_TRUSTED_ORIGINS = [
     "https://tawjeeh-production.up.railway.app",
     "https://*.railway.app",

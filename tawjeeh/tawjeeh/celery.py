@@ -3,7 +3,9 @@ import os
 from celery import Celery
 
 # Set the default Django settings module for the 'celery' program.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tawjeeh.settings")
+# if not set for production, use the development settings
+if not os.environ.get("DJANGO_SETTINGS_MODULE"):
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tawjeeh.settings")
 
 app = Celery("tawjeeh")
 
@@ -22,10 +24,10 @@ app.conf.enable_utc = True  # Ensure UTC is enabled for proper timezone conversi
 app.autodiscover_tasks()
 
 app.conf.update(
-    worker_max_memory_per_child=1048576 // 50,  # 0.02 GB in kilobytes
-    task_time_limit=60 * 1,  # 1 minutes
-    task_soft_time_limit=60 * 2,  # 2 minutes
+    worker_max_memory_per_child=1048576 // 10,  # 0.1 GB in kilobytes
+    task_time_limit=60 * 3,  # 3 minutes
+    task_soft_time_limit=60 * 5,  # 5 minutes
     worker_max_tasks_per_child=5,
-    worker_prefetch_multiplier=1,
-    worker_concurrency=1,  # set only one worker
+    worker_prefetch_multiplier=2,
+    worker_concurrency=2,  # set two concurrent workers
 )
