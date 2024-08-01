@@ -42,10 +42,10 @@ python manage.py collectstatic --noinput
 pip install gunicorn
 
 # run celery worker
-celery -A tawjeeh worker -l info --pool solo &
+# celery -A tawjeeh worker -l info --pool solo &
 
 # run celery beat
 celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 
 # Start the Gunicorn server in the background
-gunicorn tawjeeh.wsgi --workers 4 --threads 4 --bind 0.0.0.0:8080
+gunicorn tawjeeh.wsgi --workers 2 --threads 4 --bind 0.0.0.0:8080
