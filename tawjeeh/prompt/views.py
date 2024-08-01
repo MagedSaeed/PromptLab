@@ -367,6 +367,18 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
 
 
 class DatasetDetailsView(LoginRequiredMixin, View):
+
+    def remap_labels(self, sample, dataset):
+        """
+        remap the labels to their class names
+        """
+        features = dataset.get_features()
+        for c in sample:
+            if hasattr(features[c], "names"):
+                label_to_name = {i: name for i, name in enumerate(features[c].names)}
+                sample[c] = str(sample[c]) + "<<" + label_to_name[sample[c]] + ">>"
+        return sample
+
     def get(self, request, dataset_pk, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=dataset_pk)
         split = request.GET.get("split")
@@ -384,14 +396,18 @@ class DatasetDetailsView(LoginRequiredMixin, View):
                 try:
                     sample_index = int(sample_index)
                     sample = samples[sample_index]
+                    sample = self.remap_labels(sample, dataset)
                     return JsonResponse({"sample": sample}, safe=False)
                 except (ValueError, IndexError):
                     return JsonResponse({"error": "Invalid sample index"}, status=400)
+
+            first_sample = self.remap_labels(samples[0], dataset)
+
             return JsonResponse(
                 {
                     "len_samples": all_samples_count,
                     "max_browse_samples": len(samples),
-                    "first_sample": samples[0],
+                    "first_sample": first_sample,
                 },
                 safe=False,
             )
