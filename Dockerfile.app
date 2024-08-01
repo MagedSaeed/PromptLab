@@ -29,8 +29,5 @@ COPY --chown=tawjeeh:tawjeeh . /app
 # Activate the virtual environment and install the requirements
 RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
 
-# cd to tawjeeh folder
-WORKDIR /app/tawjeeh
-
 # Run the app
 CMD ["bash", "deploy.sh"]
