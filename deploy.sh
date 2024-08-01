@@ -48,4 +48,4 @@ pip install gunicorn
 celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 
 # Start the Gunicorn server in the background
-gunicorn tawjeeh.wsgi --workers 4 --threads 4 --bind 0.0.0.0:8080
+gunicorn tawjeeh.wsgi --workers 2 --threads 4 --bind 0.0.0.0:8080
