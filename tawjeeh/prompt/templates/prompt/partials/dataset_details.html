@@ -261,13 +261,24 @@
                             cls = 'json-key';
                         } else {
                             cls = 'json-string';
+                            var lst = match.split('&lt;&lt;');
+                            if (lst.length > 1){
+                                console.log(lst[1])
+                                const label = lst[1].split('&gt;&gt;')[0]
+                                const name = lst[0]
+                                return '<span class="' + cls + '">' + name + '</span>' + '<span class = "text-secondary" style = "opacity: 0.6;"> ('+label+')</span>'+'<span class="' + cls + '">"</span>';
+                            }
+
+
                         }
                     } else if (/true|false/.test(match)) {
                         cls = 'json-boolean';
                     } else if (/null/.test(match)) {
                         cls = 'json-null';
                     }
-                    return '<span class="' + cls + '">' + match + '</span>';
+
+                    return '<span class="' + cls + '">' + match + '</span>'
+
                 });
             }
         }
