@@ -10,12 +10,12 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create a new user called celery with sudo privileges
-RUN useradd -m -s /bin/bash celery && \
-    echo "celery ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Create a new user called tawjeeh with sudo privileges
+RUN useradd -m -s /bin/bash tawjeeh && \
+    echo "tawjeeh ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Switch to the celery user
-USER celery
+# Switch to the tawjeeh user
+USER tawjeeh
 
 # Set the working directory
 WORKDIR /app
@@ -24,13 +24,13 @@ WORKDIR /app
 RUN python3 -m venv venv
 
 # Copy the current directory contents into the container at /app
-COPY --chown=celery:celery . /app
+COPY --chown=tawjeeh:tawjeeh . /app
 
 # Activate the virtual environment and install the requirements
 RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
 
-# cd to tawjeeh
+# cd to tawjeeh folder
 WORKDIR /app/tawjeeh
 
-# Run the Celery worker
+# Run the app
 CMD ["bash", "deploy.sh"]
