@@ -3,7 +3,7 @@
         <tr>
             <th scope="col" style="width: 10%;">#</th>
             <th scope="col" style="width: 25%;">Dataset Name</th>
-            <th scope="col" style="width: 15%;">Tasks</th>
+            <!-- <th scope="col" style="width: 15%;">Tasks</th> -->
             <th scope="col" style="width: 30%;">Description</th>
             <th scope="col" style="width: 5%;">Prompts</th>
             <th scope="col" style="width: 15%;"></th>
@@ -14,19 +14,19 @@
             <tr>
                 <th>{{ forloop.counter }}</th>
                 <td>
-                    <a href="https://huggingface.co/datasets/{{ dataset.huggingface_name }}" target="_blank" data-toggle="tooltip" data-placement="top" title="Go to dataset page on huggingface">
+                    <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Create new prompt">
                         <span class="dataset-name">{{ dataset.name }}</span>
                     </a>
                 </td>
 
-                <td>
-                    {% for task in dataset.tasks.all %}
-                        <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
-                            {{ task }}
-                        </a>
-                        {% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </td>
+                <!-- <td> -->
+                    <!-- {% for task in dataset.tasks.all %} -->
+                        <!-- <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}"> -->
+                            <!-- {{ task }} -->
+                        <!-- </a> -->
+                        <!-- {% if not forloop.last %}, {% endif %} -->
+                    <!-- {% endfor %} -->
+                <!-- </td> -->
 
                 <td>
                     {% if dataset.description|length > 150 %}
@@ -36,7 +36,9 @@
                     {% endif %}
                 </td>
                 <td class="text-center" > {{ dataset.prompts.count }} </td>
-                <td> <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}">List Prompts</a> </td>
+                <td>
+                    <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}">List Prompts</a>
+                </td>
             </tr>
         {% endfor %}
     </tbody>
