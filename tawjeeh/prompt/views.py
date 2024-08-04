@@ -367,7 +367,6 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
 
 
 class DatasetDetailsView(LoginRequiredMixin, View):
-
     def remap_labels(self, sample, dataset):
         """
         remap the labels to their class names
@@ -411,14 +410,12 @@ class DatasetDetailsView(LoginRequiredMixin, View):
                 },
                 safe=False,
             )
-        details = dataset.get_huggingface_info(subset=subset)
         return render(
             request,
             "prompt/partials/dataset_details.html",
             {
                 "subset": subset,
                 "dataset": dataset,
-                "dataset_info": details,
             },
         )
 
