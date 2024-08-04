@@ -29,5 +29,5 @@ app.conf.update(
     task_soft_time_limit=60 * 5,  # 5 minutes
     worker_max_tasks_per_child=5,
     worker_prefetch_multiplier=2,
-    worker_concurrency=2,  # set two concurrent workers
+    worker_concurrency=1,  # set one concurrent worker(s)
 )
