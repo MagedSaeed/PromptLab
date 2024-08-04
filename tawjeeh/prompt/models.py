@@ -153,45 +153,45 @@ class Dataset(models.Model):
         cache.set(cache_key, configs_and_splits, timeout=constants.DEFAULT_TIMEOUT)
         return configs_and_splits
 
-    def get_huggingface_info(self, subset=None):
-        cache_key = f"{self.huggingface_name}_huggingface_info"
-        details = cache.get(cache_key)
-        if details:
-            return details
-        try:
-            # Load the dataset information without loading the entire dataset
-            if len(self.subsets_with_splits) > 1:
-                if not subset:
-                    subset = list(self.subsets_with_splits.keys())[0]
-                info = datasets.load_dataset_builder(
-                    self.huggingface_name,
-                    subset,
-                    trust_remote_code=True,
-                ).info
-            else:
-                info = datasets.load_dataset_builder(
-                    self.huggingface_name,
-                    trust_remote_code=True,
-                ).info
+    # def get_huggingface_info(self, subset=None):
+    #     cache_key = f"{self.huggingface_name}_huggingface_info"
+    #     details = cache.get(cache_key)
+    #     if details:
+    #         return details
+    #     try:
+    #         # Load the dataset information without loading the entire dataset
+    #         if len(self.subsets_with_splits) > 1:
+    #             if not subset:
+    #                 subset = list(self.subsets_with_splits.keys())[0]
+    #             info = datasets.load_dataset_builder(
+    #                 self.huggingface_name,
+    #                 subset,
+    #                 trust_remote_code=True,
+    #             ).info
+    #         else:
+    #             info = datasets.load_dataset_builder(
+    #                 self.huggingface_name,
+    #                 trust_remote_code=True,
+    #             ).info
 
-            # Create the Hugging Face link
-            huggingface_link = (
-                f"https://huggingface.co/datasets/{self.huggingface_name}"
-            )
+    #         # Create the Hugging Face link
+    #         huggingface_link = (
+    #             f"https://huggingface.co/datasets/{self.huggingface_name}"
+    #         )
 
-            # Format the dataset details
-            details = {
-                "description": info.description,
-                "citation": info.citation,
-                "homepage": info.homepage,
-                "license": info.license,
-                "huggingface_link": huggingface_link,
-                "full_info": info,
-            }
-            cache.set(cache_key, details, timeout=constants.DEFAULT_TIMEOUT)
-            return details
-        except Exception as e:
-            return {"error": str(e)}
+    #         # Format the dataset details
+    #         details = {
+    #             "description": info.description,
+    #             "citation": info.citation,
+    #             "homepage": info.homepage,
+    #             "license": info.license,
+    #             "huggingface_link": huggingface_link,
+    #             "full_info": info,
+    #         }
+    #         cache.set(cache_key, details, timeout=constants.DEFAULT_TIMEOUT)
+    #         return details
+    #     except Exception as e:
+    #         return {"error": str(e)}
 
     def load_samples(
         self,

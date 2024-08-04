@@ -14,7 +14,7 @@ def process_single_dataset(dataset_id):
         dataset = Dataset.objects.get(id=dataset_id)
         dataset.get_columns_names()
         dataset.subsets_with_splits
-        dataset.get_huggingface_info()
+        # dataset.get_huggingface_info()
         dataset.load_samples()
         return {"status": "success", "dataset_id": dataset_id}
     except Exception as e:
