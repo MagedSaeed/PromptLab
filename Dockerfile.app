@@ -1,12 +1,12 @@
-# Use the official Ubuntu image from the Docker Hub
-FROM ubuntu:latest
+# Use the official slim Python image from the Docker Hub
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 
-# Install dependencies
+# Install sudo
 RUN apt-get update && \
-    apt-get install -y sudo python3 python3-venv python3-pip && \
+    apt-get install -y sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -21,7 +21,7 @@ USER tawjeeh
 WORKDIR /app
 
 # Create a virtual environment
-RUN python3 -m venv venv
+RUN python -m venv venv
 
 # Copy the current directory contents into the container at /app
 COPY --chown=tawjeeh:tawjeeh . /app
