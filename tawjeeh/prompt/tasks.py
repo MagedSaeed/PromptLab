@@ -12,10 +12,10 @@ logger = get_task_logger(__name__)
 def process_single_dataset(dataset_id):
     try:
         dataset = Dataset.objects.get(id=dataset_id)
+        dataset.get_configs_details()
         dataset.get_columns_names()
-        dataset.subsets_with_splits
         # dataset.get_huggingface_info()
-        dataset.load_samples()
+        # dataset.load_split_samples()
         return {"status": "success", "dataset_id": dataset_id}
     except Exception as e:
         return {"status": "failed", "dataset_id": dataset_id, "error": str(e)}

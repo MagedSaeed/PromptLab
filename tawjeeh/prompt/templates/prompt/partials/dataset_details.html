@@ -19,7 +19,7 @@
                     {{ subset }}
                 </button>
                 <ul class="dropdown-menu form-control" aria-labelledby="subsetDropdown">
-                    {% for subset, splits in dataset.subsets_with_splits.items %}
+                    {% for subset, splits in dataset.configs_with_splits_names.items %}
                         <li>
                             <a
                                 href="#"
@@ -42,15 +42,15 @@
     {% endif %}
 
 
-    {% if dataset.subsets_with_splits.values %}
+    {% if dataset.configs_with_splits_names.values %}
         <div>
             <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
                 <div class="d-grid">
                     <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
-                        {{ dataset.subsets_with_splits.values|listify|first|first }}
+                        {{ dataset.configs_with_splits_names.values|listify|first|first }}
                     </button>
                     <ul class="dropdown-menu form-control" aria-labelledby="splitDropdown">
-                        {% for split in dataset.subsets_with_splits.values|listify|first %}
+                        {% for split in dataset.configs_with_splits_names.values|listify|first %}
                             <li>
                                 <a
                                     data-split="{{ split }}"

@@ -30,7 +30,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         self.fields["template"].widget = forms.HiddenInput()
         self.fields["text_direction"].widget = forms.HiddenInput()
         self.instance.dataset = self.dataset
-        if len(self.instance.dataset.subsets_with_splits) > 1:
+        if len(self.instance.dataset.get_configs_details()) > 1:
             self.fields["dataset_subset"].required = True
             self.fields["dataset_subset"].error_messages = {
                 "required": "Please select a dataset from the left sidebar first.",
@@ -43,7 +43,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         self.fields["answer_choices"].label = False
 
     def save(self, commit=True):
-        if not len(self.instance.dataset.subsets_with_splits) > 1:
+        if not len(self.instance.dataset.get_configs_details()) > 1:
             self.instance.dataset_subset = datasets.get_dataset_default_config_name(
                 self.dataset.huggingface_name,
                 trust_remote_code=True,
