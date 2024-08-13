@@ -1,3 +1,4 @@
+import datasets
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.management import call_command
@@ -373,7 +374,7 @@ class DatasetDetailsView(LoginRequiredMixin, View):
         """
         features = dataset.get_features()
         for c in sample:
-            if hasattr(features[c], "names"):
+            if features.get(c) and hasattr(features[c], "names"):
                 label_to_name = {i: name for i, name in enumerate(features[c].names)}
                 sample[c] = str(sample[c]) + "<<" + label_to_name[sample[c]] + ">>"
         return sample
@@ -383,14 +384,15 @@ class DatasetDetailsView(LoginRequiredMixin, View):
         split = request.GET.get("split")
         subset = request.GET.get("subset")
         sample_index = request.GET.get("sample_index")
-        if not subset and len(dataset.subsets_with_splits) > 1:
+        if not subset:
             # select the first one by default
-            subset = list(dataset.subsets_with_splits.keys())[0]
+            subset = list(dataset.get_configs_details().keys())[0]
         if split:
-            samples, all_samples_count = dataset.load_samples(
-                split=split,
-                subset=subset,
-            )
+            config_details = dataset.get_configs_details()[subset]
+            samples = config_details[split]["samples"]
+
+            samples = datasets.Dataset.from_dict(samples)
+            all_samples_count = config_details[split]["all_samples_count"]
             if sample_index is not None:
                 try:
                     sample_index = int(sample_index)
@@ -441,10 +443,9 @@ class ApplyTemplateView(LoginRequiredMixin, View):
         subset = request.GET.get("subset")
         text_direction = request.GET.get("text_direction", "ltr")
         sample_index = int(request.POST.get("sample_index", 0))
-        samples, all_samples_count = self.dataset.load_samples(
-            split=split,
-            subset=subset,
-        )
+        config_details = self.dataset.get_configs_details()[subset]
+        sampels = config_details[split]["samples"]
+        samples = datasets.Dataset.from_dict(sampels)
         sample = samples[sample_index]
         template_content = request.POST.get("template", "")
         merge_error = ""

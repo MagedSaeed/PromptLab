@@ -1,14 +1,11 @@
-import concurrent.futures
 import json
-import tempfile
 
 import datasets
 from core.utils import redis_cache  # noqa: F401
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
+from django.core.cache import cache  # noqa: F401
 from django.db import models
-from prompt import constants
-from sklearn.model_selection import train_test_split
+from prompt.utils import collect_dataset_configs_details
 from taggit.managers import TaggableManager
 
 User = get_user_model()
@@ -39,6 +36,9 @@ class Dataset(models.Model):
         null=True,
         blank=True,
     )
+    configs_details = models.JSONField(null=True, blank=True)
+    features = models.JSONField(null=True, blank=True)
+    columns_names = models.JSONField(null=True, blank=True)
 
     @property
     def primary_task(self):
@@ -49,34 +49,30 @@ class Dataset(models.Model):
         """
         Get the features of a given dataset and cache if needed
         """
-        cache_key = f"{self.huggingface_name}_features"
-        features = cache.get(cache_key)
-        if features:
-            return features
+        if self.features:
+            return self.features
         try:
             # Assuming the default configuration
-            default_config_name = list(self.subsets_with_splits.keys())[0]
+            default_config_name = list(self.get_configs_details().keys())[0]
             features = datasets.get_dataset_config_info(
                 self.huggingface_name,
                 config_name=default_config_name,
                 trust_remote_code=True,
             ).features
 
-            # Extract and return column names
-            cache.set(cache_key, features, timeout=constants.DEFAULT_TIMEOUT)
+            self.features = features.to_dict()
+            self.save()
             return features
         except Exception as e:
             print(f"Error retrieving dataset features: {e}")
             raise e
 
     def get_columns_names(self):
-        cache_key = f"{self.huggingface_name}_columns_names"
-        columns = cache.get(cache_key)
-        if columns:
-            return columns
+        if self.columns_names:
+            return self.columns_names
         try:
             # Assuming the default configuration
-            default_config_name = list(self.subsets_with_splits.keys())[0]
+            default_config_name = list(self.get_configs_details().keys())[0]
             features = datasets.get_dataset_config_info(
                 self.huggingface_name,
                 config_name=default_config_name,
@@ -85,172 +81,23 @@ class Dataset(models.Model):
 
             # Extract and return column names
             columns = list(features.keys())
-            cache.set(cache_key, columns, timeout=constants.DEFAULT_TIMEOUT)
+            self.columns_names = columns
+            self.save()
             return columns
         except Exception as e:
             print(f"Error retrieving dataset columns: {e}")
             raise e
 
-    @property
-    def subsets_with_splits(self):
-        cache_key = f"{self.huggingface_name}_subsets_with_splits"
-        configs_and_splits = cache.get(cache_key)
-        if configs_and_splits:
-            return configs_and_splits
-        configs_and_splits = {}
-        config_names = datasets.get_dataset_config_names(
-            self.huggingface_name,
-            trust_remote_code=True,
-        )
+    def configs_with_splits_names(self):
+        names = {}
+        for config in self.get_configs_details():
+            names[config] = list(self.get_configs_details()[config].keys())
+        return names
 
-        # Function to fetch splits for a given config name
-        def fetch_splits(config_name):
-            try:
-                # Create a temporary directory
-                with tempfile.TemporaryDirectory() as tmp_cache_dir:
-                    # Load the dataset and specify the temporary cache directory
-                    dataset = datasets.load_dataset(
-                        self.huggingface_name,
-                        config_name,
-                        trust_remote_code=True,
-                        cache_dir=tmp_cache_dir,
-                    )
-                    splits = list(dataset.keys())
-                return config_name, splits
-            except Exception as e:
-                print(
-                    f"Error retrieving {self.huggingface_name}'s splits with config: {config_name}. The error is: {e}"
-                )
-                return None
-
-        # Process configs in parallel if there are more than 10
-        if len(config_names) > 10:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-                future_to_config = {
-                    executor.submit(fetch_splits, config_name): config_name
-                    for config_name in config_names
-                }
-                for future in concurrent.futures.as_completed(future_to_config):
-                    try:
-                        results = future.result()  # Use the result() method
-                        if results is None:
-                            continue
-                        config_name, splits = results
-                        configs_and_splits[config_name] = splits
-                    except Exception as e:
-                        print(
-                            f"Error occurred while processing config_name: {future_to_config[future]}: {e}"
-                        )
-                        continue
-        else:
-            # Process configs sequentially if there are 10 or fewer
-            for config_name in config_names:
-                fetch_results = fetch_splits(config_name)
-                if not fetch_results:
-                    continue
-                config_name, splits = fetch_splits(config_name)
-                configs_and_splits[config_name] = splits
-        cache.set(cache_key, configs_and_splits, timeout=constants.DEFAULT_TIMEOUT)
-        return configs_and_splits
-
-    # def get_huggingface_info(self, subset=None):
-    #     cache_key = f"{self.huggingface_name}_huggingface_info"
-    #     details = cache.get(cache_key)
-    #     if details:
-    #         return details
-    #     try:
-    #         # Load the dataset information without loading the entire dataset
-    #         if len(self.subsets_with_splits) > 1:
-    #             if not subset:
-    #                 subset = list(self.subsets_with_splits.keys())[0]
-    #             info = datasets.load_dataset_builder(
-    #                 self.huggingface_name,
-    #                 subset,
-    #                 trust_remote_code=True,
-    #             ).info
-    #         else:
-    #             info = datasets.load_dataset_builder(
-    #                 self.huggingface_name,
-    #                 trust_remote_code=True,
-    #             ).info
-
-    #         # Create the Hugging Face link
-    #         huggingface_link = (
-    #             f"https://huggingface.co/datasets/{self.huggingface_name}"
-    #         )
-
-    #         # Format the dataset details
-    #         details = {
-    #             "description": info.description,
-    #             "citation": info.citation,
-    #             "homepage": info.homepage,
-    #             "license": info.license,
-    #             "huggingface_link": huggingface_link,
-    #             "full_info": info,
-    #         }
-    #         cache.set(cache_key, details, timeout=constants.DEFAULT_TIMEOUT)
-    #         return details
-    #     except Exception as e:
-    #         return {"error": str(e)}
-
-    def load_samples(
-        self,
-        split=None,
-        subset=None,
-        max_samples=constants.MAX_SAMPLES,
-        shuffled=True,
-    ):
-        cache_key = f"{self.huggingface_name}_samples"
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            samples, all_samples_count = cached_data
-            return samples, all_samples_count
-        try:
-            args = [self.huggingface_name]
-            if len(self.subsets_with_splits) > 1:
-                if not subset:
-                    subset = list(self.subsets_with_splits.keys())[0]
-            args.append(subset)
-            if not split:
-                if subset:
-                    split = list(self.subsets_with_splits[subset])[0]
-                else:
-                    split = list(self.subsets_with_splits.values())[0][0]
-            # kwargs = dict(split=f"{split}[:{max_samples}]", trust_remote_code=True)
-            kwargs = dict(split=split, trust_remote_code=True)
-            with tempfile.TemporaryDirectory() as tmp_cache_dir:
-                kwargs.update(dict(cache_dir=tmp_cache_dir))
-                dataset = datasets.load_dataset(
-                    *args,
-                    **kwargs,
-                )
-
-                if shuffled:
-                    # Shuffle the dataset
-                    dataset = dataset.shuffle()
-
-                all_samples_count = len(dataset)
-
-                df = dataset.to_pandas()
-
-                stratified_sample_df, _ = train_test_split(
-                    df,
-                    train_size=len(df) - len(set(df[self.target_column])),
-                    stratify=df[self.target_column],
-                    random_state=42,
-                )
-                stratified_sample_df = stratified_sample_df[:max_samples]
-            dataset = datasets.Dataset.from_pandas(
-                stratified_sample_df.reset_index(drop=True)
-            )
-            cache.set(
-                cache_key,
-                (dataset, all_samples_count),
-                timeout=constants.DEFAULT_TIMEOUT,
-            )
-            return dataset, all_samples_count
-        except Exception as e:
-            return {"error": str(e)}
+    def get_configs_details(self):
+        if not self.configs_details:
+            collect_dataset_configs_details(dataset_object=self)
+        return self.configs_details
 
     @property
     def huggingface_link(self):
@@ -277,7 +124,7 @@ class Dataset(models.Model):
             "example prompt already exists"
             return None
         if not subset:
-            subset = list(self.subsets_with_splits.keys())[0]
+            subset = list(self.get_configs_details().keys())[0]
         if User.objects.filter(username__iexact=created_by).exists():
             created_by_user = User.objects.get(username__iexact=created_by)
         else:
@@ -319,10 +166,10 @@ class Dataset(models.Model):
         return prompt
 
     def reset_cache(self):
-        cache.delete(f"{self.huggingface_name}_samples")
-        cache.delete(f"{self.huggingface_name}_huggingface_info")
-        cache.delete(f"{self.huggingface_name}_columns_names")
-        cache.delete(f"{self.huggingface_name}_subsets_with_splits")
+        self.columns_names = None
+        self.features = None
+        self.configs_details = None
+        self.save()
         return True
 
 
@@ -436,3 +283,45 @@ class PromptReviewAction(models.Model):
 
     def __str__(self):
         return f"Review made by {self.submitter} on {self.prompt}."
+
+
+# it was part of the dataset class
+# def get_huggingface_info(self, subset=None):
+#     cache_key = f"{self.huggingface_name}_huggingface_info"
+#     details = cache.get(cache_key)
+#     if details:
+#         return details
+#     try:
+#         # Load the dataset information without loading the entire dataset
+#         if len(self.subsets_with_splits) > 1:
+#             if not subset:
+#                 subset = list(self.subsets_with_splits.keys())[0]
+#             info = datasets.load_dataset_builder(
+#                 self.huggingface_name,
+#                 subset,
+#                 trust_remote_code=True,
+#             ).info
+#         else:
+#             info = datasets.load_dataset_builder(
+#                 self.huggingface_name,
+#                 trust_remote_code=True,
+#             ).info
+
+#         # Create the Hugging Face link
+#         huggingface_link = (
+#             f"https://huggingface.co/datasets/{self.huggingface_name}"
+#         )
+
+#         # Format the dataset details
+#         details = {
+#             "description": info.description,
+#             "citation": info.citation,
+#             "homepage": info.homepage,
+#             "license": info.license,
+#             "huggingface_link": huggingface_link,
+#             "full_info": info,
+#         }
+#         cache.set(cache_key, details, timeout=constants.DEFAULT_TIMEOUT)
+#         return details
+#     except Exception as e:
+#         return {"error": str(e)}

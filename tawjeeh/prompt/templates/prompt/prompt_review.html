@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 
 {% block prompt_template_content %}
+    {{dataset.config_details}}
     <div class="card">
         <div class="card-body">
             <form id="promptForm" method="POST">
