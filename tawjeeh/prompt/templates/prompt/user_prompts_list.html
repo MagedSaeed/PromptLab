@@ -2,7 +2,7 @@
 {% block main_content %}
 
     <div class="container mt-5">
-        <h2 class="mb-4">{{ request.user|title }}'s Prompts</h2>
+        <h2 class="mb-4">Tawjeeh Prompts List</h2>
         {% if user.is_superuser %}
             <div class="my-4 text-end">
                 <a href="{% url 'prompt:hf_sync' %}">
@@ -13,6 +13,17 @@
             </div>
         {% endif %}
         <div id="user-prompts-list-table">
+            {% if request.user.is_modirator %}
+                {% if not request.GET.show_all_prompts %}
+                    <div class="text-center m-4">
+                        Prompts list I created, <a href="{% url 'prompt:user_prompts_list' %}?show_all_prompts=true"> show all prompts instead </a>
+                    </div>
+                {% else %}
+                    <div class="text-center m-4">
+                        <a href="{% url 'prompt:user_prompts_list' %}"> Show only my prompts </a>
+                    </div>
+                {% endif %}
+            {% endif %}
             {% include 'prompt/partials/user_prompts_list_table.html' %}
         </div>
     </div>

@@ -354,7 +354,11 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(created_by=self.request.user)
+        if (
+            not self.request.GET.get("show_all_prompts")
+            and self.request.user.is_modirator
+        ):
+            queryset = queryset.filter(created_by=self.request.user)
         return queryset
 
     def render_to_response(self, context, **response_kwargs):
