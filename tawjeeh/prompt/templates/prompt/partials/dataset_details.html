@@ -1,104 +1,111 @@
 {% load utils_tags %}
-<div class="dataset-info">
-    <a href="{{ dataset.huggingface_link }}" target="_blank">
-        <h6>HuggingFace Page</h6>
-    </a>
-    <hr>
-
-    <a href="{% url 'prompt:reset_dataset_cache' dataset_pk=dataset.pk %}" class="my-3" title="reset splits, configs, and other cached information to get them again from huggingface">
-        Reset dataset cached info
-    </a>
-
-    <hr>
+<div class="dataset-info p-3">
+    <h5 class="mb-3">Dataset Information</h5>
+    
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+        <a href="{{ dataset.huggingface_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i>HuggingFace Page
+        </a>
+        <a href="{% url 'prompt:reset_dataset_cache' dataset_pk=dataset.pk %}" class="btn btn-outline-secondary btn-sm" title="Reset splits, configs, and other cached information to get them again from HuggingFace">
+            <i class="bi bi-arrow-clockwise me-1"></i>Reset Cache
+        </a>
+    </div>
 
     {% if subset %}
-        <hr>
-        <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
-            <div class="d-grid">
-                <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="subsetDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
-                    {{ subset }}
-                </button>
-                <ul class="dropdown-menu form-control" aria-labelledby="subsetDropdown">
-                    {% for subset, splits in dataset.configs_with_splits_names.items %}
-                        <li>
-                            <a
-                                href="#"
-                                hx-ext="morph"
-                                hx-swap="innerHTML"
-                                class="dropdown-item subset-item"
-                                data-subset="{{ subset }}"
-                                hx-target="#dataset-details"
-                                hx-get="{% url 'prompt:dataset_details' dataset.pk %}?subset={{ subset }}"
-                            >
-                                <span id="subset-item-spinner-{{ subset }}" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true" style="display: none;"></span>
-                                {{ subset }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+        <div class="mb-3">
+            <label for="subsetDropdown" class="form-label">Subset Selection</label>
+            <select class="form-select" id="subsetDropdown">
+                {% for subset, splits in dataset.configs_with_splits_names.items %}
+                    <option value="{{ subset }}">{{ subset }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <hr>
     {% endif %}
-
 
     {% if dataset.configs_with_splits_names.values %}
         <div>
-            <div class="dropdown" style="margin-right: 10px; padding-right: 10px;">
-                <div class="d-grid">
-                    <button class="btn btn-secondary no-arrow text-start dropdown-toggle" type="button" id="splitDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
-                        {{ dataset.configs_with_splits_names.values|listify|first|first }}
-                    </button>
-                    <ul class="dropdown-menu form-control" aria-labelledby="splitDropdown">
-                        {% for split in dataset.configs_with_splits_names.values|listify|first %}
-                            <li>
-                                <a
-                                    data-split="{{ split }}"
-                                    class="dropdown-item split-item"
-                                    style="position: relative;"
-                                >
-                                    <span id="split-item-spinner-{{ split }}" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true" style="display: none;"></span>
-                                    {{ split }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div id="split-details" style="display: none; margin-right: 10px; margin-left:5px; padding-right: 10px; padding-left:5px;">
+            <label for="splitDropdown" class="form-label">Split Selection</label>
+            <select class="form-select mb-3" id="splitDropdown">
+                {% for split in dataset.configs_with_splits_names.values|listify|first %}
+                    <option value="{{ split }}">{{ split }}</option>
+                {% endfor %}
+            </select>
+            <div id="split-details" style="display: none;">
+                <!-- Split details will be loaded here -->
             </div>
         </div>
     {% endif %}
 </div>
+
 <style>
-    .no-arrow::after {
-        display: none !important;
+    .dataset-info {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
-    .json-key {
-        color: brown;
-    }
-    .json-value {
-        color: navy;
-    }
-    .json-string {
-        color: olive;
-    }
+    .json-key { color: #d63384; }
+    .json-value { color: #0d6efd; }
+    .json-string { color: #198754; }
     pre {
-        white-space: pre-wrap; /* Wrap the text */
-        word-wrap: break-word; /* Break long words */
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .sample-card {
+        transition: all 0.3s ease;
+    }
+    .sample-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .sample-navigation {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 1000;
+        padding: 10px 0;
+    }
+    .nav-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid #0d6efd;
+        background-color: white;
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .nav-btn:hover:not(:disabled) {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 </style>
 
 <script>
-    samplesSlidersSync = false;
+    let samplesSlidersSync = false;
+    let currentSamples = [];
+    
     function initSplitDetails() {
-        let currentSplit = $('#splitDropdown').text().trim();
-        let subset = $('#subsetDropdown').text().trim();
+        let currentSplit = $('#splitDropdown').val();
+        let subset = $('#subsetDropdown').val();
+        
         function fetchSplitDetails(split, subset) {
-            $('#splitDropdown').prop('disabled', true);
-            $('#subsetDropdown').prop('disabled', true);
-            $('#split-details').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
+            $('#splitDropdown, #subsetDropdown').prop('disabled', true);
+            $('#split-details').html('<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
             $('#split-details').show();
+            
             $.ajax({
                 url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${split}&subset=${subset}`,
                 method: 'GET',
@@ -106,162 +113,116 @@
                     const splitSamples = response.len_samples;
                     const lenSamples = response.max_browse_samples;
                     const firstSample = response.first_sample;
-                    $('#splitDropdown').text(split);
+                    currentSamples = [firstSample];
+                    
                     $('#split-details').html(`
-                            <p class="my-3"><strong>Total number of samples:</strong> ${splitSamples} samples</p>
-                            <p class="my-2"><span class="text-muted">For preview, select a sample out of at most </span><u> 100 samples</u></p>
-                            <p>Browse Samples: </p>
-                            <div class="d-flex justify-content-between">
-                                <span>0</span>
-                                <input type="range" min="0" max="${lenSamples-1}" value="0" class="form-range" id="sampleRange">
-                                <span>${lenSamples-1}</span>
+                        <div class="sample-navigation mb-3">
+                            <p class="mb-1"><strong>Total samples:</strong> ${splitSamples}</p>
+                            <p class="mb-2"><small class="text-muted">Preview up to 100 samples</small></p>
+                            <div class="d-flex align-items-center">
+                                <button class="nav-btn me-2" id="prevSample" disabled>&lt;</button>
+                                <input type="range" class="form-range flex-grow-1" min="0" max="${lenSamples-1}" value="0" id="sampleRange">
+                                <button class="nav-btn ms-2" id="nextSample">&gt;</button>
                             </div>
-                            <p>Selected Sample Index: <span id="selectedSampleIndex">0</span></p>
-                            <div id="sample-content" style="margin-top: 20px;"><pre>${syntaxHighlight(firstSample)}</pre></div>
-                        `);
+                            <p class="mt-1 mb-0">Sample: <span id="selectedSampleIndex" class="badge bg-primary">1</span> / ${lenSamples}</p>
+                        </div>
+                        <div id="sample-content" class="mt-2"></div>
+                    `);
+                    
+                    updateSampleContent(firstSample, 0);
                     $('#split-details').show();
-                    $('#splitDropdown').prop('disabled', false);
-                    $('#subsetDropdown').prop('disabled', false);
+                    $('#splitDropdown, #subsetDropdown').prop('disabled', false);
 
-                        // Check if the dropdown is open before toggling
-                    if ($('#splitDropdown').next('.dropdown-menu').hasClass('show')) {
-                        $('#splitDropdown').dropdown('toggle');
-                    }
-
-                        // Add event listener for the slider mouse up event
-                    $('#sampleRange').on('change', function() {
-                        const sampleIndex = $(this).val();
-                        $('#selectedSampleIndex').text(sampleIndex);
-
-                            // change tempelateMergeSelectedSampleIndex to the same value
-                        if (!samplesSlidersSync){
-                            samplesSlidersSync = true;
-                            $('#templteMergeSampleRanger').val(sampleIndex);
-                            $('#templteMergeSampleRanger').change();
-                            samplesSlidersSync = false;
-                        }
-
-
-                            // Show spinner and disable interaction
-                        $('#sample-content').html('<div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>');
-                        $('#sample-content').show();
-                        $('#sampleRange').prop('disabled', true);
-
-                            // Fetch and display the sample details
-                        $.ajax({
-                            url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${currentSplit}&sample_index=${sampleIndex}&subset=${subset}`,
-                            method: 'GET',
-                            success: function(response) {
-                                $('#sample-content').html('<pre>' + syntaxHighlight(response.sample) + '</pre>');
-                                $('#sample-details').show();
-                                $('#sampleRange').prop('disabled', false);
-                            },
-                            error: function() {
-                                $('#sample-content').text('Error fetching sample details.');
-                                $('#sample-details').show();
-                                $('#sampleRange').prop('disabled', false);
-                            }
-                        });
-                    });
+                    setupSampleNavigation(lenSamples, split, subset);
                 },
                 error: function() {
-                    $('#split-details').text('Error fetching split details.');
-                    $('#split-details').show();
-                    $('#splitDropdown').prop('disabled', false);
-                    $('#subsetDropdown').prop('disabled', false);
+                    $('#split-details').html('<div class="alert alert-danger py-2">Error fetching split details.</div>');
+                    $('#splitDropdown, #subsetDropdown').prop('disabled', false);
                 }
             });
+        }
+
+        function setupSampleNavigation(lenSamples, split, subset) {
+            $('#sampleRange, #prevSample, #nextSample').on('click change', function(e) {
+                let sampleIndex = parseInt($('#sampleRange').val());
+                if (e.target.id === 'prevSample' && sampleIndex > 0) sampleIndex--;
+                if (e.target.id === 'nextSample' && sampleIndex < lenSamples - 1) sampleIndex++;
+                
+                $('#sampleRange').val(sampleIndex);
+                $('#selectedSampleIndex').text(sampleIndex + 1);
+                $('#prevSample').prop('disabled', sampleIndex === 0);
+                $('#nextSample').prop('disabled', sampleIndex === lenSamples - 1);
+
+                if (currentSamples[sampleIndex]) {
+                    updateSampleContent(currentSamples[sampleIndex], sampleIndex);
+                } else {
+                    fetchSample(sampleIndex, split, subset);
+                }
+            });
+        }
+
+        function fetchSample(sampleIndex, split, subset) {
+            $('#sample-content').html('<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            
+            $.ajax({
+                url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${split}&sample_index=${sampleIndex}&subset=${subset}`,
+                method: 'GET',
+                success: function(response) {
+                    currentSamples[sampleIndex] = response.sample;
+                    updateSampleContent(response.sample, sampleIndex);
+                },
+                error: function() {
+                    $('#sample-content').html('<div class="alert alert-danger py-2">Error fetching sample details.</div>');
+                }
+            });
+        }
+
+        function updateSampleContent(sample, index) {
+            $('#sample-content').html(`
+                <div class="sample-card card">
+                    <div class="card-body">
+                        <h6 class="card-title">Sample ${index + 1}</h6>
+                        <pre>${syntaxHighlight(sample)}</pre>
+                    </div>
+                </div>
+            `);
         }
 
         fetchSplitDetails(currentSplit, subset);
 
-        $('.show-more').on('click', function(event) {
-            event.preventDefault();
-            $(this).closest('.short-description').hide();
-            $(this).closest('.short-description').next('.full-description').show();
+        $('#splitDropdown, #subsetDropdown').on('change', function() {
+            currentSplit = $('#splitDropdown').val();
+            subset = $('#subsetDropdown').val();
+            fetchSplitDetails(currentSplit, subset);
         });
+    }
 
-        $('.show-less').on('click', function(event) {
-            event.preventDefault();
-            $(this).closest('.full-description').hide();
-            $(this).closest('.full-description').prev('.short-description').show();
-        });
-
-        $('.split-item').on('click', function(event) {
-            event.preventDefault();
-            const split = $(this).data('split');
-            currentSplit = split;
-
-                // Show the spinner
-            $('#split-item-spinner-' + split).show();
-
-                // Disable interaction with split items
-            $('.split-item').css('pointer-events', 'none');
-
-            fetchSplitDetails(split, subset);
-
-                // Hide the spinner once the request is complete
-            $(document).ajaxStop(function () {
-                $('#split-item-spinner-' + split).hide();
-            });
-
-                // Enable interaction with the split button and dropdown menu item
-            $('.split-item').css('pointer-events', 'auto');
-        });
-
-        $('.subset-item').on('click', function(event) {
-                // Dim the split-details div and show a centered spinner
-            $('#split-details').parent().css({
-                'display': 'flex',
-                'justify-content': 'center',
-                'align-items': 'center',
-                'height': '200px', // adjust the height as needed
-                'opacity': '0.5'
-            }).html('<div class="spinner-border text-secondary spinner-large" role="status"><span class="visually-hidden">Loading...</span></div>');
-
-            $('#split-details').parent().show();
-
-                // Show the hidden spinner beside the subset text in the dropdown
-            const subset = $(this).data('subset');
-            $('#subset-item-spinner-' + subset).show();
-
-                // Disable interaction with the subset button and dropdown menu item
-            $('#subsetDropdown').prop('disabled', true);
-            $('.subset-item').css('pointer-events', 'none');
-        });
-
-        function syntaxHighlight(json) {
-            if (typeof json != 'string') {
-                json = JSON.stringify(json, undefined, 2);
-            }
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)|(\b(true|false|null)\b|\d+)/g, function (match) {
-                let cls = 'json-value';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                    } else {
-                        cls = 'json-string';
-                        var lst = match.split('&lt;&lt;');
-                        if (lst.length > 1){
-                            console.log(lst[1])
-                            const label = lst[1].split('&gt;&gt;')[0]
-                            const name = lst[0]
-                            return '<span class="' + cls + '">' + name + '</span>' + '<span class = "text-secondary" style = "opacity: 0.6;"> ('+label+')</span>'+'<span class="' + cls + '">"</span>';
-                        }
-
-
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                } else if (/null/.test(match)) {
-                    cls = 'json-null';
-                }
-
-                return '<span class="' + cls + '">' + match + '</span>'
-
-            });
+    function syntaxHighlight(json) {
+        if (typeof json != 'string') {
+            json = JSON.stringify(json, undefined, 2);
         }
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'json-value';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'json-key';
+                } else {
+                    cls = 'json-string';
+                    var lst = match.split('&lt;&lt;');
+                    if (lst.length > 1) {
+                        const label = lst[1].split('&gt;&gt;')[0]
+                        const name = lst[0]
+                        return '<span class="' + cls + '">' + name + '</span>' + '<span class="text-secondary" style="opacity: 0.6;"> (' + label + ')</span>' + '<span class="' + cls + '">"</span>';
+                    }
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'json-boolean';
+            } else if (/null/.test(match)) {
+                cls = 'json-null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
     }
 
     $(document).ready(function() {
