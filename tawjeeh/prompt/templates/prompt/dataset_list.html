@@ -83,7 +83,7 @@
                                         class="form-control"
                                         placeholder="Search datasets..."
                                         value="{{ request.GET.name }}"
-                                        hx-get="{% url 'prompt:dataset_list' %}"
+                                        hx-get="{% url 'prompt:dataset_list' %}{% if task %}?task_pk={{ task.pk }}{% endif %}"
                                         hx-trigger="keyup changed delay:500ms"
                                         hx-target="#datasets-list"
                                         hx-push-url="true"
