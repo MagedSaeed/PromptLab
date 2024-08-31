@@ -2,68 +2,97 @@
 
 {% block style %}
     <style>
-    /* Spinner styles */
+        .task-list-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+        .task-name {
+            font-weight: 500;
+            color: #007bff;
+        }
+        .task-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        @media (max-width: 767.98px) {
+            .table-responsive-md {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
         #loading-spinner {
-            display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 1000;
         }
-
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-            border-width: .3em;
-        }
-
-    /* Dimming effect */
         #tasks-list.dimmed {
             opacity: 0.5;
-            pointer-events: none;  /* Prevent interactions */
+            pointer-events: none;
         }
     </style>
-
 {% endblock style %}
 
 {% block main_content %}
-    <div class="container mt-4">
-        <h2 class="my-4">Tasks</h2>
+    <div class="task-list-header">
+        <div class="container">
+            <h1 class="text-center mb-4">NLP Tasks</h1>
+            <p class="text-center text-muted">Explore and manage various natural language processing tasks</p>
+            
+            <div class="search-container mt-4">
+                <form method="get" id="search-form">
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            name="name"
+                            id="search-input"
+                            class="form-control"
+                            placeholder="Search tasks..."
+                            value="{{ request.GET.name }}"
+                            hx-get="{% url 'prompt:task_list' %}"
+                            hx-trigger="keyup changed delay:500ms"
+                            hx-target="#tasks-list"
+                            hx-push-url="true"
+                            hx-indicator="#loading-spinner"
+                        />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-        <div class="text-center mb-4">
-            <p class="h6">
-                Filter datasets with tasks,
-                <a href="{% url 'prompt:dataset_list' %}" class="h6">
-                    List all datasets instead
-                </a>
-            </p>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Tasks</h2>
+            <a href="{% url 'prompt:dataset_list' %}" class="btn btn-primary">
+                <i class="bi bi-grid-3x3-gap-fill"></i> View All Datasets
+            </a>
         </div>
 
-        <form method="get" id="search-form">
-            <div class="input-group mb-3">
-                <input
-                    type="text"
-                    name="name"
-                    id="search-input"
-                    class="form-control"
-                    placeholder="Search tasks..."
-                    value="{{ request.GET.name }}"
-                    hx-get="{% url 'prompt:task_list' %}"
-                    hx-trigger="keyup changed delay:500ms"
-                    hx-target="#tasks-list"
-                    hx-push-url="true"
-                    hx-indicator="#loading-spinner"/>
-            </div>
-        </form>
-
-        <div id="loading-spinner" style="display:none;">Loading...</div>
+        <div id="loading-spinner" class="spinner-border text-primary" role="status" style="display: none;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
 
         <div id="tasks-list">
             {% include "prompt/partials/task_list_table.html" %}
         </div>
     </div>
+{% endblock %}
 
+{% block extra_js %}
     <script>
         document.addEventListener('htmx:configRequest', function(event) {
             document.querySelector("#loading-spinner").style.display = 'block';
@@ -74,19 +103,20 @@
             document.querySelector("#loading-spinner").style.display = 'none';
             document.querySelector("#tasks-list").classList.remove('dimmed');
         });
+
         function highlightMatches(searchTerm) {
             if (!searchTerm) return;
 
-            const terms = searchTerm.split(/\s+/).filter(Boolean);  // Split by whitespace and filter empty terms
+            const terms = searchTerm.split(/\s+/).filter(Boolean);
             const taskElements = document.querySelectorAll('.task-name');
 
             taskElements.forEach(el => {
                 let text = el.textContent;
                 terms.forEach(term => {
                     const regex = new RegExp(`(${term})`, 'gi');
-                    text = text.replace(regex, '<u><strong>$1</strong></u>');
+                    text = text.replace(regex, '<mark>$1</mark>');
                 });
-                el.innerHTML = text;  // Set the inner HTML to the highlighted text
+                el.innerHTML = text;
             });
         }
 
@@ -95,5 +125,4 @@
             highlightMatches(searchTerm);
         });
     </script>
-
 {% endblock %}
