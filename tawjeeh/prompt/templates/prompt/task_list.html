@@ -2,15 +2,16 @@
 
 {% block style %}
     <style>
-        .task-list-header {
+        .page-header {
             background-color: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             margin-bottom: 2rem;
         }
         .search-container {
-            max-width: 500px;
-            margin: 0 auto;
+            max-width: 100%;
+            flex-grow: 1;
+            margin-right: 1rem;
         }
         .table th {
             background-color: #f8f9fa;
@@ -43,45 +44,58 @@
             opacity: 0.5;
             pointer-events: none;
         }
+        .btn-group {
+            white-space: nowrap;
+        }
+        .btn-group .btn {
+            padding: 0.25rem 0.5rem;
+        }
+        @media (max-width: 992px) {
+            .btn-group .btn {
+                padding: 0.25rem 0.35rem;
+            }
+        }
     </style>
 {% endblock style %}
 
 {% block main_content %}
-    <div class="task-list-header">
+    <div class="page-header">
         <div class="container">
-            <h1 class="text-center mb-4">NLP Tasks</h1>
-            <p class="text-center text-muted">Explore and manage various natural language processing tasks</p>
-            
-            <div class="search-container mt-4">
-                <form method="get" id="search-form">
-                    <div class="input-group">
-                        <input
-                            type="text"
-                            name="name"
-                            id="search-input"
-                            class="form-control"
-                            placeholder="Search tasks..."
-                            value="{{ request.GET.name }}"
-                            hx-get="{% url 'prompt:task_list' %}"
-                            hx-trigger="keyup changed delay:500ms"
-                            hx-target="#tasks-list"
-                            hx-push-url="true"
-                            hx-indicator="#loading-spinner"
-                        />
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h1 class="mb-0">NLP Tasks</h1>
+                </div>
+                <div class="col-md-8">
+                    <div class="d-flex justify-content-md-end mt-3 mt-md-0">
+                        <div class="search-container">
+                            <form method="get" id="search-form">
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        id="search-input"
+                                        class="form-control"
+                                        placeholder="Search tasks..."
+                                        value="{{ request.GET.name }}"
+                                        hx-get="{% url 'prompt:task_list' %}"
+                                        hx-trigger="keyup changed delay:500ms"
+                                        hx-target="#tasks-list"
+                                        hx-push-url="true"
+                                        hx-indicator="#loading-spinner"
+                                    />
+                                </div>
+                            </form>
+                        </div>
+                        <a href="{% url 'prompt:dataset_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-grid-3x3-gap-fill"></i> View All Datasets
+                        </a>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Tasks</h2>
-            <a href="{% url 'prompt:dataset_list' %}" class="btn btn-primary">
-                <i class="bi bi-grid-3x3-gap-fill"></i> View All Datasets
-            </a>
-        </div>
-
         <div id="loading-spinner" class="spinner-border text-primary" role="status" style="display: none;">
             <span class="visually-hidden">Loading...</span>
         </div>
