@@ -1,48 +1,127 @@
 {% extends "base/base.html" %}
+{% load static %}
 
+{% block style %}
+<style>
+    body, html {
+        height: 100%;
+    }
+    .landing-container {
+        min-height: calc(100vh - 56px); /* Adjust based on your navbar height */
+        display: flex;
+        align-items: center;
+        background-color: #ffffff;
+        overflow: hidden;
+        position: relative;
+    }
+    .content-wrapper {
+        z-index: 2;
+    }
+    .bg-accent {
+        position: absolute;
+        top: -50%;
+        right: -25%;
+        width: 80%;
+        height: 200%;
+        background: linear-gradient(45deg, #f3f4f6 0%, #e5e7eb 100%);
+        transform: rotate(-30deg);
+        z-index: 1;
+    }
+    .btn-custom {
+        border-radius: 30px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #4f46e5;
+    }
+    .feature-card {
+        border: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        background-color: #ffffff;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    .main-heading {
+        font-weight: 800;
+        color: #1f2937;
+    }
+    .sub-heading {
+        color: #4b5563;
+        font-weight: 400;
+    }
+</style>
+{% endblock style %}
 
 {% block main_content %}
-    <div class="container mt-5">
-        <div class="jumbotron p-5 mb-4 rounded-3" style="background-color: #e9ecef;">
-            <div class="container py-5">
-                <h1 class="display-4">Welcome to Tawjeeh!</h1>
-                <p class="lead">Join our research-driven platform for creating and sharing prompts on Arabic datasets. Collaborate, explore, and contribute to the community.</p>
-                <hr class="my-4">
-                <p>Get started by logging in or signing up. Your contributions will help improve prompt collections for various datasets.</p>
-                {% if user.is_authenticated %}
-                    <a class="btn btn-outline-success btn-lg me-2" href="{% url 'prompt:task_list' %}" role="button">Go to NLP Tasks</a>
-                {% else %}
-                    <a class="btn btn-outline-success btn-lg me-2" href="{% url 'account_login' %}" role="button">Log in</a>
-                    <a class="btn btn-outline-primary btn-lg" href="{% url 'account_signup' %}" role="button">Sign up</a>
-                {% endif %}
+    <div class="landing-container">
+        <div class="bg-accent"></div>
+        <div class="container content-wrapper">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <h1 class="display-4 mb-4 main-heading">Welcome to Tawjeeh</h1>
+                    <p class="lead mb-5 sub-heading">Elevate Arabic NLP research with collaborative prompt creation and dataset curation. Join our community of linguists, researchers, and developers in advancing natural language processing for Arabic.</p>
+                    {% if user.is_authenticated %}
+                        <a class="btn btn-primary btn-custom me-3" href="{% url 'prompt:task_list' %}">Explore NLP Tasks</a>
+                        <a class="btn btn-outline-primary btn-custom" href="{% url 'prompt:user_prompts_list' %}">My Prompts</a>
+                    {% else %}
+                        <a class="btn btn-primary btn-custom me-3" href="{% url 'account_signup' %}">Get Started</a>
+                        <a class="btn btn-outline-primary btn-custom" href="{% url 'account_login' %}">Log In</a>
+                    {% endif %}
+                </div>
+                <div class="col-lg-6">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card feature-card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-lightbulb feature-icon"></i>
+                                    <h3 class="h5 mb-3">Create</h3>
+                                    <p class="mb-0 text-muted">Develop high-quality prompts for Arabic datasets</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card feature-card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-people feature-icon"></i>
+                                    <h3 class="h5 mb-3">Collaborate</h3>
+                                    <p class="mb-0 text-muted">Work with experts to improve Arabic NLP</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card feature-card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-share feature-icon"></i>
+                                    <h3 class="h5 mb-3">Share</h3>
+                                    <p class="mb-0 text-muted">Contribute to a growing repository of NLP resources</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card feature-card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-graph-up feature-icon"></i>
+                                    <h3 class="h5 mb-3">Advance</h3>
+                                    <p class="mb-0 text-muted">Push the boundaries of Arabic language processing</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        {% comment %} <div class="row text-center">
-            <div class="col-md-4 mb-4 d-flex align-items-stretch">
-                <div class="card border border-light rounded-3 shadow-sm w-100">
-                    <div class="card-body d-flex flex-column">
-                        <h2>Create</h2>
-                        <p class="flex-grow-1">Create high-quality prompts for various Arabic datasets, helping advance research in natural language processing.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4 d-flex align-items-stretch">
-                <div class="card border border-light rounded-3 shadow-sm w-100">
-                    <div class="card-body d-flex flex-column">
-                        <h2>Review</h2>
-                        <p class="flex-grow-1">Review and refine prompts to ensure quality and consistency across the community.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4 d-flex align-items-stretch">
-                <div class="card border border-light rounded-3 shadow-sm w-100">
-                    <div class="card-body d-flex flex-column">
-                        <h2>Share</h2>
-                        <p class="flex-grow-1">Share your own prompt collections and contribute to the growing repository of prompts for Arabic datasets.</p>
-                    </div>
-                </div>
-            </div>
-        </div> {% endcomment %}
     </div>
 {% endblock %}
