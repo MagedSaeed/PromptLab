@@ -14,7 +14,9 @@
                 <tr>
                     <th scope="row">{{ forloop.counter }}</th>
                     <td>
-                        <span class="task-name">{{ task.name }}</span>
+                        <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}" class="task-name">
+                            {{ task.name }}
+                        </a>
                     </td>
                     <td>
                         <span class="task-count">{{ task.datasets.count }}</span>
