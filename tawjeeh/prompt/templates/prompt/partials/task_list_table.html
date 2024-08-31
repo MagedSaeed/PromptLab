@@ -1,26 +1,42 @@
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Task Name</th>
-            <th scope="col">Datasets</th>
-            <th scope="col">Prompts</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for task in tasks %}
+<div class="table-responsive-md">
+    <table class="table table-hover">
+        <thead>
             <tr>
-                <th>{{ forloop.counter }}</th>
-                <td>
-                    <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
-                        <span class="task-name">{{ task.name }}</span>
-                    </a>
-                </td>
-                <td>{{ task.datasets.count }}</td>
-                <td>{{ task.prompts.count }}</td>
+                <th scope="col">#</th>
+                <th scope="col">Task Name</th>
+                <th scope="col">Datasets</th>
+                <th scope="col">Prompts</th>
+                <th scope="col">Actions</th>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>
+                        <span class="task-name">{{ task.name }}</span>
+                    </td>
+                    <td>
+                        <span class="task-count">{{ task.datasets.count }}</span>
+                    </td>
+                    <td>
+                        <span class="task-count">{{ task.prompts.count }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-list-ul"></i> View Datasets
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-4">
+                        <p class="text-muted mb-0">No tasks found</p>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 {% include 'base/pagination.html' with target_id="tasks-list" %}
