@@ -86,7 +86,7 @@ class Dataset(models.Model):
             self.save()
             return columns
         except Exception as e:
-            print(f"Error retrieving dataset columns: {e}")
+            print(f"Error retrieving dataset ({self.name}) columns: {e}")
             raise e
 
     def configs_with_splits_names(self):
