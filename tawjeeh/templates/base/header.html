@@ -1,45 +1,47 @@
 {% load static %}
 {% block header %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="top:0; z-index: 1000; width: 100%; position: sticky">
-        <a class="navbar-brand mx-2" href="{% url "home" %}">Tawjeeh</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <ul class="navbar-nav ms-auto">
-                {% if user.is_authenticated %}
-                    <li class="nav-item mt-2">
-                        <a class="nav-link" href="{% url 'prompt:user_prompts_list' %}">
-                            {% if user.first_name %}
-                                Welcome, {{ user.first_name }} {{ user.last_name }}
-                            {% else %}
-                                Welcome, {{user.username}}
-                            {% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'prompt:user_prompts_list' %}" class="nav-link" title="view my prompts">
-                            {% if user.socialaccount_set.exists %}
-                                {% with account=user.socialaccount_set.all.0 %}
-                                    <img src="{{ account.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle mt-1" width="30" height="30">
-                                {% endwith %}
-                            {% else %}
-                                <img src="{% static 'img/user_placeholder.jpg' %}" class="rounded-circle mt-1" width="30" height="30">
-                            {% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item mt-2">
-                        <a class="nav-link" href="{% url 'account_logout' %}">Log out</a>
-                    </li>
-                {% else %}
-                    <li class="nav-item mt-2">
-                        <a class="nav-link" href="{% url "account_login" %}">Log in</a>
-                    </li>
-                    <li class="nav-item mt-2">
-                        <a class="nav-link" href="{% url "account_signup" %}">Sign up</a>
-                    </li>
-                {% endif %}
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm" style="top:0; z-index: 1000; width: 100%; position: sticky">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <img src="{% static 'img/tawjeeh-logo.png' %}" alt="Tawjeeh Logo" height="30" class="d-inline-block align-top me-2">
+                Tawjeeh
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.socialaccount_set.exists %}
+                                    {% with account=user.socialaccount_set.all.0 %}
+                                        <img src="{{ account.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle me-2" width="32" height="32">
+                                    {% endwith %}
+                                {% else %}
+                                    <img src="{% static 'img/user_placeholder.jpg' %}" class="rounded-circle me-2" width="32" height="32">
+                                {% endif %}
+                                {% if user.first_name %}
+                                    {{ user.first_name }}
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'prompt:user_prompts_list' %}">My Prompts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-primary me-2" href="{% url 'account_login' %}">Log in</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white" href="{% url 'account_signup' %}">Sign up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
 {% endblock %}
