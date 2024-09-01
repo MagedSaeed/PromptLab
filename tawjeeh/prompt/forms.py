@@ -137,6 +137,10 @@ class HFSyncForm(forms.Form):
         initial="final-list",
         required=True,
     )
+    default_subset = forms.CharField(
+        initial="subset",
+        required=True,
+    )
     link_column = forms.CharField(
         initial="link",
         required=True,
