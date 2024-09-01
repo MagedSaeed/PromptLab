@@ -118,7 +118,10 @@ def collect_dataset_configs_details(dataset_object):
         dataset_object.configs_details = configs_and_splits
         dataset_object.save()
     except Exception as e:
-        print("Error saving configs details: ", e)
+        print(
+            f"Error saving configs details for dataset {dataset_object.name}. The error is:",
+            e,
+        )
         print("trying to save as string...")
         dataset_object.configs_details = json.dumps(
             configs_and_splits,
