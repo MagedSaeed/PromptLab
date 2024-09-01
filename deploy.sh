@@ -33,7 +33,8 @@ python manage.py sync_with_hf \
     --answer_choices_column answer_choices \
     --is_single_classification_column is_single_classification \
     --target_column target_column \
-    --clear_datasets False
+    --clear_datasets False \
+    --default_subset subset
 
 # collect static
 python manage.py collectstatic --noinput
