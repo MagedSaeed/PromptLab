@@ -116,6 +116,7 @@ def collect_dataset_configs_details(dataset_object):
             configs_and_splits[config_name] = splits_details
     try:
         dataset_object.configs_details = configs_and_splits
+        dataset_object.save()
     except Exception as e:
         print("Error saving configs details: ", e)
         print("trying to save as string...")
@@ -125,5 +126,5 @@ def collect_dataset_configs_details(dataset_object):
             sort_keys=True,
             default=str,
         )
-    dataset_object.save()
+        dataset_object.save()
     return configs_and_splits
