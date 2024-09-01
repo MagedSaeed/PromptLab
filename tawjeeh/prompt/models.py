@@ -39,6 +39,7 @@ class Dataset(models.Model):
     configs_details = models.JSONField(null=True, blank=True)
     features = models.JSONField(null=True, blank=True)
     columns_names = models.JSONField(null=True, blank=True)
+    default_subset = models.CharField(max_length=10_000, null=True, blank=True)
 
     @property
     def primary_task(self):
