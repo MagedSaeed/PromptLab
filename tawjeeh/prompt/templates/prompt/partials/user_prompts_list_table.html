@@ -1,28 +1,96 @@
-<table class="table table-striped table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th>Name</th>
-            <th>Dataset</th>
-            <th>Subset</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for prompt in prompts %}
-            <tr>
-                <td><a href="{% url 'prompt:prompt_update' prompt.dataset.pk prompt.pk %}">{{ prompt.name }}</a></td>
-                <td>{{ prompt.dataset }}</td>
-                <td>{{ prompt.subset }}</td>
-                <td>{{ prompt.status }}</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan=4 class="text-center">
-                    <span class="text-muted" >No prompts has been entered yet</span>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Dataset</th>
+                        <th>Subset</th>
+                        <th>Status</th>
+                        {% comment %} <th>Actions</th> {% endcomment %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prompt in prompts %}
+                        <tr>
+                            <td> {{ forloop.counter }} </td>
+                            <td>
+                                <a href="{% url 'prompt:prompt_update' prompt.dataset.pk prompt.pk %}" class="text-decoration-none">
+                                    {{ prompt.name }}
+                                </a>
+                            </td>
+                            <td>{{ prompt.dataset }}</td>
+                            <td>{{ prompt.subset }}</td>
+                            <td>
+                                <span class="badge status-badge status-{{ prompt.status|lower }}">
+                                    {{ prompt.status }}
+                                </span>
+                            </td>
+                            {% comment %} <td>
+                                <a href="{% url 'prompt:prompt_update' prompt.dataset.pk prompt.pk %}"
+                                   class="btn btn-sm btn-outline-primary me-2"
+                                   hx-get="{% url 'prompt:prompt_update' prompt.dataset.pk prompt.pk %}"
+                                   hx-target="#user-prompts-list-table"
+                                   hx-push-url="true">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        hx-delete="{% url 'prompt:prompt_delete' prompt.dataset.pk prompt.pk %}"
+                                        hx-confirm="Are you sure you want to delete this prompt?"
+                                        hx-target="#user-prompts-list-table">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </td> {% endcomment %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0">No prompts have been entered yet</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-{% include 'base/pagination.html' with target_id="user-prompts-list-table" %}
+<div class="mt-4">
+    {% include 'base/pagination.html' with target_id="user-prompts-list-table" %}
+</div>
+
+<style>
+    .status-badge {
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+    .status-active {
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+    }
+    .status-pending {
+        color: #856404;
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+    }
+    .status-inactive {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+    .status-submitted {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+    }
+    /* Add more status styles as needed */
+</style>
