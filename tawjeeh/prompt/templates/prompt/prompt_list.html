@@ -1,172 +1,322 @@
 {% extends "base/base.html" %}
+{% load static %}
+
 {% block main_content %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1140px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.05);
+            border-radius: 0.75rem;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0,0,0,.05);
+            padding: 1.25rem 1.5rem;
+        }
+        .nav-tabs {
+            border-bottom: none;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            margin-right: 1rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #495057;
+        }
+        .nav-tabs .nav-link.active {
+            color: #3490dc;
+            border-bottom: 2px solid #3490dc;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            font-weight: 600;
+            color: #495057;
+            border-top: none;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        .table td {
+            vertical-align: middle;
+            padding: 1rem 0.75rem;
+        }
+        .prompt-name {
+            font-weight: 500;
+            color: #3490dc;
+            text-decoration: none;
+            transition: color 0.2s ease-in-out;
+        }
+        .prompt-name:hover {
+            color: #2779bd;
+            text-decoration: none;
+        }
+        .status-badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending { background-color: #ffeeba; color: #856404; }
+        .status-approved { background-color: #d4edda; color: #155724; }
+        .status-rejected { background-color: #f8d7da; color: #721c24; }
+        .btn {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.35rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary {
+            background-color: #3490dc;
+            border-color: #3490dc;
+        }
+        .btn-primary:hover {
+            background-color: #2779bd;
+            border-color: #2779bd;
+        }
+        .btn-outline-secondary {
+            color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-outline-secondary:hover {
+            color: #fff;
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .action-icon {
+            color: #6c757d;
+            font-size: 1rem;
+            transition: color 0.2s ease-in-out;
+        }
+        .action-icon:hover {
+            color: #dc3545;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
 
-    <div id="prompts-list" class="container">
-        <h4 class="my-4"> Prompts created for dataset: <a href="{{dataset.huggingface_link}}" target="_blank">{{dataset}}</a> </h4>
-
-        <div class="text-center my-4">
-            <p class="h6 my-4">
-                <a href="{% url 'prompt:task_list' %}" class="h6 my-4">
-                    Go back to tasks
-                </a>
-            </p>
+    <div id="prompts-list" class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Prompts for Dataset: <a href="{{dataset.huggingface_link}}" target="_blank" class="text-primary">{{dataset}}</a></h1>
+            <a href="{% url 'prompt:task_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Tasks
+            </a>
         </div>
 
-    <!-- Tabs navigation -->
-        <ul class="nav nav-tabs" id="promptTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="my-prompts-tab" data-bs-toggle="tab" href="#my-prompts" role="tab" aria-controls="my-prompts" aria-selected="true">My Prompts</a>
-            </li>
-            {% if request.user.is_modirator %}
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="submitted-prompts-tab" data-bs-toggle="tab" href="#submitted-prompts" role="tab" aria-controls="submitted-prompts" aria-selected="false">Submitted Prompts to Review</a>
-                </li>
-            {% endif %}
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="all-prompts-tab" data-bs-toggle="tab" href="#all-prompts" role="tab" aria-controls="all-prompts" aria-selected="false">All Prompts</a>
-            </li>
-        </ul>
-        <div class="tab-content" id="promptTabsContent">
-            <div class="tab-pane fade show active" id="my-prompts" role="tabpanel" aria-labelledby="my-prompts-tab">
-            <!-- My Prompts Table -->
-                <table class="my-4 table table-striped text-center">
-                    <thead>
-                        <tr>
-                            <th scope="col" style="width: 10%;">#</th>
-                            <th scope="col" style="width: 15%;">Name</th>
-                            <th scope="col" style="width: 15%;">Dataset Subset</th>
-                            <th scope="col" style="width: 20%;">Created On</th>
-                            <th scope="col" style="width: 15%;">Status</th>
-                            <th scope="col" style="width: 10%;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for prompt in user_prompts %}
-                            <tr>
-                                <th>{{ forloop.counter }}</th>
-                                <td>
-                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}">
-                                        <span class="prompt-name">{{ prompt.name }}</span>
-                                    </a>
-                                </td>
-                                <td> {{ prompt.dataset_subset }} </td>
-                                <td>{{ prompt.created_on }}</td>
-                                <td>{{ prompt.status }}</td>
-                                <td class="text-center">
-                                    {% if prompt and prompt.updateable %}
-                                        <a class="text-danger" href="#" onclick="if (confirm('Are you sure you want to delete this prompt?')) { window.location.href = '{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}'; } return false;">
-                                            delete
-                                        </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="promptTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="my-prompts-tab" data-bs-toggle="tab" href="#my-prompts" role="tab">
+                            <i class="fas fa-user-edit me-2"></i>My Prompts
+                        </a>
+                    </li>
+                    {% if request.user.is_modirator %}
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="submitted-prompts-tab" data-bs-toggle="tab" href="#submitted-prompts" role="tab">
+                                <i class="fas fa-inbox me-2"></i>Submitted Prompts
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="all-prompts-tab" data-bs-toggle="tab" href="#all-prompts" role="tab">
+                            <i class="fas fa-list-ul me-2"></i>All Prompts
+                        </a>
+                    </li>
+                </ul>
             </div>
-            {% if request.user.is_modirator %}
-                <div class="tab-pane fade" id="submitted-prompts" role="tabpanel" aria-labelledby="submitted-prompts-tab">
-            <!-- Submitted Prompts to Review Table -->
-                    <table class="my-4 table table-striped text-center">
-                        <thead>
-                            <tr>
-                                <th scope="col" style="width: 10%;">#</th>
-                                <th scope="col" style="width: 15%;">Name</th>
-                                <th scope="col" style="width: 15%;">Dataset Subset</th>
-                                <th scope="col" style="width: 15%;">Created By</th>
-                                <th scope="col" style="width: 20%;">Created On</th>
-                                <th scope="col" style="width: 15%;">Status</th>
-                            {% comment %} <th scope="col" style="width: 10%;"></th> {% endcomment %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for prompt in prompts_to_review %}
-                                <tr>
-                                    <th>{{ forloop.counter }}</th>
-                                    <td>
-                                        <a {% if prompt.reviewable %} href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}" {% endif %}>
-                                            <span class="prompt-name">{{ prompt.name }}</span>
-                                        </a>
-                                    </td>
-                                    <td> {{ prompt.dataset_subset }} </td>
-                                    <td>{{ prompt.created_by }}</td>
-                                    <td>{{ prompt.created_on }}</td>
-                                    <td>{{ prompt.status }}</td>
-                                {% comment %} <td></td> {% endcomment %}
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <div class="card-body p-0">
+                <div class="tab-content" id="promptTabsContent">
+                    <div class="tab-pane fade show active" id="my-prompts" role="tabpanel">
+                        {% if user_prompts %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Dataset Subset</th>
+                                            <th>Created On</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prompt in user_prompts %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <a href="{% url 'prompt:prompt_update' dataset_pk=dataset.pk pk=prompt.pk %}" class="prompt-name">
+                                                        {{ prompt.name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ prompt.dataset_subset }}</td>
+                                                <td>{{ prompt.created_on|date:"M d, Y" }}</td>
+                                                <td><span class="status-badge status-{{ prompt.status|lower }}">{{ prompt.status }}</span></td>
+                                                <td>
+                                                    {% if prompt.updateable %}
+                                                        <a href="#" class="action-icon" onclick="deletePrompt('{% url 'prompt:prompt_delete' dataset_pk=dataset.pk pk=prompt.pk %}')">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-file-alt"></i>
+                                <p>You haven't created any prompts yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if request.user.is_modirator %}
+                        <div class="tab-pane fade" id="submitted-prompts" role="tabpanel">
+                            {% if prompts_to_review %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Name</th>
+                                                <th>Dataset Subset</th>
+                                                <th>Created By</th>
+                                                <th>Created On</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for prompt in prompts_to_review %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>
+                                                        <a {% if prompt.reviewable %}href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}"{% endif %} class="prompt-name">
+                                                            {{ prompt.name }}
+                                                        </a>
+                                                    </td>
+                                                    <td>{{ prompt.dataset_subset }}</td>
+                                                    <td>{{ prompt.created_by }}</td>
+                                                    <td>{{ prompt.created_on|date:"M d, Y" }}</td>
+                                                    <td><span class="status-badge status-{{ prompt.status|lower }}">{{ prompt.status }}</span></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No prompts submitted for review.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    <div class="tab-pane fade" id="all-prompts" role="tabpanel">
+                        {% if all_prompts %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Dataset Subset</th>
+                                            <th>Created By</th>
+                                            <th>Created On</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prompt in all_prompts %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <a {% if not prompt.updateable %}href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}"{% else %}title="prompt still under design"{% endif %} class="prompt-name">
+                                                        {{ prompt.name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ prompt.dataset_subset }}</td>
+                                                <td>{{ prompt.created_by }}</td>
+                                                <td>{{ prompt.created_on|date:"M d, Y" }}</td>
+                                                <td><span class="status-badge status-{{ prompt.status|lower }}">{{ prompt.status }}</span></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-list-alt"></i>
+                                <p>No prompts available.</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endif %}
-            <div class="tab-pane fade" id="all-prompts" role="tabpanel" aria-labelledby="all-prompts-tab">
-            <!-- All Prompts Table -->
-                <table class="my-4 table table-striped text-center">
-                    <thead>
-                        <tr>
-                            <th scope="col" style="width: 10%;">#</th>
-                            <th scope="col" style="width: 15%;">Name</th>
-                            <th scope="col" style="width: 15%;">Dataset Subset</th>
-                            <th scope="col" style="width: 15%;">Created By</th>
-                            <th scope="col" style="width: 20%;">Created On</th>
-                            <th scope="col" style="width: 15%;">Status</th>
-                            {% comment %} <th scope="col" style="width: 10%;"></th> {% endcomment %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for prompt in all_prompts %}
-                            <tr>
-                                <th>{{ forloop.counter }}</th>
-                                <td>
-                                    <a {% if not prompt.updateable %} href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=prompt.pk %}" {% else %} title="prompt still under design" {% endif %}>
-                                        <span class="prompt-name">{{ prompt.name }}</span>
-                                    </a>
-                                </td>
-                                <td> {{ prompt.dataset_subset }} </td>
-                                <td>{{ prompt.created_by }}</td>
-                                <td>{{ prompt.created_on }}</td>
-                                <td>{{ prompt.status }}</td>
-                                {% comment %} <td></td> {% endcomment %}
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
 
-    <!-- Utilize Bootstrap grid system to align the button to the right -->
-        <div class="row">
-            <div class="col text-end">
-                <a id="create-prompt-btn" class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">
-                    <span id="btn-text">Create New Prompt</span>
-                    <span id="spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
-                </a>
-            </div>
-            <span class="text-muted text-end my-2" id="loadingHelper" style="display:none;">Some datasets may take a while to load...</span>
+        <div class="d-flex justify-content-end mt-4">
+            <a id="create-prompt-btn" class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">
+                <i class="fas fa-plus me-2"></i>
+                <span id="btn-text">Create New Prompt</span>
+                <span id="spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+            </a>
         </div>
-        <script>
-            window.onpageshow = function(event) {
-                if (event.persisted) {
-                    window.location.reload();
-                }
-            };
-            document.getElementById('create-prompt-btn').addEventListener('click', function(event) {
-                event.preventDefault();  // Prevent the default action
-                var button = this;
-                var spinner = document.getElementById('spinner');
-
-            // Show spinner and disable button
-                spinner.style.display = 'inline-block';
-                button.classList.add('disabled');
-                button.style.pointerEvents = 'none';
-
-                var textHelper = document.getElementById('loadingHelper');
-                textHelper.style.display = 'inline-block';
-
-            // Redirect to the href of the button after showing the spinner
-                window.location.href = button.href;
-            });
-        </script>
-        {% comment %} {% include 'base/pagination.html' with target_id="prompts-list" %} {% endcomment %}
+        <p class="text-muted mt-2 text-end" id="loadingHelper" style="display:none;">Some datasets may take a while to load...</p>
     </div>
+
+    <script>
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+
+        document.getElementById('create-prompt-btn').addEventListener('click', function(event) {
+            event.preventDefault();
+            var button = this;
+            var spinner = document.getElementById('spinner');
+            var btnText = document.getElementById('btn-text');
+            var textHelper = document.getElementById('loadingHelper');
+
+            spinner.style.display = 'inline-block';
+            button.classList.add('disabled');
+            button.style.pointerEvents = 'none';
+            btnText.textContent = 'Creating...';
+            textHelper.style.display = 'block';
+
+            window.location.href = button.href;
+        });
+
+        function deletePrompt(url) {
+            if (confirm('Are you sure you want to delete this prompt?')) {
+                window.location.href = url;
+            }
+        }
+    </script>
 {% endblock %}
