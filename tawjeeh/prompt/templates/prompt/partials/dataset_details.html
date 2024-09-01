@@ -1,7 +1,7 @@
 {% load utils_tags %}
 <div class="dataset-info p-3">
     <h5 class="mb-3">Dataset Information</h5>
-    
+
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
         <a href="{{ dataset.huggingface_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-box-arrow-up-right me-1"></i>HuggingFace Page
@@ -96,16 +96,16 @@
 <script>
     let samplesSlidersSync = false;
     let currentSamples = [];
-    
+
     function initSplitDetails() {
         let currentSplit = $('#splitDropdown').val();
         let subset = $('#subsetDropdown').val();
-        
+
         function fetchSplitDetails(split, subset) {
             $('#splitDropdown, #subsetDropdown').prop('disabled', true);
             $('#split-details').html('<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
             $('#split-details').show();
-            
+
             $.ajax({
                 url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${split}&subset=${subset}`,
                 method: 'GET',
@@ -114,7 +114,7 @@
                     const lenSamples = response.max_browse_samples;
                     const firstSample = response.first_sample;
                     currentSamples = [firstSample];
-                    
+
                     $('#split-details').html(`
                         <div class="sample-navigation mb-3">
                             <p class="mb-1"><strong>Total samples:</strong> ${splitSamples}</p>
@@ -128,7 +128,7 @@
                         </div>
                         <div id="sample-content" class="mt-2"></div>
                     `);
-                    
+
                     updateSampleContent(firstSample, 0);
                     $('#split-details').show();
                     $('#splitDropdown, #subsetDropdown').prop('disabled', false);
@@ -147,7 +147,7 @@
                 let sampleIndex = parseInt($('#sampleRange').val());
                 if (e.target.id === 'prevSample' && sampleIndex > 0) sampleIndex--;
                 if (e.target.id === 'nextSample' && sampleIndex < lenSamples - 1) sampleIndex++;
-                
+
                 $('#sampleRange').val(sampleIndex);
                 $('#selectedSampleIndex').text(sampleIndex + 1);
                 $('#prevSample').prop('disabled', sampleIndex === 0);
@@ -158,12 +158,16 @@
                 } else {
                     fetchSample(sampleIndex, split, subset);
                 }
+
+                if ($('#templateResultContainer').hasClass('visible')){
+                    $('#applyButton').click()
+                }
             });
         }
 
         function fetchSample(sampleIndex, split, subset) {
             $('#sample-content').html('<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-            
+
             $.ajax({
                 url: `{% url 'prompt:dataset_details' dataset.pk %}?split=${split}&sample_index=${sampleIndex}&subset=${subset}`,
                 method: 'GET',

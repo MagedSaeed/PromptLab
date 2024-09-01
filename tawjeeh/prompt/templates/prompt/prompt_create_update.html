@@ -292,8 +292,12 @@
                 else
                     answer_choices = []
                 $('#apply-spinner').addClass('visible');
-                let split = $('#splitDropdown').text().trim();
-                let subset = $('#subsetDropdown').text().trim();
+                let split = $('#splitDropdown').val().trim();
+                let subset = $('#subsetDropdown').val().trim();
+                let selectedSampleIndex = 0;
+                if ($('#sampleRange').length){
+                    selectedSampleIndex = $('#sampleRange').val();
+                }
                 htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}&text_direction=${text_direction}`, {
                     target: '#mergeTemplateResult',
                     swap: 'innerHTML',
@@ -303,6 +307,7 @@
                     values: {
                         'template': promptTemplate,
                         'answer_choices': answer_choices,
+                        'sample_index': selectedSampleIndex,
                     }
                 }).then(function() {
                     $('#apply-spinner').removeClass('visible');
