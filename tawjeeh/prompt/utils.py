@@ -116,14 +116,14 @@ def collect_dataset_configs_details(dataset_object):
             configs_and_splits[config_name] = splits_details
     try:
         dataset_object.configs_details = configs_and_splits
-    except TypeError:
+    except Exception as e:
+        print("Error saving configs details: ", e)
+        print("trying to save as string...")
         dataset_object.configs_details = json.dumps(
             configs_and_splits,
             indent=4,
             sort_keys=True,
             default=str,
         )
-    except Exception as e:
-        raise e
     dataset_object.save()
     return configs_and_splits
