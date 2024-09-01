@@ -1,67 +1,101 @@
 {% extends 'base/base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block main_content %}
-    <div class="container mt-4">
-        <form method="POST">
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    {{ form.sheet_id|as_crispy_field }}
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        .form-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .form-title {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        .form-control, .form-select {
+            border-color: #ced4da;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .btn-primary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-primary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+        .warning-text {
+            font-size: 0.9rem;
+            padding: 1rem;
+            border-radius: 5px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="form-title text-center">Import datasets from Google Sheet Configuration</h2>
+            <hr>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        {{ form.sheet_id|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.sheet_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.link_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.task_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.example_template_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.example_template_created_by_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.example_template_subset_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.answer_choices_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.is_single_classification_column|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.target_column|as_crispy_field }}
+                    </div>
+                    <div class="col-12">
+                        <hr>
+                        <div class="warning-text mt-2">
+                            <strong>Warning:</strong> The option below "clear dataset" will erase all datasets, prompts, tasks, and everything related to them, and create them again.
+                            This will do full sync with the sheet. DO NOT USE IT if you just need to import additional datasets with their prompts.
+                        </div>
+                        <hr>
+                        <div class="text-danger">
+                            {{ form.clear_datasets|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="col-12 text-center">
+                        <button type="submit" class="btn btn-outline-primary mt-4 px-5">Submit</button>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    {{ form.sheet_name|as_crispy_field }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    {{ form.link_column|as_crispy_field }}
-                </div>
-                <div class="col-md-6 mb-3">
-                    {{ form.task_column|as_crispy_field }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    {{ form.example_template_column|as_crispy_field }}
-                </div>
-                <div class="col-md-6 mb-3">
-                    {{ form.example_template_created_by_column|as_crispy_field }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    {{ form.example_template_subset_column|as_crispy_field }}
-                </div>
-                <div class="col-md-6 mb-3">
-                    {{ form.answer_choices_column|as_crispy_field }}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    {{ form.is_single_classification_column|as_crispy_field }}
-                </div>
-                <div class="col-md-6 mb-3">
-                    {{ form.target_column|as_crispy_field }}
-                </div>
-            </div>
-            <div class="row">
-                <hr>
-                <div class="col-md-6 mb-3">
-                    <span class="text-danger">
-                        This will erase all datasets, prompts, tasks, and everything related to them, and create them again.
-                        This will do full sync with the sheet.
-                        DO NOT USE IT if you just need to import additional datasets with their prompts
-                    </span>
-                    {{ form.clear_datasets|as_crispy_field }}
-                </div>
-            </div>
-            <div class="row">
-                <hr>
-                <div class="col-12">
-                    <input type="submit" class="btn btn-primary mt-3" />
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 {% endblock %}
