@@ -7,7 +7,7 @@
             position: fixed;
             top: 60px; /* Adjust this value based on your header height */
             left: 0;
-            width: 350px; /* Adjust this value based on your sidebar width */
+            width: 375px; /* Adjust this value based on your sidebar width */
             height: calc(100vh - 60px); /* Adjust this value based on your header height */
             overflow-y: auto;
             background-color: #ffffff; /* White background */
@@ -19,7 +19,7 @@
         }
 
         .fixed-sidebar.closed {
-            transform: translateX(-310px);
+            transform: translateX(-340px);
             overflow-y: hidden;
         }
 
@@ -39,7 +39,7 @@
         }
 
         .main-content {
-            margin-left: 350px; /* Adjust this value based on your sidebar width and padding */
+            margin-left: 375px; /* Adjust this value based on your sidebar width and padding */
             padding: 20px;
             transition: margin-left 0.3s ease;
         }
@@ -176,7 +176,7 @@
                                         <h4 style="margin: 0;">Creating Diverse Prompts for dataset: {{dataset}}</h4>
                                     </button>
                                 </h2>
-                                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
+                                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
                                     <div class="accordion-body">
                                         <p>
                                             Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
