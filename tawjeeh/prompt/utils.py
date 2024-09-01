@@ -1,4 +1,5 @@
 import concurrent.futures
+import json
 import tempfile
 
 import datasets
@@ -113,6 +114,16 @@ def collect_dataset_configs_details(dataset_object):
                 continue
             config_name, splits_details = fetch_splits_details(config_name)
             configs_and_splits[config_name] = splits_details
-    dataset_object.configs_details = configs_and_splits
+    try:
+        dataset_object.configs_details = configs_and_splits
+    except TypeError:
+        dataset_object.configs_details = json.dumps(
+            configs_and_splits,
+            indent=4,
+            sort_keys=True,
+            default=str,
+        )
+    except Exception as e:
+        raise e
     dataset_object.save()
     return configs_and_splits
