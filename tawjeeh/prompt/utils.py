@@ -128,6 +128,7 @@ def collect_dataset_configs_details(dataset_object):
             indent=4,
             sort_keys=True,
             default=str,
+            ensure_ascii=False,
         )
         dataset_object.save()
     return configs_and_splits
