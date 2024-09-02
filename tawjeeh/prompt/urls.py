@@ -59,10 +59,10 @@ urlpatterns = [
         DatasetResetCacheView.as_view(),
         name="reset_dataset_cache",
     ),
-    path(
-        "dataset/prompt/merge/",
-        PromptCreateView.as_view(),
-    ),
+    # path(
+    #     "dataset/prompt/merge/",
+    #     PromptCreateView.as_view(),
+    # ),
     path(
         "dataset/<int:dataset_pk>/prompt/apply-template/",
         ApplyTemplateView.as_view(),
