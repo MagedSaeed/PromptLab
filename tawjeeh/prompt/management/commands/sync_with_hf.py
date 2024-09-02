@@ -94,12 +94,6 @@ class Command(BaseCommand):
             default=False,
             help="Clear existing datasets, prompts, and tasks.",
         )
-        parser.add_argument(
-            "--default_subset",
-            type=str,
-            default="",
-            help="Default subset for this dataset.",
-        )
 
     def handle(self, *args, **options):
         dataset_info_list = self.get_dataset_info(options)
@@ -181,7 +175,6 @@ class Command(BaseCommand):
             "answer_choices_column",
             "is_single_classification_column",
             "target_column",
-            "default_subset",
         ]
 
         for column in additional_columns:
@@ -296,7 +289,6 @@ class Command(BaseCommand):
             dataset_name if author == "datasets" else f"{author}/{dataset_name}"
         )
         is_single_classification, target = additional_info[4:6]
-        default_subset = additional_info[-1]
 
         dataset, created = Dataset.objects.update_or_create(
             name=dataset_name,
@@ -312,6 +304,8 @@ class Command(BaseCommand):
                 ),
             },
         )
+        # reuse this column to be the default subset for the dataset
+        default_subset = additional_info[2]
         if default_subset:
             dataset.default_subset = default_subset
         dataset.save()
