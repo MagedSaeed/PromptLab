@@ -40,6 +40,22 @@ class DatasetAdmin(admin.ModelAdmin):
     search_fields = ["name", "description", "tasks__name"]
     list_filter = ["tasks"]
     filter_horizontal = ["tasks"]
+    readonly_fields = ["configs_details_truncated"]
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        fields = [f for f in fields if f != "configs_details"]
+        # fields.append("configs_details_truncated")
+        return fields
+
+    def configs_details_truncated(self, obj):
+        if obj.configs_details:
+            json_str = str(obj.configs_details)
+            if len(json_str) > 10_000:
+                return f"{json_str[:1000]} ..."
+        return obj.configs_details
+
+    configs_details_truncated.short_description = "Configs Details (Truncated)"
 
 
 class PromptAdmin(admin.ModelAdmin):
