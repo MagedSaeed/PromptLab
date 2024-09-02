@@ -16,7 +16,7 @@
             <label for="subsetDropdown" class="form-label">Subset Selection</label>
             <select class="form-select" id="subsetDropdown">
                 {% for subset, splits in dataset.configs_with_splits_names.items %}
-                    <option value="{{ subset }}">{{ subset }}</option>
+                    <option value="{{ subset }}" {% if subset == dataset.default_subset %}selected{% endif %}>{{ subset }}</option>
                 {% endfor %}
             </select>
         </div>
