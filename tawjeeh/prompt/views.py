@@ -234,15 +234,16 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.prompt = get_object_or_404(Prompt, pk=kwargs["prompt_pk"])
-        if not request.user.is_modirator:
-            messages.error(
-                request,
-                "Only modirators can review prompts. Please contact admins for further dtails.",
-            )
-            return redirect(self.get_success_url())
         return super().setup(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_modirator:
+            messages.error(
+                request,
+                "Only reviewers can review prompts.",
+                extra_tags="danger",
+            )
+            return redirect(self.get_success_url())
         if self.prompt.updateable:
             messages.error(
                 request,
