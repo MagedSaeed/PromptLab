@@ -28,6 +28,15 @@
                     </button>
                 </div>
 
+                <span>
+                    Review actions on this prompt has been taken.
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        See full review history
+                    </a>
+                </span>
+
+                {% include 'prompt/partials/review_history_modal.html' with review_actions=form.prompt.review_actions.all %}
+
                 {% if form.is_prompt_reviewable %}
                     <hr>
                     <div class="row">
