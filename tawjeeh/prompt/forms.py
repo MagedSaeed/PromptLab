@@ -35,11 +35,13 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["dataset_subset"].error_messages = {
                 "required": "Please select a dataset from the left sidebar first.",
             }
+        self.can_edit_text = True
         if not self.instance.updateable:
             self.fields["name"].disabled = True
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
+            self.can_edit_text = False
         self.fields["answer_choices"].label = False
 
     def save(self, commit=True):
@@ -82,6 +84,13 @@ class PromptReviewForm(forms.ModelForm):
         self.fields["text_direction"].initial = self.prompt.text_direction
         self.fields["answer_choices"].initial = self.prompt.answer_choices
         self.fields["dataset_subset"].initial = self.prompt.dataset_subset
+        self.prompt.can_edit_text = True
+        if self.prompt.approved:
+            self.fields["name"].disabled = True
+            self.fields["template"].disabled = True
+            self.fields["text_direction"].disabled = True
+            self.fields["answer_choices"].disabled = True
+            self.prompt.can_edit_text = False
 
     def set_prompt_status(self):
         data = self.cleaned_data
