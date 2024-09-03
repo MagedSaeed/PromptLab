@@ -38,7 +38,7 @@
         answerChoicesTagified = new Tagify(answer_choices_input)
         var prompt_textarea = document.getElementById('tagifyTextarea');
         var directionSwitcher = document.getElementById('directionSwitcher');
-        {% if prompt and not prompt.updateable %}
+        {% if prompt and not prompt.can_edit_text %}
             currentText = prompt_textarea.value;
             currentText = currentText.trim()
             prompt_textarea.value = currentText

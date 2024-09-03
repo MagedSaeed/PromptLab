@@ -233,6 +233,10 @@ class Prompt(models.Model):
         )
 
     @property
+    def approved(self):
+        return not self.updateable and not self.reviewable
+
+    @property
     def status(self):
         status = PromptReviewAction.PromptStatus.DRAFT
         if self.review_actions.exists():
