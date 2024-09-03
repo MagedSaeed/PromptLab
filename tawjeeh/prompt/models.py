@@ -284,6 +284,11 @@ class PromptReviewAction(models.Model):
     prompt_before_submitter_modifications = models.JSONField(null=True, blank=True)
     taken_on = models.DateTimeField(auto_now_add=True)
 
+    def get_submitter_decision_display(self):
+        if self.submitter_decision:
+            return self.DecisionChoices(self.submitter_decision).label
+        return "Submitted"  # or any default value you prefer
+
     def __str__(self):
         return f"Review made by {self.submitter} on {self.prompt}."
 

@@ -103,25 +103,30 @@ class PromptReviewForm(forms.ModelForm):
                     "Please add a comment when returning a prompt for modifications.",
                 )
 
-    def get_prompt_reviewer_modifications(self):
+    def update_prompt(self):
         data = self.cleaned_data
-        prompt_modifications = {}
         prompt_fields = set(self.fields) - {"submitter_comment", "submitter_decision"}
         for key in data:
             if key in prompt_fields:
-                if data[key] != getattr(self.prompt, key):
-                    reviewer_updates = data[key]
-                    if reviewer_updates:
-                        reviewer_updates = reviewer_updates.strip()
-                    prompt_modifications[key] = reviewer_updates
-        return prompt_modifications
+                reviewer_updates = data[key]
+                if reviewer_updates:
+                    reviewer_updates = reviewer_updates.strip()
+                    setattr(self.prompt, key, reviewer_updates)
+        self.prompt.save()
 
     def save(self, commit=True):
         self.set_prompt_status()
         self.instance.prompt = self.prompt
         self.instance.submitter = self.reviewer
-        prompt_modifications = self.get_prompt_reviewer_modifications()
-        self.instance.prompt_before_modifications = prompt_modifications
+        self.instance.prompt_before_submitter_modifications = {
+            key: getattr(self.prompt, key)
+            for key in self.fields.keys()
+            - {
+                "submitter_comment",
+                "submitter_decision",
+            }
+        }
+        self.update_prompt()
         return super().save(commit=commit)
 
     def is_prompt_reviewable(self):
