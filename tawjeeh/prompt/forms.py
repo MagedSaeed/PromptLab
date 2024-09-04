@@ -22,6 +22,8 @@ class PromptCreateUpdateForm(forms.ModelForm):
                 "placeholder": "Enter choices here pressing Enter after each choice (optional)."
             }
         )
+        if self.dataset.default_answer_choices:
+            self.fields["answer_choices"].initial = self.dataset.default_answer_choices
         self.fields["name"].widget.attrs.update(
             {"placeholder": "Enter prompt name here"}
         )
@@ -42,7 +44,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
             self.can_edit_text = False
-        self.fields["answer_choices"].label = False
+        # self.fields["answer_choices"].label = False
 
     def save(self, commit=True):
         if not len(self.instance.dataset.get_configs_details()) > 1:
