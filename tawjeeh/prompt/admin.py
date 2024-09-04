@@ -61,7 +61,7 @@ class DatasetAdmin(admin.ModelAdmin):
 
 
 class PromptAdmin(admin.ModelAdmin):
-    search_fields = ["content", "dataset__name", "dataset__tasks__name"]
+    search_fields = ["dataset__name", "dataset__tasks__name"]
     list_filter = ["dataset", "dataset__tasks"]
 
 
