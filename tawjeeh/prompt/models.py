@@ -175,6 +175,13 @@ class Dataset(models.Model):
         self.save()
         return True
 
+    @property
+    def default_answer_choices(self):
+        for prompt in self.prompts.all():
+            if prompt.answer_choices:
+                return prompt.answer_choices
+        return None
+
 
 class Prompt(models.Model):
     class TextDirectionChoices(models.TextChoices):
