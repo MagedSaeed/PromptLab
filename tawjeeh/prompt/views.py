@@ -307,6 +307,7 @@ class PromptListView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset()
         queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
         if not self.request.user.is_modirator:
+            queryset = list(filter(lambda prompt: prompt.approved, queryset))
             queryset = queryset[:5]
         return queryset
 
