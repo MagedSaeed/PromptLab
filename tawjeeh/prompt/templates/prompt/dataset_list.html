@@ -9,9 +9,9 @@
             margin-bottom: 2rem;
         }
         .search-container {
-            max-width: 100%; /* Changed from 500px to 100% */
-            flex-grow: 1; /* Added to allow the search bar to grow */
-            margin-right: 1rem; /* Added some margin to separate from the button */
+            max-width: 100%;
+            flex-grow: 1;
+            margin-right: 1rem;
         }
         .table th {
             background-color: #f8f9fa;
@@ -55,10 +55,87 @@
                 padding: 0.25rem 0.35rem;
             }
         }
+
+        /* Improved Breadcrumb Styles */
+        .breadcrumb-wrapper {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e9ecef;
+            padding: 0.75rem 0;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .breadcrumb {
+            background-color: transparent;
+            margin-bottom: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .breadcrumb-item {
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+        .breadcrumb-item a {
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .breadcrumb-item a:hover {
+            color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .breadcrumb-item.active {
+            color: #007bff;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            color: #6c757d;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 0.25rem;
+        }
+        .breadcrumb-icon {
+            margin-right: 0.35rem;
+            font-size: 1.1rem;
+        }
     </style>
 {% endblock style %}
 
 {% block main_content %}
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'home' %}">
+                            <i class="bi bi-house-door-fill breadcrumb-icon"></i>Home
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'prompt:task_list' %}">
+                            <i class="bi bi-list-check breadcrumb-icon"></i>Tasks
+                        </a>
+                    </li>
+                    {% if task %}
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <i class="bi bi-table breadcrumb-icon"></i>{{ task.name }} Datasets
+                        </li>
+                    {% else %}
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <i class="bi bi-grid-3x3-gap-fill breadcrumb-icon"></i>All Datasets
+                        </li>
+                    {% endif %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
     <div class="page-header">
         <div class="container">
             <div class="row align-items-center">
@@ -143,6 +220,16 @@
         document.addEventListener('htmx:afterSwap', () => {
             const searchTerm = document.getElementById('search-input').value;
             highlightMatches(searchTerm);
+        });
+
+        // Add hover effect for breadcrumb items
+        document.querySelectorAll('.breadcrumb-item a').forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            link.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
         });
     </script>
 {% endblock %}
