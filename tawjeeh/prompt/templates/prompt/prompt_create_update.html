@@ -224,7 +224,11 @@
                         <li class="breadcrumb-item active" aria-current="page">
                             <i class="bi bi-pencil-square breadcrumb-icon"></i>
                             {% if prompt %}
-                                Edit Prompt
+                                {% if prompt.updateable %}
+                                    Edit Prompt
+                                {% else %}
+                                    Show Prompt
+                                {% endif %}
                             {% else %}
                                 Create Prompt
                             {% endif %}
@@ -373,15 +377,6 @@
             $('#closeTemplateResult').on('click', function() {
                 $('#templateResultContainer').removeClass('visible').addClass('hidden');
                 $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
-            });
-
-            var instructionsButton = document.querySelector('#instructionsAccordion .accordion-button');
-            var instructionsCollapse = new bootstrap.Collapse(document.querySelector('#collapseInstructions'), {
-                toggle: false
-            });
-
-            instructionsButton.addEventListener('click', function() {
-                instructionsCollapse.toggle();
             });
 
             $('#applyButton').on('click', function() {
