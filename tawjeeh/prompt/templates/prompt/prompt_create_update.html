@@ -135,6 +135,11 @@
         .apply-spinner.visible {
             display: inline-block;
         }
+
+        #instructionsAccordion .accordion-button h4 {
+            flex-grow: 1;
+            margin-right: 20px; /* Adjust as needed */
+        }
     </style>
 {% endblock style %}
 
@@ -169,14 +174,14 @@
                 <!-- Main Content -->
                 <div class="main-content col" id="mainContent">
                     {% block prompt_template_content %}
-                        <div class="accordion" id="instructionsAccordion">
+                        <div class="accordion mb-4" id="instructionsAccordion">
                             <div class="accordion-item">
-                                <h2 class="accordion-header" id="headingOne">
-                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="background-color: #f8f9fa;">
+                                <h2 class="accordion-header" id="headingInstructions">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions" style="background-color: #f8f9fa;">
                                         <h4 style="margin: 0;">Creating Diverse Prompts for dataset: {{dataset}}</h4>
                                     </button>
                                 </h2>
-                                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#instructionsAccordion">
+                                <div id="collapseInstructions" class="accordion-collapse collapse" aria-labelledby="headingInstructions" data-bs-parent="#instructionsAccordion">
                                     <div class="accordion-body">
                                         <p>
                                             Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
@@ -280,6 +285,15 @@
             $('#closeTemplateResult').on('click', function() {
                 $('#templateResultContainer').removeClass('visible').addClass('hidden');
                 $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
+            });
+
+            var instructionsButton = document.querySelector('#instructionsAccordion .accordion-button');
+            var instructionsCollapse = new bootstrap.Collapse(document.querySelector('#collapseInstructions'), {
+                toggle: false
+            });
+
+            instructionsButton.addEventListener('click', function() {
+                instructionsCollapse.toggle();
             });
 
             $('#applyButton').on('click', function() {
