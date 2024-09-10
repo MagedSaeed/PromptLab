@@ -192,6 +192,25 @@
         .breadcrumb-wrapper {
             margin-left: 360px;
         }
+        .breadcrumb-item.dropdown .dropdown-menu {
+            min-width: 200px;
+        }
+
+        .breadcrumb-item.dropdown .dropdown-toggle::after {
+            display: inline-block;
+            margin-left: .255em;
+            vertical-align: .255em;
+            content: "";
+            border-top: .3em solid;
+            border-right: .3em solid transparent;
+            border-bottom: 0;
+            border-left: .3em solid transparent;
+        }
+
+        .breadcrumb-item.dropdown .dropdown-item {
+            padding: .25rem 1rem;
+            font-size: 0.9rem;
+        }
     </style>
 {% endblock style %}
 
@@ -211,10 +230,20 @@
                                 <i class="bi bi-list-check breadcrumb-icon"></i>Tasks
                             </a>
                         </li>
-                        <li class="breadcrumb-item">
-                            <a href="{% url 'prompt:dataset_list' %}">
+                        <li class="breadcrumb-item dropdown">
+                            <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
                                 <i class="bi bi-grid-3x3-gap-fill breadcrumb-icon"></i>Datasets
                             </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'prompt:dataset_list' %}">All Datasets</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Datasets by Current Tasks:</h6></li>
+                                {% for task in dataset.tasks.all %}
+                                    <li><a class="dropdown-item" href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">{{ task.name }} Datasets</a></li>
+                                {% empty %}
+                                    <li><a class="dropdown-item disabled" href="#">No associated tasks</a></li>
+                                {% endfor %}
+                            </ul>
                         </li>
                         <li class="breadcrumb-item">
                             <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}">
