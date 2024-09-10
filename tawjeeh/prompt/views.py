@@ -15,7 +15,7 @@ from django.views.generic import (
     View,
 )
 from django_filters.views import FilterView
-from jinja2 import Template
+from jinja2 import Environment, StrictUndefined
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import HFSyncForm, PromptCreateUpdateForm, PromptReviewForm
 from prompt.models import Dataset, Prompt, PromptReviewAction, Task
@@ -428,18 +428,38 @@ class DatasetDetailsView(LoginRequiredMixin, View):
 
 
 class ApplyTemplateView(LoginRequiredMixin, View):
+    def validate_template(self, original_template, html_template, sample):
+        env = Environment(undefined=StrictUndefined)
+        # Load your template
+        if "|||" not in original_template:
+            return '<span class = "text-danger"> no ||| dividor </span>'
+        else:
+            original_template = env.from_string(original_template)
+            html_template = env.from_string(html_template)
+
+            # Render the template with the variables
+
+            rendered_template = html_template.render(**sample)
+            answer_choices = sample["answer_choices"]
+            if len(answer_choices):
+                rendered_original_template = original_template.render(**sample)
+                answers = rendered_original_template.split("|||")[-1].strip()
+                for answer in answers.split(","):
+                    if answer.strip() not in answer_choices:
+                        return f'<span class = "text-danger"> The output: {answer} is not a subset of {answer_choices}</span>'
+            return rendered_template
+
     def apply_template(self, template_content, sample):
-        template_content = template_content.replace("<br>", "\n")
-        template_content = template_content.replace(
-            "{{", '<span class = "text-danger"> {{'
-        )
-        template_content = template_content.replace("}}", "}} </span>")
-        template = Template(template_content)
+        html_template = template_content.replace("<br>", "\n")
+        html_template = html_template.replace("{{", '<span class = "text-success"> {{')
+        html_template = html_template.replace("}}", "}} </span>")
         answer_choices = self.request.POST.get("answer_choices", [])
         if answer_choices:
             answer_choices = answer_choices.split("||")
         sample["answer_choices"] = answer_choices
-        rendered_sample = template.render(**sample)
+        rendered_sample = self.validate_template(
+            template_content, html_template, sample
+        )
         return rendered_sample
 
     def post(self, request, *args, **kwargs):
