@@ -11,6 +11,20 @@
         </a>
     </div>
 
+    <!-- New section for associated tasks -->
+    <div class="mb-3">
+        <h6 class="mb-2">Associated Tasks:</h6>
+        <div class="d-flex flex-wrap gap-2">
+            {% for task in dataset.tasks.all %}
+                <a href="{% url 'prompt:dataset_list' %}?task_pk={{task.pk}}" class="btn btn-outline-info btn-sm">
+                    {{ task.name }}
+                </a>
+            {% empty %}
+                <p class="text-muted">No tasks associated with this dataset.</p>
+            {% endfor %}
+        </div>
+    </div>
+
     {% if subset %}
         <div class="mb-3">
             <label for="subsetDropdown" class="form-label">Subset Selection</label>
