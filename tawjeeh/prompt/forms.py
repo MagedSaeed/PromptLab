@@ -37,13 +37,13 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["dataset_subset"].error_messages = {
                 "required": "Please select a dataset from the left sidebar first.",
             }
-        self.can_edit_text = True
+        self.instance.can_edit_text = True
         if not self.instance.updateable:
             self.fields["name"].disabled = True
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
-            self.can_edit_text = False
+            self.instance.can_edit_text = False
         # self.fields["answer_choices"].label = False
 
     def save(self, commit=True):
