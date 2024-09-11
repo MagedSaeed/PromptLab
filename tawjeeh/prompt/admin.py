@@ -1,10 +1,10 @@
 import json
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.safestring import mark_safe
 
 # from django.core.management import call_command
-from prompt.models import Dataset, Prompt, PromptReviewAction, Task
+from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
@@ -179,7 +179,57 @@ class PromptReviewActionAdmin(admin.ModelAdmin):
     ]
 
 
+class PromptingProjectAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "get_prompters_count", "get_datasets_count")
+    search_fields = ("name", "owner__username", "prompters__username")
+    filter_horizontal = ("prompters", "datasets")
+
+    def get_prompters_count(self, obj):
+        return obj.prompters.count()
+
+    get_prompters_count.short_description = "Prompters Count"
+
+    def get_datasets_count(self, obj):
+        return obj.datasets.count()
+
+    get_datasets_count.short_description = "Datasets Count"
+
+    actions = ["distribute_datasets_action"]
+
+    @admin.action(description="Distribute datasets to prompters")
+    def distribute_datasets_action(self, request, queryset):
+        for project in queryset:
+            try:
+                result = project.distribute_datasets()
+                self.message_user(request, result, messages.SUCCESS)
+            except Exception as e:
+                self.message_user(
+                    request,
+                    f"Error distributing datasets for {project.name}: {str(e)}",
+                    messages.ERROR,
+                )
+
+    def response_change(self, request, obj):
+        if "_distribute_datasets" in request.POST:
+            try:
+                result = obj.distribute_datasets()
+                self.message_user(request, result, messages.SUCCESS)
+            except Exception as e:
+                self.message_user(
+                    request, f"Error distributing datasets: {str(e)}", messages.ERROR
+                )
+        return super().response_change(request, obj)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["show_distribute_button"] = True
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
+
+
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Dataset, DatasetAdmin)
 admin.site.register(Prompt, PromptAdmin)
 admin.site.register(PromptReviewAction, PromptReviewActionAdmin)
+admin.site.register(PromptingProject, PromptingProjectAdmin)

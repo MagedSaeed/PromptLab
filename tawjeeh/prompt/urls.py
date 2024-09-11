@@ -11,6 +11,7 @@ from prompt.views import (
     PromptReviewView,
     PromptUpdateView,
     TaskListView,
+    UserDistributedDatasetsView,
     UserPromptsListView,
 )
 
@@ -72,5 +73,10 @@ urlpatterns = [
         "hf-sync",
         HFSynchView.as_view(),
         name="hf_sync",
+    ),
+    path(
+        "user-distributed-datasets/",
+        UserDistributedDatasetsView.as_view(),
+        name="my_datasets",
     ),
 ]
