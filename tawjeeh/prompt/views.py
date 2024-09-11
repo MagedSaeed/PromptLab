@@ -379,8 +379,8 @@ class DatasetDetailsView(LoginRequiredMixin, View):
         """
         features = dataset.get_features()
         for c in sample:
-            if features.get(c) and hasattr(features[c], "names"):
-                label_to_name = {i: name for i, name in enumerate(features[c].names)}
+            if features.get(c) and "names" in features[c]:
+                label_to_name = {i: name for i, name in enumerate(features[c]["names"])}
                 sample[c] = str(sample[c]) + "<<" + label_to_name[sample[c]] + ">>"
         return sample
 
