@@ -2,6 +2,7 @@ import datasets
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.management import call_command
+from django.core.paginator import Paginator
 from django.db.models import OuterRef, Subquery
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,7 +19,7 @@ from django_filters.views import FilterView
 from jinja2 import Environment, StrictUndefined
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import HFSyncForm, PromptCreateUpdateForm, PromptReviewForm
-from prompt.models import Dataset, Prompt, PromptReviewAction, Task
+from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -529,3 +530,47 @@ class DatasetResetCacheView(LoginRequiredMixin, View):
         dataset.reset_cache()
         messages.success(request, "Dataset cache reset successfully")
         return redirect("prompt:prompt_list", dataset_pk=dataset.pk)
+
+
+class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
+    template_name = "prompt/user_distributed_datasets_list.html"
+    context_object_name = "assignments"
+    paginate_by = 10  # Adjust this number as needed
+
+    def get_queryset(self):
+        user_projects = PromptingProject.objects.filter(prompters=self.request.user)
+        assignments = []
+        for project in user_projects:
+            if self.request.user.username in project.dataset_assignments:
+                for task, dataset_info in project.dataset_assignments[
+                    self.request.user.username
+                ].items():
+                    dataset = Dataset.objects.get(name=dataset_info["dataset_name"])
+                    has_prompt = Prompt.objects.filter(
+                        dataset=dataset,
+                        created_by=self.request.user,
+                    ).exists()
+                    if has_prompt:
+                        last_prompt = Prompt.objects.filter(
+                            dataset=dataset,
+                            created_by=self.request.user,
+                        ).last()
+                    assignments.append(
+                        {
+                            "project_name": project.name,
+                            "task": task,
+                            "dataset_name": dataset_info["dataset_name"],
+                            "dataset_pk": dataset.pk,
+                            "status": last_prompt.status if has_prompt else "Pending",
+                            "last_prompt": last_prompt if has_prompt else None,
+                        }
+                    )
+        return assignments
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        paginator = Paginator(self.object_list, self.paginate_by)
+        page = self.request.GET.get("page")
+        assignments = paginator.get_page(page)
+        context["assignments"] = assignments
+        return context

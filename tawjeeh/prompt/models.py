@@ -1,14 +1,59 @@
 import json
+import random
 
 import datasets
 from core.utils import redis_cache  # noqa: F401
 from django.contrib.auth import get_user_model
 from django.core.cache import cache  # noqa: F401
-from django.db import models
+from django.db import models, transaction
 from prompt.utils import collect_dataset_configs_details
 from taggit.managers import TaggableManager
 
 User = get_user_model()
+
+
+class PromptingProject(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    prompters = models.ManyToManyField(User, related_name="prompting_projects")
+    datasets = models.ManyToManyField("Dataset", related_name="prompting_projects")
+    dataset_assignments = models.JSONField(default=dict, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    def distribute_datasets(self, save=True):
+        with transaction.atomic():
+            prompters = list(self.prompters.all())
+            tasks = self.datasets.values_list("tasks__name", flat=True).distinct()
+            assignments = {}
+            for task_name in tasks:
+                task_datasets = list(
+                    self.datasets.filter(tasks__name=task_name).values(
+                        "name",
+                        # "huggingface_name",
+                    )
+                )
+                random.shuffle(task_datasets)
+
+                for i, prompter in enumerate(prompters):
+                    dataset = task_datasets[i % len(task_datasets)]
+
+                    if prompter.username not in assignments:
+                        assignments[prompter.username] = {}
+
+                    assignments[prompter.username][task_name] = {
+                        "dataset_name": dataset["name"],
+                        # "huggingface_name": dataset["huggingface_name"],
+                    }
+
+            dataset_assignments = assignments
+            if save:
+                self.dataset_assignments = dataset_assignments
+                self.save()
+                return f"Distributed datasets for {len(tasks)} tasks among {len(prompters)} prompters for project {self.name}"
+            return dataset_assignments
 
 
 class Task(models.Model):
