@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 .vscode
 tawjeeh/tawjeeh/staging_settings.py
+db*.sqlite3
