@@ -1,4 +1,3 @@
-import datasets
 from django import forms
 from prompt.models import Prompt, PromptReviewAction
 
@@ -45,14 +44,6 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["answer_choices"].disabled = True
             self.instance.can_edit_text = False
         # self.fields["answer_choices"].label = False
-
-    def save(self, commit=True):
-        if not len(self.instance.dataset.get_configs_details()) > 1:
-            self.instance.dataset_subset = datasets.get_dataset_default_config_name(
-                self.dataset.huggingface_name,
-                trust_remote_code=True,
-            )
-        return super().save(commit=commit)
 
     def is_prompt_reviewable(self):
         return self.instance.reviewable
