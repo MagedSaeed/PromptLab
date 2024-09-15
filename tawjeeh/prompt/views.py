@@ -546,23 +546,30 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
                     self.request.user.username
                 ].items():
                     dataset = Dataset.objects.get(name=dataset_info["dataset_name"])
-                    has_prompt = Prompt.objects.filter(
+                    has_prompts = Prompt.objects.filter(
                         dataset=dataset,
                         created_by=self.request.user,
+                        dataset__prompting_projects__in=[project],
                     ).exists()
-                    if has_prompt:
-                        last_prompt = Prompt.objects.filter(
+                    prompts_count = 0
+                    if has_prompts:
+                        prompts_query = Prompt.objects.filter(
                             dataset=dataset,
                             created_by=self.request.user,
-                        ).last()
+                            dataset__prompting_projects__in=[project],
+                        )
+                        last_prompt = prompts_query.last()
+                        prompts_count = prompts_query.count()
+
                     assignments.append(
                         {
-                            "project_name": project.name,
+                            "project": project,
                             "task": task,
                             "dataset_name": dataset_info["dataset_name"],
                             "dataset_pk": dataset.pk,
-                            "status": last_prompt.status if has_prompt else "Pending",
-                            "last_prompt": last_prompt if has_prompt else None,
+                            "status": last_prompt.status if has_prompts else "Pending",
+                            "last_prompt": last_prompt if has_prompts else None,
+                            "prompts_count": prompts_count,
                         }
                     )
         return assignments

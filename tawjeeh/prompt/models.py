@@ -19,6 +19,11 @@ class PromptingProject(models.Model):
     prompters = models.ManyToManyField(User, related_name="prompting_projects")
     datasets = models.ManyToManyField("Dataset", related_name="prompting_projects")
     dataset_assignments = models.JSONField(default=dict, null=True, blank=True)
+    minimum_prompts_per_prompter = models.PositiveIntegerField(
+        default=5,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return self.name
