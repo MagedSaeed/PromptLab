@@ -66,9 +66,37 @@
                 <h6 class="mb-3">Introduction to LLM Prompt Engineering</h6>
                 <p>Prompt engineering is crucial for effectively instructing Language Models (LLMs) in Natural Language Processing (NLP) tasks. Well-crafted prompts can significantly improve the model's performance and output quality.</p>
 
+                <p>Example usage in a prompt:</p>
+                <pre><code>{% verbatim %}Classify the sentiment of the following text as {% for choice in answer_choices %}{{ choice }}{% if not loop.last %} or {% endif %}{% endfor %}.
+
+Text: {{ input_text }}
+
+Sentiment:
+|||
+{{ target_column }}{% endverbatim %}</code></pre>
+                <p>This will render as "Classify the sentiment of the following text as negative or positive." if your answer choices are set to "0:negative,1:positive".</p>
+
                 <div class="alert alert-info" role="alert">
-                    <strong>Quick Tip:</strong> Type '\' in the prompt template to see a list of all available dataset columns.
+                    <strong>Quick Tip:</strong> Type '\\' in the prompt template to see a list of all available dataset columns, i.e., the ones enclosed with {% verbatim %} {{}} {% endverbatim %}.
                 </div>
+
+                <h6 class="mt-4">Using Answer Choices</h6>
+                <p>Answer choices are particularly useful for transforming numeric or coded classes into descriptive labels, making prompts more interpretable for LLMs. Here's how to use them:</p>
+                <ol>
+                    <li>Define your answer choices in the designated field (e.g., "0:negative,1:positive" for binary sentiment)</li>
+                    <li>Use the <code>answer_choices</code> variable in your prompt template</li>
+                    <li>Access specific choices using index (e.g., <code>answer_choices[0]</code> for the first choice)</li>
+                </ol>
+
+                <h6 class="mt-4">Best Practices for LLM Prompt Creation:</h6>
+                <ol>
+                    <li><strong>Be Clear and Specific:</strong> Clearly state the task and desired output format.</li>
+                    <li><strong>Provide Context:</strong> Include relevant background information when necessary.</li>
+                    <li><strong>Use Examples:</strong> Incorporate few-shot learning by providing examples when possible.</li>
+                    <li><strong>Control Output Format:</strong> Specify the desired structure of the output.</li>
+                    <li><strong>Iterate and Refine:</strong> Test your prompts and refine them based on the results.</li>
+                    <li><strong>Leverage Answer Choices:</strong> Use descriptive labels to make tasks more intuitive for the model.</li>
+                </ol>
 
                 <h6 class="mt-4">Key Elements of Jinja Syntax in Prompts:</h6>
                 <ul>
@@ -82,33 +110,6 @@
                     <li><strong>Comments:</strong> {# This won't be rendered #} - Add notes to your prompts</li>
                     <li><strong>Filters:</strong> {% verbatim %}{{ text|lower }}{% endverbatim %} - Modify variables (e.g., lowercase)</li>
                 </ul>
-
-                <h6 class="mt-4">Using Answer Choices</h6>
-                <p>Answer choices are particularly useful for transforming numeric or coded classes into descriptive labels, making prompts more interpretable for LLMs. Here's how to use them:</p>
-                <ol>
-                    <li>Define your answer choices in the designated field (e.g., "0:negative,1:positive" for binary sentiment)</li>
-                    <li>Use the <code>answer_choices</code> variable in your prompt template</li>
-                    <li>Access specific choices using index (e.g., <code>answer_choices[0]</code> for the first choice)</li>
-                </ol>
-                <p>Example usage in a prompt:</p>
-                <pre><code>{% verbatim %}Classify the sentiment of the following text as {% for choice in answer_choices %}{{ choice }}{% if not loop.last %} or {% endif %}{% endfor %}.
-
-Text: {{ input_text }}
-
-Sentiment:
-|||
-{{ target_column }}{% endverbatim %}</code></pre>
-                <p>This will render as "Classify the sentiment of the following text as negative or positive." if your answer choices are set to "0:negative,1:positive".</p>
-
-                <h6 class="mt-4">Best Practices for LLM Prompt Creation:</h6>
-                <ol>
-                    <li><strong>Be Clear and Specific:</strong> Clearly state the task and desired output format.</li>
-                    <li><strong>Provide Context:</strong> Include relevant background information when necessary.</li>
-                    <li><strong>Use Examples:</strong> Incorporate few-shot learning by providing examples when possible.</li>
-                    <li><strong>Control Output Format:</strong> Specify the desired structure of the output.</li>
-                    <li><strong>Iterate and Refine:</strong> Test your prompts and refine them based on the results.</li>
-                    <li><strong>Leverage Answer Choices:</strong> Use descriptive labels to make tasks more intuitive for the model.</li>
-                </ol>
 
                 <h6 class="mt-4">NLP Task-Specific Examples:</h6>
                 <div class="accordion" id="promptExamples">
