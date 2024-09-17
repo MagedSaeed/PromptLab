@@ -11,5 +11,5 @@ class TawjeehUser(AbstractUser):
         return self.username
 
     @property
-    def is_modirator(self):
+    def is_moderator(self):
         return self.is_superuser
