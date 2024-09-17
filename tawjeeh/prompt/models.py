@@ -1,5 +1,6 @@
 import json
 import random
+import secrets
 
 import datasets
 from core.utils import redis_cache  # noqa: F401
@@ -24,9 +25,12 @@ class PromptingProject(models.Model):
         null=True,
         blank=True,
     )
+    secret_key = models.CharField(max_length=64, unique=True, blank=True)
 
-    def __str__(self):
-        return self.name
+    def save(self, *args, **kwargs):
+        if not self.secret_key:
+            self.secret_key = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
 
     def distribute_datasets(self, save=True):
         with transaction.atomic():
@@ -59,6 +63,9 @@ class PromptingProject(models.Model):
                 self.save()
                 return f"Distributed datasets for {len(tasks)} tasks among {len(prompters)} prompters for project {self.name}"
             return dataset_assignments
+
+    def __str__(self):
+        return self.name
 
 
 class Task(models.Model):
