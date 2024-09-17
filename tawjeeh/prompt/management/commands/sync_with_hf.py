@@ -94,6 +94,12 @@ class Command(BaseCommand):
             default=False,
             help="Clear existing datasets, prompts, and tasks.",
         )
+        parser.add_argument(
+            "--example_template_tags_column",
+            type=str,
+            default="",
+            help="Column name for example template tags.",
+        )
 
     def handle(self, *args, **options):
         dataset_info_list = self.get_dataset_info(options)
@@ -175,6 +181,7 @@ class Command(BaseCommand):
             "answer_choices_column",
             "is_single_classification_column",
             "target_column",
+            "example_template_tags_column",
         ]
 
         for column in additional_columns:
@@ -317,7 +324,10 @@ class Command(BaseCommand):
             example_template_created_by,
             example_template_subset,
             answer_choices,
-        ) = additional_info[:4]
+            _,
+            _,
+            example_template_tags,
+        ) = additional_info[:7]
 
         if options["example_template_column"]:
             Prompt.objects.filter(
@@ -327,9 +337,19 @@ class Command(BaseCommand):
             if answer_choices:
                 answer_choices = ast.literal_eval(answer_choices)
 
-            dataset.create_example_prompt(
+            prompt = dataset.create_example_prompt(
                 prompt_template=example_template,
                 created_by=example_template_created_by,
                 subset=example_template_subset,
                 answer_choices=answer_choices,
             )
+
+            # Add the new tags to the prompt
+            if example_template_tags and prompt:
+                tags = [
+                    tag.strip()
+                    for tag in example_template_tags.split(",")
+                    if tag.strip()
+                ]
+                prompt.tags.add(*tags)
+                prompt.save()
