@@ -238,7 +238,7 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
         return super().setup(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if not request.user.is_modirator:
+        if not request.user.is_moderator:
             messages.error(
                 request,
                 "Only reviewers can review prompts.",
@@ -307,7 +307,7 @@ class PromptListView(LoginRequiredMixin, ListView):
         # filter all prompts by dataset
         queryset = super().get_queryset()
         queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
-        if not self.request.user.is_modirator:
+        if not self.request.user.is_moderator:
             queryset = list(filter(lambda prompt: prompt.approved, queryset))
             queryset = queryset[:5]
         return queryset
@@ -357,7 +357,7 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.request.user.is_modirator:
+        if self.request.user.is_moderator:
             if self.request.GET.get("show_all_prompts"):
                 return queryset
         queryset = queryset.filter(created_by=self.request.user)
