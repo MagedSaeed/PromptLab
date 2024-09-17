@@ -283,6 +283,7 @@
                                                 <th>Created By</th>
                                                 <th>Created On</th>
                                                 <th>Status</th>
+                                                <th>Tags</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -298,6 +299,13 @@
                                                     <td>{{ prompt.created_by }}</td>
                                                     <td>{{ prompt.created_on|date:"M d, Y" }}</td>
                                                     <td><span class="status-badge status-{{ prompt.status|lower }}">{{ prompt.status }}</span></td>
+                                                    <td>
+                                                        {% for tag in prompt.tags.all %}
+                                                            <span class="badge bg-secondary">{{ tag.name }}</span>
+                                                        {% empty %}
+                                                            <span class="text-muted">No tags</span>
+                                                        {% endfor %}
+                                                    </td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -323,6 +331,9 @@
                                             <th>Created By</th>
                                             <th>Created On</th>
                                             <th>Status</th>
+                                            {% if request.user.is_moderator %}
+                                                <th>Tags</th>
+                                            {% endif %}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -338,6 +349,15 @@
                                                 <td>{{ prompt.created_by }}</td>
                                                 <td>{{ prompt.created_on|date:"M d, Y" }}</td>
                                                 <td><span class="status-badge status-{{ prompt.status|lower }}">{{ prompt.status }}</span></td>
+                                                {% if request.user.is_moderator %}
+                                                    <td>
+                                                        {% for tag in prompt.tags.all %}
+                                                            <span class="badge bg-secondary">{{ tag.name }}</span>
+                                                        {% empty %}
+                                                            <span class="text-muted">No tags</span>
+                                                        {% endfor %}
+                                                    </td>
+                                                {% endif %}
                                             </tr>
                                         {% endfor %}
                                     </tbody>
