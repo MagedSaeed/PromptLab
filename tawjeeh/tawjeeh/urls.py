@@ -28,6 +28,7 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="index.html"), name="home"),
     path("accounts/", include("allauth.urls")),
     path("prompt/", include("prompt.urls")),
+    path("api/", include("api.urls")),
 ]
 
 # add static urls
