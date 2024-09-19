@@ -1,14 +1,13 @@
 import argparse
-import ast
 import csv
 import os
 from typing import List, Optional, Tuple
 
 import pandas as pd
-import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from prompt.models import Dataset, Prompt, Task
+from prompt.tasks import process_dataset  # Import the Celery task
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 
@@ -23,7 +22,7 @@ def str2bool(value: str) -> bool:
 
 
 class Command(BaseCommand):
-    help = "Populate datasets and tasks from Hugging Face or CSV file."
+    help = "Queue datasets for processing using Celery."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -204,152 +203,28 @@ class Command(BaseCommand):
         self.stdout.write("All datasets, prompts, and tasks cleared.")
 
     def process_datasets(self, dataset_info_list, options):
-        tasks_created = 0
-        datasets_created = 0
+        datasets_queued = 0
 
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
-            TextColumn("{task.completed}/{task.total} datasets processed"),
+            TextColumn("{task.completed}/{task.total} datasets queued"),
         ) as progress:
             progress_task = progress.add_task(
-                "[cyan]Processing datasets...", total=len(dataset_info_list)
+                "[cyan]Queueing datasets for processing...",
+                total=len(dataset_info_list),
             )
 
             for dataset_info in dataset_info_list:
                 dataset_url, primary_tasks, *additional_info = dataset_info
-                tasks_created += self.process_dataset(
-                    dataset_url,
-                    primary_tasks,
-                    additional_info,
-                    options,
-                )
-                datasets_created += 1
+                # Queue the Celery task
+                process_dataset.delay(dataset_url, primary_tasks, additional_info)
+                datasets_queued += 1
                 progress.advance(progress_task)
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Successfully populated datasets and tasks. {tasks_created} new tasks created and {datasets_created} new datasets created."
+                f"Successfully queued {datasets_queued} datasets for processing."
             )
         )
-
-    def process_dataset(self, dataset_url, primary_tasks, additional_info, options):
-        author, dataset_name = self.parse_dataset_url(dataset_url)
-        if not author or not dataset_name:
-            return 0
-
-        dataset_data = self.fetch_dataset_data(author, dataset_name)
-        if not dataset_data:
-            return 0
-
-        tasks = self.create_tasks(primary_tasks)
-        dataset = self.create_or_update_dataset(
-            dataset_name,
-            author,
-            dataset_data,
-            additional_info,
-        )
-        dataset.tasks.set(tasks)
-        self.manage_example_prompt(dataset, additional_info, options)
-        # fetch dataset's details
-        dataset.get_columns_names()
-        dataset.get_configs_details()
-        dataset.get_features()
-        return len(tasks)
-
-    def parse_dataset_url(self, dataset_url):
-        path_parts = dataset_url.split("/")
-        if len(path_parts) >= 2:
-            return path_parts[-2], path_parts[-1]
-        self.stdout.write(self.style.ERROR(f"Invalid URL format: {dataset_url}"))
-        return None, None
-
-    def fetch_dataset_data(self, author, dataset_name):
-        api_url = (
-            f"https://huggingface.co/api/datasets/{author}/{dataset_name}"
-            if author != "datasets"
-            else f"https://huggingface.co/api/datasets/{dataset_name}"
-        )
-        response = requests.get(api_url)
-        if response.status_code != 200:
-            self.stdout.write(
-                self.style.ERROR(f"Failed to fetch dataset: {author}/{dataset_name}")
-            )
-            return None
-        return response.json()
-
-    def create_tasks(self, primary_tasks):
-        task_names = [task.strip() for task in primary_tasks.split(",") if task.strip()]
-        return [
-            Task.objects.get_or_create(name=task_name)[0] for task_name in task_names
-        ]
-
-    def create_or_update_dataset(
-        self,
-        dataset_name,
-        author,
-        dataset_data,
-        additional_info,
-    ):
-        huggingface_name = (
-            dataset_name if author == "datasets" else f"{author}/{dataset_name}"
-        )
-        is_single_classification, target = additional_info[4:6]
-
-        dataset, created = Dataset.objects.update_or_create(
-            name=dataset_name,
-            defaults={
-                "huggingface_name": huggingface_name,
-                "description": dataset_data.get("description", ""),
-                "huggingface_raw": dataset_data,
-                "target_column": target,
-                "is_single_classification": (
-                    str2bool(is_single_classification)
-                    if is_single_classification
-                    else False
-                ),
-            },
-        )
-        # reuse this column to be the default subset for the dataset
-        default_subset = additional_info[2]
-        if default_subset:
-            dataset.default_subset = default_subset
-        dataset.save()
-        return dataset
-
-    def manage_example_prompt(self, dataset, additional_info, options):
-        (
-            example_template,
-            example_template_created_by,
-            example_template_subset,
-            answer_choices,
-            _,
-            _,
-            example_template_tags,
-        ) = additional_info[:7]
-
-        if options["example_template_column"]:
-            Prompt.objects.filter(
-                dataset=dataset, tags__name__icontains="Example Prompt"
-            ).delete()
-
-            if answer_choices:
-                answer_choices = ast.literal_eval(answer_choices)
-
-            prompt = dataset.create_example_prompt(
-                prompt_template=example_template,
-                created_by=example_template_created_by,
-                subset=example_template_subset,
-                answer_choices=answer_choices,
-            )
-
-            # Add the new tags to the prompt
-            if example_template_tags and prompt:
-                tags = [
-                    tag.strip()
-                    for tag in example_template_tags.split(",")
-                    if tag.strip()
-                ]
-                prompt.tags.add(*tags)
-                prompt.save()
