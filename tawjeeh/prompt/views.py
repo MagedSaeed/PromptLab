@@ -326,26 +326,21 @@ class PromptListView(LoginRequiredMixin, ListView):
 
         # get prompts that are available to review
 
-        # Subquery to get the last review action for each prompt
-        review_actions = PromptReviewAction.objects.filter(
+        # Subquery to get the latest PromptReviewAction for each Prompt
+        latest_actions = PromptReviewAction.objects.filter(
             prompt=OuterRef("pk")
         ).order_by("-taken_on")
 
-        # Annotate each prompt with the last review action's submitter_decision
-        prompts_with_last_action = Prompt.objects.annotate(
-            last_submitter_decision=Subquery(
-                review_actions.values("submitter_decision")[:1]
-            )
+        # Main query to get the Prompts ready for review
+        prompts_ready_for_review = Prompt.objects.annotate(
+            latest_status=Subquery(latest_actions.values("prompt_status")[:1]),
+            latest_decision=Subquery(latest_actions.values("submitter_decision")[:1]),
         ).filter(
-            review_actions__isnull=False,
             dataset=self.dataset,
+            latest_decision__isnull=True,
+            latest_status=PromptReviewAction.PromptStatus.SUBMITTED,
         )
-
-        # Filter prompts where the last submitter_decision is None
-        ready_to_review_prompts = prompts_with_last_action.filter(
-            last_submitter_decision__isnull=True
-        )
-        context["prompts_to_review"] = ready_to_review_prompts
+        context["prompts_to_review"] = prompts_ready_for_review
         return context
 
 
