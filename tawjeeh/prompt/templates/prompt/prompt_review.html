@@ -23,32 +23,29 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 mb-3">
-                        <div class="template-result hidden rounded p-3 bg-light" id="templateResultContainer">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Template Result</h6>
-                                <button type="button" class="btn-close" id="closeTemplateResult" aria-label="Close"></button>
-                            </div>
-                            <div id="mergeTemplateResult"></div>
-                        </div>
+                    <div class="template-result hidden rounded" id="templateResultContainer">
+                        <div class="close-btn" id="closeTemplateResult">✖</div>
+                        <div id="mergeTemplateResult"></div>
                     </div>
                 </div>
                 <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button type="button" class="btn btn-outline-primary" id="applyButton">
-                        Apply Template
-                        <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner d-none" role="status" aria-hidden="true"></span>
-                    </button>
-                    {% if not form.prompt or form.prompt.updateable %}
-                        <div>
-                            <button type="submit" name="submit" value="save_draft" class="btn btn-outline-secondary me-2">
-                                Save Draft
+                <div class="row my-2">
+                    <div class="col text-end">
+                        <button type="button" class="btn btn-outline-primary" id="applyButton">
+                            Apply Template
+                            <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
+                        </button>
+                        {% if not form.prompt or form.prompt.updateable %}
+                            <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
+                                <span>Save</span>
+                                <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
                             </button>
-                            <button type="submit" name="submit" value="submit_for_review" class="btn btn-primary">
-                                Submit for Review
+                            <button type="submit" name="submit" value="submit_for_review" class="btn btn-success">
+                                <span >Submit for review</span>
+                                <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
                             </button>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
 
                 {% if form.prompt.review_actions.exists %}
