@@ -95,8 +95,16 @@ class PromptReviewForm(forms.ModelForm):
 
     def clean(self):
         data = self.cleaned_data
+        if data.get("submitter_decision") not in (
+            PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION,
+            PromptReviewAction.DecisionChoices.APPROVED,
+        ):
+            self.add_error(
+                "submitter_decision",
+                "Please select a valid choice, either approve or return for modification.",
+            )
         if (
-            data["submitter_decision"]
+            data.get("submitter_decision")
             == PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION
         ):
             if not data["submitter_comment"]:
