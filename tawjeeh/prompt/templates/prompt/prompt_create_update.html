@@ -212,6 +212,53 @@
             padding: .25rem 1rem;
             font-size: 0.9rem;
         }
+        .review-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.25rem;
+            padding: 1.25rem;
+            margin-top: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .review-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #495057;
+            margin: 0;
+        }
+        .review-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.15s ease-in-out;
+        }
+        .review-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        .reviewer-comment {
+            background-color: #ffffff;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+        .reviewer-comment-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        .reviewer-comment-content {
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 {% endblock style %}
 
@@ -347,27 +394,7 @@
                                     </div>
                                     <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
                                     <div class="row my-2">
-                                        <div class="col col-6">
-                                            {% if prompt.review_actions.exists %}
-                                                <span>
-                                                    Review actions on this prompt has been taken.
-                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                                                        See full review history
-                                                    </a>
-                                                </span>
-                                                {% include 'prompt/partials/review_history_modal.html' with review_actions=prompt.review_actions.all %}
-                                                {% if prompt.review_actions.last.submitter_comment %}
-                                                    <hr>
-                                                    <p>
-                                                        <u>Latest reviewer comment:</u>
-                                                        <p>
-                                                            {{ prompt.review_actions.last.submitter_comment }}
-                                                        </p>
-                                                    </p>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
-                                        <div class="col col-6 text-end">
+                                        <div class="col text-end">
                                             <button type="button" class="btn btn-outline-primary" id="applyButton">
                                                 Apply Template
                                                 <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
@@ -383,9 +410,38 @@
                                                 </button>
                                             {% endif %}
                                         </div>
-                                    </form>
-                                </div>
+                                    </div>
+                                    <div class="row my-2 mx-1">
+                                        <div class="review-section">
+                                            <div class="review-header">
+                                                <h5 class="review-title">Review Actions</h5>
+                                                {% if prompt.review_actions.exists %}
+                                                    <a href="#" class="review-link" data-bs-toggle="modal" data-bs-target="#reviewHistoryModal">
+                                                        View Full Review History
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if prompt.review_actions.exists %}
+                                                <p>Review actions have been taken on this prompt.</p>
+                                                {% include 'prompt/partials/review_history_modal.html' with review_actions=prompt.review_actions.all %}
+
+                                                {% if prompt.review_actions.last.submitter_comment %}
+                                                    <div class="reviewer-comment">
+                                                        <h6 class="reviewer-comment-title">Latest Reviewer Comment:</h6>
+                                                        <p class="reviewer-comment-content">
+                                                            {{ prompt.review_actions.last.submitter_comment }}
+                                                        </p>
+                                                    </div>
+                                                {% endif %}
+                                            {% else %}
+                                                <p>No review actions have been taken on this prompt yet.</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
+                        </div>
                     {% endblock %}
                 </div>
             </div>
