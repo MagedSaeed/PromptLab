@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
-                <div class="row my-2">
+                <div class="row mb-3">
                     <div class="col text-end">
                         <button type="button" class="btn btn-outline-primary" id="applyButton">
                             Apply Template
@@ -49,15 +49,16 @@
                 </div>
 
                 {% if form.prompt.review_actions.exists %}
-                    <div class="alert alert-info">
-                        <span>
-                            Review actions on this prompt have been taken.
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#reviewHistoryModal" class="alert-link">
-                                See full review history
-                            </a>
-                        </span>
+                    <div class="container" style="margin:auto; width:50%">
+                        <div class="alert alert-info text-center">
+                            <span>
+                                Review actions on this prompt have been taken.
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#reviewHistoryModal" class="alert-link">
+                                    See full review history
+                                </a>
+                            </span>
+                        </div>
                     </div>
-
                     {% include 'prompt/partials/review_history_modal.html' with review_actions=form.prompt.review_actions.all %}
                 {% endif %}
 
