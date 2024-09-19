@@ -2,55 +2,90 @@
 {% load crispy_forms_tags %}
 
 {% block prompt_template_content %}
-    {{dataset.config_details}}
-    <div class="card">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{{ dataset.config_details }}</h5>
+        </div>
         <div class="card-body">
             <form id="promptForm" method="POST">
                 {% csrf_token %}
-                <div class="row justify-content-center">
-                    <div class="mb-3 col-12 full-width" id="templateFieldContainer">
+                <div class="row">
+                    <div class="col-12 mb-3" id="templateFieldContainer">
                         {{ form.name|as_crispy_field }}
                         {% include 'prompt/partials/prompt_tagified_textarea.html' with prompt=form.prompt %}
                         {{ form.template|as_crispy_field }}
-                        {{ form.dataset_subset }}
-                        {{ form.text_direction }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.dataset_subset|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.text_direction|as_crispy_field }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="template-result hidden rounded" id="templateResultContainer">
-                        <div class="close-btn" id="closeTemplateResult">✖</div>
-                        <div id="mergeTemplateResult"></div>
+                    <div class="col-12 mb-3">
+                        <div class="template-result hidden rounded p-3 bg-light" id="templateResultContainer">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">Template Result</h6>
+                                <button type="button" class="btn-close" id="closeTemplateResult" aria-label="Close"></button>
+                            </div>
+                            <div id="mergeTemplateResult"></div>
+                        </div>
                     </div>
                 </div>
                 <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
-                <div class="text-end">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <button type="button" class="btn btn-outline-primary" id="applyButton">
                         Apply Template
-                        <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
+                        <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner d-none" role="status" aria-hidden="true"></span>
                     </button>
+                    {% if not form.prompt or form.prompt.updateable %}
+                        <div>
+                            <button type="submit" name="submit" value="save_draft" class="btn btn-outline-secondary me-2">
+                                Save Draft
+                            </button>
+                            <button type="submit" name="submit" value="submit_for_review" class="btn btn-primary">
+                                Submit for Review
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
 
-                <span>
-                    Review actions on this prompt has been taken.
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        See full review history
-                    </a>
-                </span>
+                {% if form.prompt.review_actions.exists %}
+                    <div class="alert alert-info">
+                        <span>
+                            Review actions on this prompt have been taken.
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#reviewHistoryModal" class="alert-link">
+                                See full review history
+                            </a>
+                        </span>
+                    </div>
 
-                {% include 'prompt/partials/review_history_modal.html' with review_actions=form.prompt.review_actions.all %}
+                    {% include 'prompt/partials/review_history_modal.html' with review_actions=form.prompt.review_actions.all %}
+                {% endif %}
 
                 {% if form.is_prompt_reviewable %}
-                    <hr>
-                    <div class="row">
-                        <div class="row">
-                            {{ form.submitter_comment|as_crispy_field }}
+                    <hr class="my-4">
+                    <div class="card bg-light">
+                        <div class="card-header">
+                            <h5 class="mb-0">Reviewer Actions</h5>
                         </div>
-                        <div class="row my-4">
-                            <div class="col col-2">
-                                {{ form.submitter_decision|as_crispy_field }}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col col-2">
-                                <input type="submit" class="btn btn-primary" value="Submit">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    {{ form.submitter_comment|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.submitter_decision|as_crispy_field }}
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button type="submit" class="btn btn-primary" id="submitButton">
+                                            Submit Review
+                                        </button>
+                                        <small class="text-muted">Please ensure all fields are filled before submitting.</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
