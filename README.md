@@ -150,5 +150,65 @@ then, run the server as:
 python manage.py runserver
 ```
 
+# Adding prompts via APIs
 
+The platform allows for integrating prompts through a REST API. In order to do so, the project admin needs to set a key for his project then he can share this key with members to contribute via APIs.
 
+Sample python code:
+```python
+import requests
+import json
+
+# The URL for the API endpoint
+url = "https://tawjeeh.up.railway.app/api/prompt/create"
+
+# The headers for the request
+headers = {
+    "Content-Type": "application/json"
+}
+
+# The data payload
+data = {
+    "name": "Test Prompt from api",
+    "template": "Translate {text} to {language}",
+    "dataset_huggingface_name": "arbml/watan_2004",
+    "dataset_subset": "",  # optional, can be removed
+    "project_secret_key": "6Wirj",  # can be found in: https://tawjeeh.up.railway.app/admin/prompt/promptingproject , then click the name of the project
+    "created_by": "majed.alshaibani",
+    "tags": ["AI generated", "AI translated"],  # optional, these are just examples, can be removed
+    "text_direction": "rtl",  # optional, default to rtl, choices are: rtl or ltr, can be removed
+    "answer_choices": json.dumps([{"value": "choice1"}])  # Convert to JSON string
+}
+
+# Send the POST request
+response = requests.post(url, headers=headers, json=data)
+
+# Check the response
+if response.status_code == 201:
+    print("Prompt created successfully!")
+    print("Response:", response.json())
+else:
+    print("Failed to create prompt")
+    print("Status code:", response.status_code)
+    print("Response:", response.text)
+```
+
+Another example via curl
+
+```bash
+
+curl -X POST https://tawjeeh.up.railway.app/api/prompt/create \
+     -H "Content-Type: application/json" \
+     -d '{
+         "name": "Test Prompt from api",
+         "dataset_subset": "hey",
+         "template": "Translate {text} to {language}",
+         "dataset_huggingface_name": "arbml/watan_2004",
+         "project_secret_key": "6Wirj",
+         "text_direction": "ltr",
+         "created_by": "majed.alshaibani",
+         "tags": ["translation", "api-test"],
+         "answer_choices": "[{\"value\": \"choice1\"}]"
+     }'
+
+```
