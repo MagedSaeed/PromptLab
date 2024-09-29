@@ -34,7 +34,9 @@ python manage.py sync_with_hf \
     --is_single_classification_column is_single_classification \
     --target_column target_column \
     --clear_datasets False \
-    --example_template_tags_column example_template_tags
+    --example_template_tags_column example_template_tags \
+    --default_subset_column dataset_default_subset \
+    --subsets_column dataset_subsets_to_download
 
 # collect static
 python manage.py collectstatic --noinput
