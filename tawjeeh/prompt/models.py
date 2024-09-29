@@ -1,6 +1,7 @@
 import json
 import random
 import secrets
+from functools import cached_property
 
 import datasets
 from core.utils import redis_cache  # noqa: F401
@@ -96,12 +97,37 @@ class Dataset(models.Model):
     configs_details = models.JSONField(null=True, blank=True)
     features = models.JSONField(null=True, blank=True)
     columns_names = models.JSONField(null=True, blank=True)
-    default_subset = models.CharField(max_length=10_000, null=True, blank=True)
+    default_subset = models.CharField(
+        max_length=10_000,
+        null=True,
+        blank=True,
+        help_text="Subset to show by default when accessing the dataset from the left bar. If empty, the first subset will be chosen. Useful when the dataset has many subsets.",
+    )
+    subsets = models.CharField(
+        max_length=10_000,
+        null=True,
+        blank=True,
+        help_text='Subsets to download, empty for all. Split subsets by comma",".',
+    )
 
     @property
     def primary_task(self):
         if self.tasks.exists():
             return self.tasks.first()
+
+    @cached_property
+    def default_config(self):
+        # Assuming the default configuration
+        if self.default_subset:
+            default_config_name = self.default_subset
+        else:
+            default_config_name = list(self.get_configs_details().keys())[0]
+        default_config = datasets.get_dataset_config_info(
+            self.huggingface_name,
+            trust_remote_code=True,
+            config_name=default_config_name,
+        )
+        return default_config
 
     def get_features(self):
         """
@@ -110,14 +136,7 @@ class Dataset(models.Model):
         if self.features:
             return self.features
         try:
-            # Assuming the default configuration
-            default_config_name = list(self.get_configs_details().keys())[0]
-            features = datasets.get_dataset_config_info(
-                self.huggingface_name,
-                config_name=default_config_name,
-                trust_remote_code=True,
-            ).features
-
+            features = self.default_config.features
             self.features = features.to_dict()
             self.save()
             return features
@@ -130,13 +149,7 @@ class Dataset(models.Model):
             return self.columns_names
         try:
             # Assuming the default configuration
-            default_config_name = list(self.get_configs_details().keys())[0]
-            features = datasets.get_dataset_config_info(
-                self.huggingface_name,
-                config_name=default_config_name,
-                trust_remote_code=True,
-            ).features
-
+            features = self.get_features()
             # Extract and return column names
             columns = list(features.keys())
             self.columns_names = columns
@@ -148,8 +161,12 @@ class Dataset(models.Model):
 
     def configs_with_splits_names(self):
         names = {}
-        for config in self.get_configs_details():
-            names[config] = list(self.get_configs_details()[config].keys())
+        if not self.subsets:
+            for config in self.get_configs_details():
+                names[config] = list(self.get_configs_details()[config].keys())
+        else:
+            for config in self.subsets.split(","):
+                names[config] = list(self.get_configs_details()[config].keys())
         return names
 
     def get_configs_details(self):

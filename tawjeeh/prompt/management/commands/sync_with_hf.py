@@ -99,6 +99,19 @@ class Command(BaseCommand):
             default="",
             help="Column name for example template tags.",
         )
+        parser.add_argument(
+            "--default_subset_column",
+            type=str,
+            default="",
+            help="Default subset to show when accessing the dataset from the left bar.",
+        )
+
+        parser.add_argument(
+            "--subsets_column",
+            type=str,
+            default="",
+            help='Subsets to download, empty for all. Split subsets by comma","',
+        )
 
     def handle(self, *args, **options):
         dataset_info_list = self.get_dataset_info(options)
@@ -181,6 +194,8 @@ class Command(BaseCommand):
             "is_single_classification_column",
             "target_column",
             "example_template_tags_column",
+            "default_subset_column",
+            "subsets_column",
         ]
 
         for column in additional_columns:

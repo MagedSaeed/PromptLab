@@ -78,7 +78,7 @@ def reset_redis_cache():
 # tasks related to pull data during the sync_with_hf management command:
 
 
-def fetch_dataset_data(author, dataset_name):
+def fetch_dataset_data_from_hugginface(author, dataset_name):
     api_url = (
         f"https://huggingface.co/api/datasets/{author}/{dataset_name}"
         if author != "datasets"
@@ -110,9 +110,12 @@ def create_or_update_dataset(dataset_name, author, dataset_data, additional_info
             ),
         },
     )
-    default_subset = additional_info[2]
+    default_subset = additional_info[7]
     if default_subset:
         dataset.default_subset = default_subset
+    subset = additional_info[8]
+    if subset:
+        dataset.subsets = subset
     dataset.save()
     return dataset
 
@@ -166,7 +169,7 @@ def process_dataset(dataset_url, primary_tasks, additional_info):
         author, dataset_name = path_parts[-2], path_parts[-1]
     if not author or not dataset_name:
         return False
-    dataset_data = fetch_dataset_data(author, dataset_name)
+    dataset_data = fetch_dataset_data_from_hugginface(author, dataset_name)
     if not dataset_data:
         return False
     task_names = [task.strip() for task in primary_tasks.split(",") if task.strip()]

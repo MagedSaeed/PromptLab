@@ -50,10 +50,17 @@ def get_split_samples(
 
 def collect_dataset_configs_details(dataset_object):
     configs_and_splits = {}
-    config_names = datasets.get_dataset_config_names(
-        dataset_object.huggingface_name,
-        trust_remote_code=True,
-    )
+    if not dataset_object.subsets:
+        config_names = datasets.get_dataset_config_names(
+            dataset_object.huggingface_name,
+            trust_remote_code=True,
+        )
+    else:
+        config_names = dataset_object.subsets.split(",")
+
+    if dataset_object.default_subset:
+        if dataset_object.default_subset not in config_names:
+            config_names.append(dataset_object.default_subset)
 
     # Function to fetch splits for a given config name
     def fetch_splits_details(config_name):
