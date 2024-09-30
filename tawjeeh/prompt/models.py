@@ -161,7 +161,9 @@ class Dataset(models.Model):
 
     def configs_with_splits_names(self):
         names = {}
-        if not self.subsets:
+        if (
+            not self.subsets or self.subsets == "nan"
+        ):  # "nan" is coming from the empty string in excel pandas
             for config in self.get_configs_details():
                 names[config] = list(self.get_configs_details()[config].keys())
         else:
