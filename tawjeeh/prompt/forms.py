@@ -78,7 +78,7 @@ class PromptReviewForm(forms.ModelForm):
         self.fields["answer_choices"].initial = self.prompt.answer_choices
         self.fields["dataset_subset"].initial = self.prompt.dataset_subset
         self.prompt.can_edit_text = True
-        if self.prompt.approved:
+        if self.prompt.is_approved:
             self.fields["name"].disabled = True
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True

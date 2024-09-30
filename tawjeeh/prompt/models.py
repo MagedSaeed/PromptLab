@@ -316,7 +316,7 @@ class Prompt(models.Model):
         )
 
     @property
-    def approved(self):
+    def is_approved(self):
         return not self.updateable and not self.reviewable
 
     @property
