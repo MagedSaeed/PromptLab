@@ -218,7 +218,7 @@
                     {% endif %}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="all-prompts-tab" data-bs-toggle="tab" href="#all-prompts" role="tab">
-                            <i class="fas fa-list-ul me-2"></i>All{% if not request.user.is_moderator %} Approved {% endif %} Prompts
+                            <i class="fas fa-list-ul me-2"></i>All{% if not request.user.is_moderator %} Approved {% endif %} Prompts{% if request.user.is_moderator %} (Drafts Excluded) {% endif %}
                         </a>
                     </li>
                 </ul>

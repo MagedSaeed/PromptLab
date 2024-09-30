@@ -307,6 +307,8 @@ class PromptListView(LoginRequiredMixin, ListView):
         # filter all prompts by dataset
         queryset = super().get_queryset()
         queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
+        # filter out draft prompts
+        queryset = queryset.filter(review_actions__isnull=False)
         if not self.request.user.is_moderator:
             queryset = list(filter(lambda prompt: prompt.is_approved, queryset))
             queryset = queryset[:5]
