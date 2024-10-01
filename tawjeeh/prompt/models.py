@@ -253,9 +253,16 @@ class Dataset(models.Model):
 
     @property
     def default_answer_choices(self):
-        for prompt in self.prompts.all():
-            if prompt.answer_choices:
-                return prompt.answer_choices
+        if not self.target_column:
+            return None
+        features = self.get_features()
+        if features.get(self.target_column) and "names" in features[self.target_column]:
+            answer_choices = features[self.target_column]["names"]
+            return json.dumps([{"value": choice} for choice in answer_choices])
+        # for prompt in self.prompts.all():
+        #     if prompt.answer_choices:
+        #         print(prompt.answer_choices, type(prompt.answer_choices))
+        #         return prompt.answer_choices
         return None
 
 
