@@ -192,15 +192,15 @@ class Command(BaseCommand):
 
         info = [row[link_column].strip(), row[task_column].strip()]
         additional_columns = [
-            "example_template_column",
-            "example_template_created_by_column",
-            "example_template_subset_column",
-            # "answer_choices_column",
-            "is_single_classification_column",
             "target_column",
-            "example_template_tags_column",
-            "default_subset_column",
             "subsets_column",
+            "default_subset_column",
+            "is_single_classification_column",
+            # "answer_choices_column",
+            # "example_template_column",
+            # "example_template_tags_column",
+            # "example_template_subset_column",
+            # "example_template_created_by_column",
         ]
 
         for column in additional_columns:
