@@ -52,30 +52,6 @@ class Command(BaseCommand):
             help="Name of the column containing dataset primary tasks.",
         )
         parser.add_argument(
-            "--example_template_column",
-            type=str,
-            default="",
-            help="Column name for example template.",
-        )
-        parser.add_argument(
-            "--example_template_created_by_column",
-            type=str,
-            default="",
-            help="Column name for example template creator.",
-        )
-        parser.add_argument(
-            "--example_template_subset_column",
-            type=str,
-            default="",
-            help="Column name for example template subset.",
-        )
-        parser.add_argument(
-            "--answer_choices_column",
-            type=str,
-            default="",
-            help="Column name for answer choices.",
-        )
-        parser.add_argument(
             "--is_single_classification_column",
             type=str,
             default="",
@@ -94,12 +70,6 @@ class Command(BaseCommand):
             help="Clear existing datasets, prompts, and tasks.",
         )
         parser.add_argument(
-            "--example_template_tags_column",
-            type=str,
-            default="",
-            help="Column name for example template tags.",
-        )
-        parser.add_argument(
             "--default_subset_column",
             type=str,
             default="",
@@ -112,6 +82,36 @@ class Command(BaseCommand):
             default="",
             help='Subsets to download, empty for all. Split subsets by comma","',
         )
+        # parser.add_argument(
+        #     "--example_template_column",
+        #     type=str,
+        #     default="",
+        #     help="Column name for example template.",
+        # )
+        # parser.add_argument(
+        #     "--example_template_created_by_column",
+        #     type=str,
+        #     default="",
+        #     help="Column name for example template creator.",
+        # )
+        # parser.add_argument(
+        #     "--example_template_subset_column",
+        #     type=str,
+        #     default="",
+        #     help="Column name for example template subset.",
+        # )
+        # parser.add_argument(
+        #     "--answer_choices_column",
+        #     type=str,
+        #     default="",
+        #     help="Column name for answer choices.",
+        # )
+        # parser.add_argument(
+        #     "--example_template_tags_column",
+        #     type=str,
+        #     default="",
+        #     help="Column name for example template tags.",
+        # )
 
     def handle(self, *args, **options):
         dataset_info_list = self.get_dataset_info(options)
@@ -195,7 +195,7 @@ class Command(BaseCommand):
             "example_template_column",
             "example_template_created_by_column",
             "example_template_subset_column",
-            "answer_choices_column",
+            # "answer_choices_column",
             "is_single_classification_column",
             "target_column",
             "example_template_tags_column",

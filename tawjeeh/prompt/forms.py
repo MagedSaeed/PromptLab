@@ -152,9 +152,16 @@ class HFSyncForm(forms.Form):
         initial="final-list",
         required=True,
     )
-    default_subset = forms.CharField(
-        initial="subset",
+    default_subset_column = forms.CharField(
+        label="Dataset default subset",
         required=True,
+        initial="dataset_default_subset",
+    )
+    subsets_column = forms.CharField(
+        label="Subsets to download",
+        required=True,
+        help_text="Enter subsets separated by commas. Leave empty to download all subsets.",
+        initial="dataset_subsets_to_download",
     )
     link_column = forms.CharField(
         initial="link",
@@ -164,6 +171,15 @@ class HFSyncForm(forms.Form):
         initial="task_name",
         required=True,
     )
+    is_single_classification_column = forms.CharField(
+        initial="is_single_classification",
+        required=True,
+    )
+    target_column = forms.CharField(
+        initial="target_column",
+        required=True,
+    )
+    clear_datasets = forms.BooleanField(required=False)
     # example_template_column = forms.CharField(
     #     initial="example_template",
     #     required=False,
@@ -180,12 +196,3 @@ class HFSyncForm(forms.Form):
     #     initial="answer_choices",
     #     required=False,
     # )
-    is_single_classification_column = forms.CharField(
-        initial="is_single_classification",
-        required=False,
-    )
-    target_column = forms.CharField(
-        initial="target_column",
-        required=False,
-    )
-    clear_datasets = forms.BooleanField(required=False)
