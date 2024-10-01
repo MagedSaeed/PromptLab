@@ -162,7 +162,7 @@ class DatasetAdmin(admin.ModelAdmin):
 
 class PromptAdmin(admin.ModelAdmin):
     search_fields = ["dataset__name", "dataset__tasks__name"]
-    list_filter = ["dataset", "dataset__tasks"]
+    list_filter = ["dataset", "dataset__tasks", "created_by"]
 
 
 class PromptReviewActionAdmin(admin.ModelAdmin):
