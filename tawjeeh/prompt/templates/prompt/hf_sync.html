@@ -62,7 +62,7 @@
                     <div class="col-md-6">
                         {{ form.task_column|as_crispy_field }}
                     </div>
-                    <div class="col-md-6">
+                    {% comment %} <div class="col-md-6">
                         {{ form.example_template_column|as_crispy_field }}
                     </div>
                     <div class="col-md-6">
@@ -73,7 +73,7 @@
                     </div>
                     <div class="col-md-6">
                         {{ form.answer_choices_column|as_crispy_field }}
-                    </div>
+                    </div> {% endcomment %}
                     <div class="col-md-6">
                         {{ form.is_single_classification_column|as_crispy_field }}
                     </div>
@@ -83,7 +83,7 @@
                     <div class="col-12">
                         <hr>
                         <div class="warning-text mt-2">
-                            <strong>Warning:</strong> The option below "clear dataset" will erase all datasets, prompts, tasks, and everything related to them, and create them again.
+                            <strong>Warning:</strong> The option below "clear dataset" <b class="text-danger"><u>will erase all datasets, prompts, tasks, and everything</b></u> related to them, and create them again.
                             This will do full sync with the sheet. DO NOT USE IT if you just need to import additional datasets with their prompts.
                         </div>
                         <hr>

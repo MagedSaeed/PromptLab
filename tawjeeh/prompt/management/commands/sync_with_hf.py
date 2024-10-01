@@ -185,6 +185,11 @@ class Command(BaseCommand):
                 )
             )
             return None
+
+        # Check if the required fields are not nan
+        if pd.isna(row[link_column]) or pd.isna(row[task_column]):
+            return None
+
         info = [row[link_column].strip(), row[task_column].strip()]
         additional_columns = [
             "example_template_column",
@@ -200,11 +205,11 @@ class Command(BaseCommand):
 
         for column in additional_columns:
             if options[column]:
-                info.append(
-                    str(row.get(options[column], "")).strip()
-                    if row.get(options[column])
-                    else None
-                )
+                value = row.get(options[column])
+                if pd.notna(value):
+                    info.append(str(value).strip())
+                else:
+                    info.append(None)
             else:
                 info.append(None)
 

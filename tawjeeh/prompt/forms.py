@@ -164,22 +164,22 @@ class HFSyncForm(forms.Form):
         initial="task_name",
         required=True,
     )
-    example_template_column = forms.CharField(
-        initial="example_template",
-        required=False,
-    )
-    example_template_created_by_column = forms.CharField(
-        initial="example_template_created_by",
-        required=False,
-    )
-    example_template_subset_column = forms.CharField(
-        initial="subset",
-        required=False,
-    )
-    answer_choices_column = forms.CharField(
-        initial="answer_choices",
-        required=False,
-    )
+    # example_template_column = forms.CharField(
+    #     initial="example_template",
+    #     required=False,
+    # )
+    # example_template_created_by_column = forms.CharField(
+    #     initial="example_template_created_by",
+    #     required=False,
+    # )
+    # example_template_subset_column = forms.CharField(
+    #     initial="subset",
+    #     required=False,
+    # )
+    # answer_choices_column = forms.CharField(
+    #     initial="answer_choices",
+    #     required=False,
+    # )
     is_single_classification_column = forms.CharField(
         initial="is_single_classification",
         required=False,
