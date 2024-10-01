@@ -93,7 +93,7 @@ def create_or_update_dataset(dataset_name, author, dataset_data, additional_info
     huggingface_name = (
         dataset_name if author == "datasets" else f"{author}/{dataset_name}"
     )
-    is_single_classification, target = additional_info[3:5]
+    target, subsets, default_subset, is_single_classification = additional_info
 
     dataset, created = Dataset.objects.update_or_create(
         name=dataset_name,
@@ -109,12 +109,10 @@ def create_or_update_dataset(dataset_name, author, dataset_data, additional_info
             ),
         },
     )
-    default_subset = additional_info[6]
     if default_subset:
         dataset.default_subset = default_subset
-    subset = additional_info[7]
-    if subset:
-        dataset.subsets = subset
+    if subsets:
+        dataset.subsets = subsets
     dataset.save()
     return dataset
 
