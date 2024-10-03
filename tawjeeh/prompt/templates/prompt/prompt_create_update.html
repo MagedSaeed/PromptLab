@@ -555,6 +555,23 @@
                 // add class disabled to submitButton
                 submitButton.addClass('disabled');
                 submitButton.css('pointer-events', 'none');
+                // custom logic to transform tags to comma separated string of tags
+                tags = $('#id_tags').val();
+                tagsObjects = JSON.parse(tags)
+                console.log(tagsObjects)
+                tagsTexts = []
+                // Loop through each object and extract its value
+                for (var i = 0; i < tagsObjects.length; i++) {
+                    var obj = tagsObjects[i];
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            tagsTexts.push(obj[key]);
+                            break; // We only need the first (and presumably only) value
+                        }
+                    }
+                }
+                tagsTexts = tagsTexts.join(', ');
+                $('#id_tags').val(tagsTexts);
 
                 // for button in form.text-end div, make them disabled with pointer-events none
                 submitButtons = $(this).find('.text-end button');
