@@ -539,7 +539,7 @@
             // set dataset_subset from subset element before submission
             $('#promptForm').on('submit', function(event) {
                 if ($('#subsetDropdown').length) {
-                    let subset = $('#subsetDropdown').text().trim();
+                    let subset = $('#subsetDropdown').find(':selected').text().trim();
                     $('#id_dataset_subset').val(subset);
                 }
                 text_direction = document.getElementById('directionSwitcher').value;
