@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from prompt.models import Prompt, PromptReviewAction
 
@@ -7,6 +9,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         model = Prompt
         fields = [
             "name",
+            "tags",
             "template",
             "text_direction",
             "answer_choices",
@@ -36,9 +39,13 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["dataset_subset"].error_messages = {
                 "required": "Please select a dataset from the left sidebar first.",
             }
+        self.fields["tags"].help_text = (
+            ""  # override the default help text that is useful in the admin page.
+        )
         self.instance.can_edit_text = True
         if not self.instance.updateable:
             self.fields["name"].disabled = True
+            self.fields["tags"].disabled = True
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
@@ -53,6 +60,7 @@ class PromptReviewForm(forms.ModelForm):
     # these are prompt fields,
     # names are chosen to match the prompt fields in the prompt_create_update html template
     name = forms.CharField()
+    tags = forms.CharField()
     template = forms.CharField(widget=forms.HiddenInput())
     text_direction = forms.ChoiceField(
         widget=forms.HiddenInput(),
@@ -73,6 +81,14 @@ class PromptReviewForm(forms.ModelForm):
         self.fields["submitter_comment"].widget = forms.Textarea(attrs={"rows": 3})
         # set fields initials from the prompt
         self.fields["name"].initial = self.prompt.name
+        self.fields["tags"].initial = json.dumps(
+            list(
+                map(
+                    lambda item: {"value": item},
+                    self.prompt.tags.names(),
+                )
+            )
+        )
         self.fields["template"].initial = self.prompt.template
         self.fields["text_direction"].initial = self.prompt.text_direction
         self.fields["answer_choices"].initial = self.prompt.answer_choices
@@ -95,6 +111,14 @@ class PromptReviewForm(forms.ModelForm):
 
     def clean(self):
         data = self.cleaned_data
+        # transform tags to a string of comma separated tags list
+        if data.get("tags"):
+            # tags comes as a string of the following:
+            # '[{"value": "tag1"}, {"value": "tag2"}]'
+            data["tags"] = json.loads(data["tags"])
+            data["tags"] = ",".join(
+                tag for tag_dict in data["tags"] for tag in tag_dict.values()
+            )
         if data.get("submitter_decision") not in (
             PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION,
             PromptReviewAction.DecisionChoices.APPROVED,
@@ -115,7 +139,15 @@ class PromptReviewForm(forms.ModelForm):
 
     def update_prompt(self):
         data = self.cleaned_data
-        prompt_fields = set(self.fields) - {"submitter_comment", "submitter_decision"}
+        prompt_fields = set(self.fields) - {
+            "submitter_comment",
+            "submitter_decision",
+            "tags",
+        }
+        if data.get("tags"):
+            tags = data.pop("tags")
+            self.prompt.tags.clear()
+            self.prompt.tags.add(*tags.split(","))
         for key in data:
             if key in prompt_fields:
                 reviewer_updates = data[key]
@@ -129,13 +161,19 @@ class PromptReviewForm(forms.ModelForm):
         self.instance.prompt = self.prompt
         self.instance.submitter = self.reviewer
         self.instance.prompt_before_submitter_modifications = {
-            key: getattr(self.prompt, key)
-            for key in self.fields.keys()
-            - {
-                "submitter_comment",
-                "submitter_decision",
-            }
+            "tags": list(self.prompt.tags.names())
         }
+        self.instance.prompt_before_submitter_modifications.update(
+            {
+                key: getattr(self.prompt, key)
+                for key in self.fields.keys()
+                - {
+                    "submitter_comment",
+                    "submitter_decision",
+                    "tags",
+                }
+            }
+        )
         self.update_prompt()
         return super().save(commit=commit)
 

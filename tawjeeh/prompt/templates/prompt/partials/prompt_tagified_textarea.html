@@ -28,6 +28,9 @@
 <div id="answer_choices_div" class="my-2">
     {{ form.answer_choices|as_crispy_field }}
 </div>
+<div id="tags_div" class="my-2">
+    {{ form.tags|as_crispy_field }}
+</div>
 <div class="my-2">
     <label for="directionSwitcher" class="form-label">Text Direction: </label>
     <select id="directionSwitcher" class="form-select form-select-small mb-2 mx-2">
@@ -204,7 +207,9 @@ Sentiment:
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var answer_choices_input = document.getElementById('id_answer_choices');
-        answerChoicesTagified = new Tagify(answer_choices_input)
+        var tags_input = document.getElementById('id_tags');
+        var answerChoicesTagified = new Tagify(answer_choices_input);
+        var tagsTagified = new Tagify(tags_input);
         var prompt_textarea = document.getElementById('tagifyTextarea');
         var directionSwitcher = document.getElementById('directionSwitcher');
         {% if prompt and not prompt.can_edit_text %}
@@ -263,6 +268,7 @@ Sentiment:
                 var direction = directionSwitcher.value;
                 $('#tagifyTextarea').parent().attr('dir', direction);
                 $('#answer_choices_div').attr('dir', direction);
+                $('#tags_div').attr('dir', direction);
 
                 if (promptTempateTagified) {
                     promptTempateTagified.destroy();
@@ -271,9 +277,11 @@ Sentiment:
                 if (direction === 'rtl') {
                     prompt_textarea.placeholder = 'أدخل التعليمات هنا...';
                     $('#id_answer_choices .tagify__input').attr('placeholder', "أدخل اختيارات الإجابات هنا، اضغط enter بعد كل إجابة، من الممكن ترك هذا فارغا إذا كانت الإجابات في قالب التوجيه");
+                    $('#id_tags .tagify__input').attr('placeholder', "أدخل الوسوم هنا، اضغط enter بعد كل وسم");
                 } else {
                     prompt_textarea.placeholder = 'Enter your prompt here...';
                     $('#id_answer_choices .tagify__input').attr('placeholder', "Enter choices here pressing Enter after each choice (optional).");
+                    $('#id_tags .tagify__input').attr('placeholder', "Enter tags here pressing Enter after each tag");
                 }
 
                 initializeTagify();
