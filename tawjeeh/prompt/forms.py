@@ -24,6 +24,11 @@ class PromptCreateUpdateForm(forms.ModelForm):
                 "placeholder": "Enter choices here pressing Enter after each choice (optional)."
             }
         )
+        self.fields["tags"].widget.attrs.update(
+            {
+                "placeholder": "Enter tags here separated by commas or pressing Enter after on each tag (optional)"
+            }
+        )
         if self.dataset.default_answer_choices:
             self.fields["answer_choices"].initial = self.dataset.default_answer_choices
         self.fields["name"].widget.attrs.update(
