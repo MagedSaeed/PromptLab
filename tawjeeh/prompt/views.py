@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.management import call_command
 from django.core.paginator import Paginator
 from django.db.models import OuterRef, Subquery
-from django.http import JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -20,6 +20,7 @@ from jinja2 import Environment, StrictUndefined
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import HFSyncForm, PromptCreateUpdateForm, PromptReviewForm
 from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
+from prompt.utils import generate_ai_prompts
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -144,6 +145,132 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
     def form_invalid(self, form):
         messages.error(self.request, form.errors, extra_tags="danger")
         return super().form_invalid(form)
+
+
+class MultiplePromptsCreateView(PromptCreateView):
+    template_name = "prompt/multiple_prompts_create.html"
+
+    def error_redirect(self, request, message):
+        default_url = reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.kwargs["dataset_pk"]},
+        )
+        redirect_link = request.META.get("HTTP_REFERER", default_url)
+        messages.error(request, message, extra_tags="danger")
+        return redirect(redirect_link)
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        if not request.user.is_moderator:
+            return self.error_redirect(
+                request,
+                "This feature is for moderators only for the time being.",
+            )
+        self.prompt_index = 0
+        try:
+            self.prompt_index = int(request.GET.get("prompt_index", 0))
+        except ValueError:
+            pass
+        self.seed_prompt_pk = request.GET.get("seed_prompt_pk")
+        if not self.seed_prompt_pk:
+            return self.error_redirect(
+                request,
+                "A seed prompt is required to generate AI prompts.",
+            )
+        try:
+            self.seed_prompt = get_object_or_404(
+                Prompt,
+                pk=self.seed_prompt_pk,
+                dataset=self.dataset,
+            )
+        except Http404:
+            return self.error_redirect(
+                request,
+                "The specified seed prompt does not exist or does not belong to this dataset.",
+            )
+        if not self.seed_prompt.is_approved:
+            return self.error_redirect(
+                request,
+                "The prompt needs to approved first.",
+            )
+
+    def dispatch(self, request, *args, **kwargs):
+        setup_result = self.setup(request, *args, **kwargs)
+        if isinstance(setup_result, HttpResponseRedirect):
+            return setup_result
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["prompt_index"] = self.prompt_index
+        context["ai_prompts_count"] = len(self.get_ai_prompts())
+        context["seed_prompt"] = self.seed_prompt
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        ai_prompts = self.get_ai_prompts()
+        if 0 <= self.prompt_index < len(ai_prompts):
+            kwargs["instance"] = ai_prompts[self.prompt_index]
+        return kwargs
+
+    def get_ai_prompts(self):
+        # this code can be uncommented for debugging
+        # if f"ai_generated_prompts_{self.seed_prompt_pk}" in self.request.session:
+        #     self.request.session.pop(f"ai_generated_prompts_{self.seed_prompt_pk}")
+        session_key = f"ai_generated_prompts_{self.seed_prompt_pk}"
+        if session_key not in self.request.session:
+            ai_prompts = generate_ai_prompts(self.seed_prompt.as_dict())
+            self.request.session[session_key] = [
+                prompt.as_dict() for prompt in ai_prompts
+            ]
+        else:
+            prompt_dicts = self.request.session[session_key]
+            ai_prompts = []
+            for prompt_dict in prompt_dicts:
+                prompt = {k: v for k, v in prompt_dict.items()}
+                prompt["dataset"] = Dataset.objects.get(pk=prompt.pop("dataset_pk"))
+                prompt.pop("dataset_name")
+                ai_prompts.append(prompt)
+            ai_prompts = [Prompt(**prompt) for prompt in ai_prompts]
+        return ai_prompts
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        ai_prompts = self.get_ai_prompts()
+        if 0 <= self.prompt_index < len(ai_prompts):
+            del ai_prompts[self.prompt_index]
+            session_key = f"ai_generated_prompts_{self.seed_prompt_pk}"
+            self.request.session[session_key] = [
+                prompt.as_dict() for prompt in ai_prompts
+            ]
+            if not ai_prompts:
+                messages.success(
+                    self.request,
+                    "All AI-generated prompts have been saved.",
+                )
+                del self.request.session[session_key]
+                return redirect(
+                    "prompt:prompt_list",
+                    dataset_pk=self.object.dataset.pk,
+                )
+        return response
+
+    def get_success_url(self):
+        ai_prompts = self.get_ai_prompts()
+        if ai_prompts:
+            return (
+                reverse_lazy(
+                    "prompt:prompt_create_multiple",
+                    kwargs={"dataset_pk": self.object.dataset.pk},
+                )
+                + f"?seed_prompt_pk={self.seed_prompt_pk}&prompt_index={min(self.prompt_index, len(ai_prompts) - 1)}"
+            )
+        else:
+            return reverse_lazy(
+                "prompt:prompt_list",
+                kwargs={"dataset_pk": self.object.dataset.pk},
+            )
 
 
 class PromptUpdateView(LoginRequiredMixin, UpdateView):

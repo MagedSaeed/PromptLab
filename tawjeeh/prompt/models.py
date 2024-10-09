@@ -351,6 +351,18 @@ class Prompt(models.Model):
                 status = last_review_action.submitter_decision
         return status
 
+    def as_dict(self):
+        return {
+            "name": self.name,
+            "template": self.template,
+            "answer_choices": self.answer_choices,
+            "text_direction": self.text_direction,
+            "dataset_pk": self.dataset.pk,
+            "dataset_name": self.dataset.huggingface_name,
+            "dataset_subset": self.dataset_subset,
+            "created_by": self.created_by,
+        }
+
 
 class PromptReviewAction(models.Model):
     class DecisionChoices(models.TextChoices):
