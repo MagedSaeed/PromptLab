@@ -374,215 +374,217 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card my-4">
-                            <div class="card-body">
-                                <form id="promptForm" method="POST">
-                                    {% csrf_token %}
-                                    <div class="row justify-content-center">
-                                        <div class="mb-3 col-12 full-width" id="templateFieldContainer">
-                                            {{ form.name|as_crispy_field }}
-                                            {% include 'prompt/partials/prompt_tagified_textarea.html' %}
-                                            {{ form.template|as_crispy_field }}
-                                            {{ form.dataset_subset }}
-                                            {{ form.text_direction }}
+                        {% block prompt_form_card %}
+                            <div class="card my-4">
+                                <div class="card-body">
+                                    <form id="promptForm" method="POST">
+                                        {% csrf_token %}
+                                        <div class="row justify-content-center">
+                                            <div class="mb-3 col-12 full-width" id="templateFieldContainer">
+                                                {{ form.name|as_crispy_field }}
+                                                {% include 'prompt/partials/prompt_tagified_textarea.html' %}
+                                                {{ form.template|as_crispy_field }}
+                                                {{ form.dataset_subset }}
+                                                {{ form.text_direction }}
+                                            </div>
+                                            <div class="template-result hidden rounded mx-1" id="templateResultContainer">
+                                                <div class="close-btn" id="closeTemplateResult">✖</div>
+                                                <div id="mergeTemplateResult"></div>
+                                            </div>
                                         </div>
-                                        <div class="template-result hidden rounded mx-1" id="templateResultContainer">
-                                            <div class="close-btn" id="closeTemplateResult">✖</div>
-                                            <div id="mergeTemplateResult"></div>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
-                                    <div class="row my-2">
-                                        <div class="col text-end">
-                                            <button type="button" class="btn btn-outline-primary" id="applyButton">
-                                                Apply Template
-                                                <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
-                                            </button>
-                                            {% if not prompt or prompt.updateable %}
-                                                <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
-                                                    <span>Save</span>
-                                                    <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                        <input type="hidden" name="merge_template" id="mergeTemplateInput" value="false">
+                                        <div class="row my-2">
+                                            <div class="col text-end">
+                                                <button type="button" class="btn btn-outline-primary" id="applyButton">
+                                                    Apply Template
+                                                    <span id="apply-spinner" class="spinner-border spinner-border-sm apply-spinner" role="status" aria-hidden="true"></span>
                                                 </button>
-                                                <button type="submit" name="submit" value="submit_for_review" class="btn btn-success">
-                                                    <span >Submit for review</span>
-                                                    <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
-                                                </button>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="row my-2 mx-1">
-                                        <div class="review-section">
-                                            <div class="review-header">
-                                                <h5 class="review-title">Review Actions</h5>
-                                                {% if prompt.review_actions.exists %}
-                                                    <a href="#" class="review-link" data-bs-toggle="modal" data-bs-target="#reviewHistoryModal">
-                                                        View Full Review History
-                                                    </a>
+                                                {% if not prompt or prompt.updateable %}
+                                                    <button type="submit" name="submit" value="save_draft" class="btn btn-outline-primary">
+                                                        <span>Save</span>
+                                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                                    </button>
+                                                    <button type="submit" name="submit" value="submit_for_review" class="btn btn-success">
+                                                        <span >Submit for review</span>
+                                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                                    </button>
                                                 {% endif %}
                                             </div>
-
-                                            {% if prompt.review_actions.exists %}
-                                                <p>Review actions have been taken on this prompt.</p>
-                                                {% include 'prompt/partials/review_history_modal.html' with review_actions=prompt.review_actions.all %}
-
-                                                {% if prompt.review_actions.last.submitter_comment %}
-                                                    <div class="reviewer-comment">
-                                                        <h6 class="reviewer-comment-title">Latest Reviewer Comment:</h6>
-                                                        <p class="reviewer-comment-content">
-                                                            {{ prompt.review_actions.last.submitter_comment }}
-                                                        </p>
-                                                    </div>
-                                                {% endif %}
-                                            {% else %}
-                                                <p>No review actions have been taken on this prompt yet.</p>
-                                            {% endif %}
                                         </div>
-                                    </div>
-                                </form>
+                                        <div class="row my-2 mx-1">
+                                            <div class="review-section">
+                                                <div class="review-header">
+                                                    <h5 class="review-title">Review Actions</h5>
+                                                    {% if prompt.review_actions.exists %}
+                                                        <a href="#" class="review-link" data-bs-toggle="modal" data-bs-target="#reviewHistoryModal">
+                                                            View Full Review History
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+
+                                                {% if prompt.review_actions.exists %}
+                                                    <p>Review actions have been taken on this prompt.</p>
+                                                    {% include 'prompt/partials/review_history_modal.html' with review_actions=prompt.review_actions.all %}
+
+                                                    {% if prompt.review_actions.last.submitter_comment %}
+                                                        <div class="reviewer-comment">
+                                                            <h6 class="reviewer-comment-title">Latest Reviewer Comment:</h6>
+                                                            <p class="reviewer-comment-content">
+                                                                {{ prompt.review_actions.last.submitter_comment }}
+                                                            </p>
+                                                        </div>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <p>No review actions have been taken on this prompt yet.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
+                        {% endblock prompt_form_card %}
                     {% endblock %}
                 </div>
             </div>
         </div>
     {% endblock html_content %}
-
-    <script>
-        window.onpageshow = function(event) {
-            if (event.persisted) {
-                window.location.reload();
-            }
-        };
-        $(document).ready(function() {
-            $('#toggleSidebar').on('click', function() {
-                $('#sidebar').toggleClass('closed');
-                $('#mainContent').toggleClass('full-width');
-            });
-
-            $('#closeTemplateResult').on('click', function() {
-                $('#templateResultContainer').removeClass('visible').addClass('hidden');
-                $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
-            });
-
-            $('#applyButton').on('click', function() {
-                promptText = $('#tagifyTextarea').val();
-                promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
-                text_direction = document.getElementById('directionSwitcher').value;
-                answer_choices = $('#id_answer_choices').val();
-                if(answer_choices)
-                    answer_choices = JSON.parse(answer_choices).map((choice)=>{return choice.value}).join('||')
-                else
-                    answer_choices = []
-                $('#apply-spinner').addClass('visible');
-                let split = $('#splitDropdown').val().trim();
-                let subset = $('#subsetDropdown').val().trim();
-                let selectedSampleIndex = 0;
-                if ($('#sampleRange').length){
-                    selectedSampleIndex = $('#sampleRange').val();
+    {% block extra_js %}
+        <script>
+            window.onpageshow = function(event) {
+                if (event.persisted) {
+                    window.location.reload();
                 }
-                htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}&text_direction=${text_direction}`, {
-                    target: '#mergeTemplateResult',
-                    swap: 'innerHTML',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    values: {
-                        'template': promptTemplate,
-                        'answer_choices': answer_choices,
-                        'sample_index': selectedSampleIndex,
-                    }
-                }).then(function() {
-                    $('#apply-spinner').removeClass('visible');
-                    $('#templateFieldContainer').removeClass('full-width').addClass('half-width');
-                    $('#templateResultContainer').removeClass('hidden').addClass('visible');
+            };
+            $(document).ready(function() {
+                $('#toggleSidebar').on('click', function() {
+                    $('#sidebar').toggleClass('closed');
+                    $('#mainContent').toggleClass('full-width');
                 });
-            });
 
-            $(document).on('htmx:beforeRequest', function(event) {
-                if ($(event.target).is('#promptForm')) {
+                $('#closeTemplateResult').on('click', function() {
+                    $('#templateResultContainer').removeClass('visible').addClass('hidden');
+                    $('#templateFieldContainer').removeClass('half-width').addClass('full-width');
+                });
+
+                $('#applyButton').on('click', function() {
+                    promptText = $('#tagifyTextarea').val();
+                    promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
+                    text_direction = document.getElementById('directionSwitcher').value;
+                    answer_choices = $('#id_answer_choices').val();
+                    if(answer_choices)
+                        answer_choices = JSON.parse(answer_choices).map((choice)=>{return choice.value}).join('||')
+                    else
+                        answer_choices = []
                     $('#apply-spinner').addClass('visible');
-                }
-            });
-
-            $(document).on('htmx:afterRequest', function(event) {
-                if ($(event.target).is('#promptForm')) {
-                    $('#apply-spinner').removeClass('visible');
-                }
-                if ($(event.target).attr('hx-get')){
-                    if ($(event.target).attr('hx-get').includes("{% url 'prompt:dataset_details' dataset.pk %}")) {
-                        $('#sidebar-spinner').hide();
+                    let split = $('#splitDropdown').val().trim();
+                    let subset = $('#subsetDropdown').val().trim();
+                    let selectedSampleIndex = 0;
+                    if ($('#sampleRange').length){
+                        selectedSampleIndex = $('#sampleRange').val();
                     }
-                }
-            });
+                    htmx.ajax('POST', `{% url 'prompt:apply_template' dataset.pk %}?split=${split}&subset=${subset}&text_direction=${text_direction}`, {
+                        target: '#mergeTemplateResult',
+                        swap: 'innerHTML',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        values: {
+                            'template': promptTemplate,
+                            'answer_choices': answer_choices,
+                            'sample_index': selectedSampleIndex,
+                        }
+                    }).then(function() {
+                        $('#apply-spinner').removeClass('visible');
+                        $('#templateFieldContainer').removeClass('full-width').addClass('half-width');
+                        $('#templateResultContainer').removeClass('hidden').addClass('visible');
+                    });
+                });
+
+                $(document).on('htmx:beforeRequest', function(event) {
+                    if ($(event.target).is('#promptForm')) {
+                        $('#apply-spinner').addClass('visible');
+                    }
+                });
+
+                $(document).on('htmx:afterRequest', function(event) {
+                    if ($(event.target).is('#promptForm')) {
+                        $('#apply-spinner').removeClass('visible');
+                    }
+                    if ($(event.target).attr('hx-get')){
+                        if ($(event.target).attr('hx-get').includes("{% url 'prompt:dataset_details' dataset.pk %}")) {
+                            $('#sidebar-spinner').hide();
+                        }
+                    }
+                });
 
             // Handle htmx request error
-            $(document).on('htmx:responseError', function(event) {
-                if ($(event.target).attr('hx-get')){
-                    if ($(event.target).attr('hx-get').includes("{% url 'prompt:dataset_details' dataset.pk %}")) {
-                        $('#sidebar-spinner').hide();
-                        $('#dataset-details').html('<div class="alert alert-danger" role="alert">Failed to load dataset details. Please try again later.</div>');
+                $(document).on('htmx:responseError', function(event) {
+                    if ($(event.target).attr('hx-get')){
+                        if ($(event.target).attr('hx-get').includes("{% url 'prompt:dataset_details' dataset.pk %}")) {
+                            $('#sidebar-spinner').hide();
+                            $('#dataset-details').html('<div class="alert alert-danger" role="alert">Failed to load dataset details. Please try again later.</div>');
+                        }
                     }
-                }
-            });
+                });
 
             // Function to replace the [[..]] object
-            const replaceTagsWithJinjaBrackets = (match) => {
+                const replaceTagsWithJinjaBrackets = (match) => {
                 // Parse the JSON inside [[..]]
-                const jsonArray = JSON.parse(match.slice(2, -2));
-                const value = jsonArray.value;
+                    const jsonArray = JSON.parse(match.slice(2, -2));
+                    const value = jsonArray.value;
                 {% verbatim %}
                 return `{{${value}}}`;
                 {% endverbatim %}
-            };
+                };
 
             // set dataset_subset from subset element before submission
-            $('#promptForm').on('submit', function(event) {
-                if ($('#subsetDropdown').length) {
-                    let subset = $('#subsetDropdown').find(':selected').text().trim();
-                    $('#id_dataset_subset').val(subset);
-                }
-                text_direction = document.getElementById('directionSwitcher').value;
-                promptText = $('#tagifyTextarea').val();
-                promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
-                $('#id_template').val(promptTemplate)
-                $("#id_text_direction").val(text_direction);
+                $('#promptForm').on('submit', function(event) {
+                    if ($('#subsetDropdown').length) {
+                        let subset = $('#subsetDropdown').find(':selected').text().trim();
+                        $('#id_dataset_subset').val(subset);
+                    }
+                    text_direction = document.getElementById('directionSwitcher').value;
+                    promptText = $('#tagifyTextarea').val();
+                    promptTemplate = promptText.replace(/\[\[.*?\]\]/g, replaceTagsWithJinjaBrackets);
+                    $('#id_template').val(promptTemplate)
+                    $("#id_text_direction").val(text_direction);
                 // get closest spinner to $(this)
-                var submitButton = $(event.originalEvent.submitter);
-                var submitSpinner = $(event.originalEvent.submitter).children('.spinner')[0];
+                    var submitButton = $(event.originalEvent.submitter);
+                    var submitSpinner = $(event.originalEvent.submitter).children('.spinner')[0];
                 // Show spinner and disable button
-                submitSpinner.style.display = 'inline-block';
+                    submitSpinner.style.display = 'inline-block';
                 // add class disabled to submitButton
-                submitButton.addClass('disabled');
-                submitButton.css('pointer-events', 'none');
+                    submitButton.addClass('disabled');
+                    submitButton.css('pointer-events', 'none');
                 // custom logic to transform tags to comma separated string of tags
-                tags = $('#id_tags').val();
-                tagsObjects = JSON.parse(tags)
-                console.log(tagsObjects)
-                tagsTexts = []
+                    tags = $('#id_tags').val();
+                    tagsObjects = JSON.parse(tags)
+                    console.log(tagsObjects)
+                    tagsTexts = []
                 // Loop through each object and extract its value
-                for (var i = 0; i < tagsObjects.length; i++) {
-                    var obj = tagsObjects[i];
-                    for (var key in obj) {
-                        if (obj.hasOwnProperty(key)) {
-                            tagsTexts.push(obj[key]);
-                            break; // We only need the first (and presumably only) value
+                    for (var i = 0; i < tagsObjects.length; i++) {
+                        var obj = tagsObjects[i];
+                        for (var key in obj) {
+                            if (obj.hasOwnProperty(key)) {
+                                tagsTexts.push(obj[key]);
+                                break; // We only need the first (and presumably only) value
+                            }
                         }
                     }
-                }
-                tagsTexts = tagsTexts.join(', ');
-                $('#id_tags').val(tagsTexts);
+                    tagsTexts = tagsTexts.join(', ');
+                    $('#id_tags').val(tagsTexts);
 
                 // for button in form.text-end div, make them disabled with pointer-events none
-                submitButtons = $(this).find('.text-end button');
-                for (var i = 0; i < submitButtons.length; i++) {
-                    submitButtons[i].classList.add('disabled');
-                    submitButtons[i].style.pointerEvents = 'none';
-                }
+                    submitButtons = $(this).find('.text-end button');
+                    for (var i = 0; i < submitButtons.length; i++) {
+                        submitButtons[i].classList.add('disabled');
+                        submitButtons[i].style.pointerEvents = 'none';
+                    }
 
-                return true;
+                    return true;
+                });
+
             });
-
-        });
-    </script>
+        </script>
+    {% endblock extra_js %}
 {% endblock %}

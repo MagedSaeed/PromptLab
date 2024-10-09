@@ -5,6 +5,7 @@ from prompt.views import (
     DatasetListView,
     DatasetResetCacheView,
     HFSynchView,
+    MultiplePromptsCreateView,
     PromptCreateView,
     PromptDeleteView,
     PromptListView,
@@ -24,6 +25,11 @@ urlpatterns = [
         "dataset/<int:dataset_pk>/prompt/create",
         PromptCreateView.as_view(),
         name="prompt_create",
+    ),
+    path(
+        "dataset/<int:dataset_pk>/prompt/create-multiple",
+        MultiplePromptsCreateView.as_view(),
+        name="prompt_create_multiple",
     ),
     path(
         "dataset/<int:dataset_pk>/prompt/list",

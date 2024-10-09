@@ -1,0 +1,115 @@
+{% extends 'prompt/prompt_create_update.html' %}
+{% load crispy_forms_tags %}
+{% load utils_tags %}
+
+{% block style %}
+    {{ block.super }}
+    <style>
+        .nav-tabs .nav-link {
+            color: #495057;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            margin-right: 5px;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #495057;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: none;
+            padding: 20px;
+        }
+
+        .seed-prompt-info {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .seed-prompt-info h5 {
+            margin-bottom: 10px;
+        }
+
+        .seed-prompt-text {
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            height: 25px;
+        }
+
+        .progress-bar {
+            line-height: 25px;
+            font-size: 14px;
+        }
+    </style>
+{% endblock style %}
+
+{% block prompt_template_content %}
+    <h2 class="mb-4">AI Generated Prompts</h2>
+
+    {% if seed_prompt %}
+        <div class="seed-prompt-info">
+            <h5>
+                <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=seed_prompt.pk %}" class="text-decoration-none text-reset" target='_blank'>
+                    Seed Prompt <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </h5>
+            <p class="seed-prompt-text">"{{ seed_prompt.template|truncatechars:200 }}"</p>
+        {% comment %} <small class="text-muted">Created by: {{ seed_prompt.created_by }} on {{ seed_prompt.created_on|date:"M d, Y" }}</small> {% endcomment %}
+        </div>
+    {% endif %}
+
+    {% if ai_prompts_count > 0 %}
+
+        <ul class="nav nav-tabs mb-3" id="promptTabs" role="tablist">
+            {% for i in ai_prompts_count|get_range %}
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {% if i == prompt_index %}active{% endif %}"
+                       id="prompt{{ i|add:'1' }}-tab"
+                       href="{% url 'prompt:prompt_create_multiple' dataset_pk=dataset.pk %}?seed_prompt_pk={{ seed_prompt.pk }}&prompt_index={{ i }}"
+                       role="tab"
+                       aria-controls="prompt{{ i|add:'1' }}"
+                       aria-selected="{% if i == prompt_index %}true{% else %}false{% endif %}">
+                        Prompt {{ i|add:'1' }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="tab-content" id="promptTabsContent">
+            <div class="tab-pane fade show active" id="prompt{{ prompt_index|add:'1' }}" role="tabpanel" aria-labelledby="prompt{{ prompt_index|add:'1' }}-tab">
+                {% if form %}
+                    {% block prompt_form_card %}
+                        {{ block.super }}
+                    {% endblock prompt_form_card %}
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        Please select a prompt to view its details.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            All AI-generated prompts have been saved. <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}">View all prompts</a>
+        </div>
+    {% endif %}
+{% endblock prompt_template_content %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function() {
+            $('#promptTabs .nav-link').removeClass('active');
+            $('#prompt{{ prompt_index|add:'1' }}-tab').addClass('active');
+        });
+    </script>
+{% endblock extra_js %}

@@ -139,3 +139,24 @@ def collect_dataset_configs_details(dataset_object):
         )
         dataset_object.save()
     return configs_and_splits
+
+
+def generate_ai_prompts(prompt_dict):
+    from prompt.models import Dataset, Prompt
+
+    # you can implement the code that generates the prompts here
+    # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
+    generated_prompts_objects = []
+    for i in range(5):
+        new_prompt = Prompt(
+            name=f"AI Generated {i+1}",
+            template=f"(AI variation {i+1})",
+            dataset=Dataset.objects.get(pk=prompt_dict["dataset_pk"]),
+            text_direction="ltr",
+            answer_choices=json.dumps(
+                [{"value": f"answer_choice {j+1}"} for j in range(5)]
+            ),  # answer choices need to be in this format
+            dataset_subset=prompt_dict["dataset_subset"],
+        )
+        generated_prompts_objects.append(new_prompt)
+    return generated_prompts_objects
