@@ -215,6 +215,7 @@ class MultiplePromptsCreateView(PromptCreateView):
             kwargs["instance"] = instance
             initial_tags = "AI generated"  # should be comma separated, or list
             kwargs["initial_tags"] = initial_tags
+            kwargs["base_prompt"] = self.seed_prompt
         return kwargs
 
     def get_ai_prompts(self):

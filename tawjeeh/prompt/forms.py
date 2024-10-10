@@ -19,6 +19,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.dataset = kwargs.pop("dataset")
         self.initial_tags = kwargs.pop("initial_tags", None)
+        self.base_prompt = kwargs.pop("base_prompt", None)
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
             {
@@ -65,6 +66,11 @@ class PromptCreateUpdateForm(forms.ModelForm):
 
     def is_prompt_reviewable(self):
         return self.instance.reviewable
+
+    def save(self, commit=False):
+        if self.base_prompt:
+            self.instance.base_prompt = self.base_prompt
+        return super().save(commit=commit)
 
 
 class PromptReviewForm(forms.ModelForm):
