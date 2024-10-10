@@ -404,14 +404,18 @@
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="promptActions{{ prompt.pk }}">
                                                                     <li>
-                                                                        <a class="dropdown-item" href="{% url 'prompt:prompt_create_multiple' dataset_pk=dataset.pk %}?seed_prompt_pk={{ prompt.pk }}">
+                                                                        <a class="dropdown-item" href="{% url 'prompt:prompt_create_multiple' dataset_pk=dataset.pk %}?base_prompt_pk={{ prompt.pk }}">
                                                                             <i class="bi bi-magic me-2"></i>Generate AI prompts from this prompt
+                                                                        </a>
+                                                                    </li>
+                                                                    <li>
+                                                                        <a class="dropdown-item" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}?action=translate&base_prompt_pk={{ prompt.pk }}">
+                                                                            <i class="bi bi-translate me-2"></i>Translate this prompt with AI
                                                                         </a>
                                                                     </li>
                                                                 </ul>
                                                             </div>
                                                         {% endif %}
-                                                    </td>
                                                 {% endif %}
                                             </tr>
                                         {% endfor %}

@@ -171,16 +171,16 @@ class MultiplePromptsCreateView(PromptCreateView):
             self.prompt_index = int(request.GET.get("prompt_index", 0))
         except ValueError:
             pass
-        self.seed_prompt_pk = request.GET.get("seed_prompt_pk")
-        if not self.seed_prompt_pk:
+        self.base_prompt_pk = request.GET.get("base_prompt_pk")
+        if not self.base_prompt_pk:
             return self.error_redirect(
                 request,
                 "A seed prompt is required to generate AI prompts.",
             )
         try:
-            self.seed_prompt = get_object_or_404(
+            self.base_prompt = get_object_or_404(
                 Prompt,
-                pk=self.seed_prompt_pk,
+                pk=self.base_prompt_pk,
                 dataset=self.dataset,
             )
         except Http404:
@@ -188,7 +188,7 @@ class MultiplePromptsCreateView(PromptCreateView):
                 request,
                 "The specified seed prompt does not exist or does not belong to this dataset.",
             )
-        if not self.seed_prompt.is_approved:
+        if not self.base_prompt.is_approved:
             return self.error_redirect(
                 request,
                 "The prompt needs to approved first.",
@@ -204,7 +204,7 @@ class MultiplePromptsCreateView(PromptCreateView):
         context = super().get_context_data(**kwargs)
         context["prompt_index"] = self.prompt_index
         context["ai_prompts_count"] = len(self.get_ai_prompts())
-        context["seed_prompt"] = self.seed_prompt
+        context["base_prompt"] = self.base_prompt
         return context
 
     def get_form_kwargs(self):
@@ -215,16 +215,16 @@ class MultiplePromptsCreateView(PromptCreateView):
             kwargs["instance"] = instance
             initial_tags = "AI generated"  # should be comma separated, or list
             kwargs["initial_tags"] = initial_tags
-            kwargs["base_prompt"] = self.seed_prompt
+            kwargs["base_prompt"] = self.base_prompt
         return kwargs
 
     def get_ai_prompts(self):
         # this code can be uncommented for debugging
-        # if f"ai_generated_prompts_{self.seed_prompt_pk}" in self.request.session:
-        #     self.request.session.pop(f"ai_generated_prompts_{self.seed_prompt_pk}")
-        session_key = f"ai_generated_prompts_{self.seed_prompt_pk}"
+        # if f"ai_generated_prompts_{self.base_prompt_pk}" in self.request.session:
+        #     self.request.session.pop(f"ai_generated_prompts_{self.base_prompt_pk}")
+        session_key = f"ai_generated_prompts_{self.base_prompt_pk}"
         if session_key not in self.request.session:
-            ai_prompts = generate_ai_prompts(self.seed_prompt.as_dict())
+            ai_prompts = generate_ai_prompts(self.base_prompt.as_dict())
             self.request.session[session_key] = [
                 prompt.as_dict() for prompt in ai_prompts
             ]
@@ -244,7 +244,7 @@ class MultiplePromptsCreateView(PromptCreateView):
         ai_prompts = self.get_ai_prompts()
         if 0 <= self.prompt_index < len(ai_prompts):
             del ai_prompts[self.prompt_index]
-            session_key = f"ai_generated_prompts_{self.seed_prompt_pk}"
+            session_key = f"ai_generated_prompts_{self.base_prompt_pk}"
             self.request.session[session_key] = [
                 prompt.as_dict() for prompt in ai_prompts
             ]
@@ -268,7 +268,7 @@ class MultiplePromptsCreateView(PromptCreateView):
                     "prompt:prompt_create_multiple",
                     kwargs={"dataset_pk": self.object.dataset.pk},
                 )
-                + f"?seed_prompt_pk={self.seed_prompt_pk}&prompt_index={min(self.prompt_index, len(ai_prompts) - 1)}"
+                + f"?base_prompt_pk={self.base_prompt_pk}&prompt_index={min(self.prompt_index, len(ai_prompts) - 1)}"
             )
         else:
             return reverse_lazy(
