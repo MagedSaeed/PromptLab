@@ -211,7 +211,10 @@ class MultiplePromptsCreateView(PromptCreateView):
         kwargs = super().get_form_kwargs()
         ai_prompts = self.get_ai_prompts()
         if 0 <= self.prompt_index < len(ai_prompts):
-            kwargs["instance"] = ai_prompts[self.prompt_index]
+            instance = ai_prompts[self.prompt_index]
+            kwargs["instance"] = instance
+            initial_tags = "AI generated"  # should be comma separated, or list
+            kwargs["initial_tags"] = initial_tags
         return kwargs
 
     def get_ai_prompts(self):
