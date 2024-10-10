@@ -24,7 +24,7 @@
             padding: 20px;
         }
 
-        .seed-prompt-info {
+        .base-prompt-info {
             background-color: #e9ecef;
             border: 1px solid #ced4da;
             border-radius: 0.25rem;
@@ -32,11 +32,11 @@
             margin-bottom: 20px;
         }
 
-        .seed-prompt-info h5 {
+        .base-prompt-info h5 {
             margin-bottom: 10px;
         }
 
-        .seed-prompt-text {
+        .base-prompt-text {
             font-style: italic;
             margin-bottom: 10px;
         }
@@ -55,15 +55,15 @@
 {% block prompt_template_content %}
     <h2 class="mb-4">AI Generated Prompts</h2>
 
-    {% if seed_prompt %}
-        <div class="seed-prompt-info">
+    {% if base_prompt %}
+        <div class="base-prompt-info">
             <h5>
-                <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=seed_prompt.pk %}" class="text-decoration-none text-reset" target='_blank'>
-                    Seed Prompt <i class="bi bi-box-arrow-up-right"></i>
+                <a href="{% url 'prompt:prompt_review' dataset_pk=dataset.pk prompt_pk=base_prompt.pk %}" class="text-decoration-none text-reset" target='_blank'>
+                    base Prompt <i class="bi bi-box-arrow-up-right"></i>
                 </a>
             </h5>
-            <p class="seed-prompt-text">"{{ seed_prompt.template|truncatechars:200 }}"</p>
-        {% comment %} <small class="text-muted">Created by: {{ seed_prompt.created_by }} on {{ seed_prompt.created_on|date:"M d, Y" }}</small> {% endcomment %}
+            <p class="base-prompt-text">"{{ base_prompt.template|truncatechars:200 }}"</p>
+        {% comment %} <small class="text-muted">Created by: {{ base_prompt.created_by }} on {{ base_prompt.created_on|date:"M d, Y" }}</small> {% endcomment %}
         </div>
     {% endif %}
 
@@ -74,7 +74,7 @@
                 <li class="nav-item" role="presentation">
                     <a class="nav-link {% if i == prompt_index %}active{% endif %}"
                        id="prompt{{ i|add:'1' }}-tab"
-                       href="{% url 'prompt:prompt_create_multiple' dataset_pk=dataset.pk %}?seed_prompt_pk={{ seed_prompt.pk }}&prompt_index={{ i }}"
+                       href="{% url 'prompt:prompt_create_multiple' dataset_pk=dataset.pk %}?base_prompt_pk={{ base_prompt.pk }}&prompt_index={{ i }}"
                        role="tab"
                        aria-controls="prompt{{ i|add:'1' }}"
                        aria-selected="{% if i == prompt_index %}true{% else %}false{% endif %}">
