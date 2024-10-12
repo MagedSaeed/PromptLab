@@ -208,6 +208,10 @@ Sentiment:
     document.addEventListener('DOMContentLoaded', function () {
         var answer_choices_input = document.getElementById('id_answer_choices');
         var tags_input = document.getElementById('id_tags');
+        let tags = tags_input.value.trim();
+        // remove " from the start and end of tags string
+        tags = tags.replace(/^"(.*)"$/, '$1');
+        tags_input.value = tags;
         var answerChoicesTagified = new Tagify(answer_choices_input);
         var tagsTagified = new Tagify(tags_input);
         var prompt_textarea = document.getElementById('tagifyTextarea');

@@ -160,3 +160,21 @@ def generate_ai_prompts(prompt_dict):
         )
         generated_prompts_objects.append(new_prompt)
     return generated_prompts_objects
+
+
+def translate_prompt_with_ai(prompt_dict):
+    from prompt.models import Dataset, Prompt
+
+    # you can implement the code that generates the prompts here
+    # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
+    new_prompt = Prompt(
+        name="AI translated from prompt with title: " + prompt_dict["name"],
+        template=f"(AI translated): {prompt_dict['template']}",
+        dataset=Dataset.objects.get(pk=prompt_dict["dataset_pk"]),
+        text_direction="ltr",
+        answer_choices=json.dumps(
+            [{"value": f"answer_choice {j+1}"} for j in range(5)]
+        ),  # answer choices need to be in this format
+        dataset_subset=prompt_dict["dataset_subset"],
+    )
+    return new_prompt
