@@ -18,7 +18,6 @@ class PromptCreateUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.dataset = kwargs.pop("dataset")
-        self.initial_tags = kwargs.pop("initial_tags", None)
         self.base_prompt = kwargs.pop("base_prompt", None)
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
@@ -48,12 +47,6 @@ class PromptCreateUpdateForm(forms.ModelForm):
             }
         # override the default help text that is useful in the admin page.
         self.fields["tags"].help_text = ""
-        if self.initial_tags:
-            initial_tags = self.initial_tags
-            if isinstance(initial_tags, str):
-                initial_tags = initial_tags.split(",")
-            self.fields["tags"].widget.attrs["value"] = json.dumps(initial_tags)
-
         self.instance.can_edit_text = True
         if not self.instance.updateable:
             self.fields["name"].disabled = True

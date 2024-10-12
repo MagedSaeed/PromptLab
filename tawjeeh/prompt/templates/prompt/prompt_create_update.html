@@ -559,7 +559,6 @@
                 // custom logic to transform tags to comma separated string of tags
                     tags = $('#id_tags').val();
                     tagsObjects = JSON.parse(tags)
-                    console.log(tagsObjects)
                     tagsTexts = []
                 // Loop through each object and extract its value
                     for (var i = 0; i < tagsObjects.length; i++) {
@@ -571,7 +570,13 @@
                             }
                         }
                     }
+                    console.log(tagsTexts)
                     tagsTexts = tagsTexts.join(', ');
+                    // if tagsTexts does not end with , add ,
+                    // this is important for django-taggit to work properly
+                    if (!tagsTexts.endsWith(',')) {
+                        tagsTexts += ',';
+                    }
                     $('#id_tags').val(tagsTexts);
 
                 // for button in form.text-end div, make them disabled with pointer-events none

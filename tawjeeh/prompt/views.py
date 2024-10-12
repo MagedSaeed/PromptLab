@@ -20,7 +20,7 @@ from jinja2 import Environment, StrictUndefined
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import HFSyncForm, PromptCreateUpdateForm, PromptReviewForm
 from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
-from prompt.utils import generate_ai_prompts
+from prompt.utils import generate_ai_prompts, translate_prompt_with_ai
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -114,23 +114,58 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.subset = request.GET.get("subset")
         self.split = request.GET.get("split")
+        self.action = request.GET.get("action")
+        self.base_prompt_pk = request.GET.get("base_prompt_pk")
+        self.session_key = None
         return super().setup(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["dataset"] = self.dataset
-        context["dataset_columns"] = self.dataset.get_columns_names()
-        return context
+    def get(self, request, *args, **kwargs):
+        if self.action == "translate" and self.base_prompt_pk:
+            try:
+                self.base_prompt = Prompt.objects.get(pk=self.base_prompt_pk)
+                self.session_key = f"ai_translated_prompts_{self.base_prompt_pk}"
+            except Prompt.DoesNotExist:
+                messages.error(request, "Base prompt not found.", extra_tags="danger")
+                return redirect("prompt:prompt_list", dataset_pk=self.dataset.pk)
+        elif self.action == "translate":
+            messages.error(
+                request,
+                "Base prompt not specified for translation.",
+                extra_tags="danger",
+            )
+            return redirect("prompt:prompt_list", dataset_pk=self.dataset.pk)
+        return super().get(request, *args, **kwargs)
+
+    def get_translated_prompt(self):
+        if self.session_key not in self.request.session:
+            translated_prompt = translate_prompt_with_ai(self.base_prompt.as_dict())
+            self.request.session[self.session_key] = translated_prompt.as_dict()
+        else:
+            translated_prompt = self.request.session[self.session_key]
+            translated_prompt["dataset"] = Dataset.objects.get(
+                pk=translated_prompt.pop("dataset_pk")
+            )
+            translated_prompt.pop("dataset_name")
+            translated_prompt = Prompt(**translated_prompt)
+        return translated_prompt
 
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs(**kwargs)
         kwargs["dataset"] = self.dataset
+        if self.session_key:
+            translated_prompt = self.get_translated_prompt()
+            kwargs["instance"] = translated_prompt
+            kwargs["initial"]["tags"] = "AI translated"  # should be comma separated
+            kwargs["base_prompt"] = self.base_prompt
         return kwargs
 
     def form_valid(self, form):
         instance = form.save(commit=False)
         instance.created_by = self.request.user
         instance.save()
+        form.save_m2m()
+        if self.session_key:
+            self.request.session.pop(self.session_key)
         if self.request.POST.get("submit") == "submit_for_review":
             # create a submission action
             submission = PromptReviewAction(
@@ -145,6 +180,12 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
     def form_invalid(self, form):
         messages.error(self.request, form.errors, extra_tags="danger")
         return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dataset"] = self.dataset
+        context["dataset_columns"] = self.dataset.get_columns_names()
+        return context
 
 
 class MultiplePromptsCreateView(PromptCreateView):
@@ -213,8 +254,7 @@ class MultiplePromptsCreateView(PromptCreateView):
         if 0 <= self.prompt_index < len(ai_prompts):
             instance = ai_prompts[self.prompt_index]
             kwargs["instance"] = instance
-            initial_tags = "AI generated"  # should be comma separated, or list
-            kwargs["initial_tags"] = initial_tags
+            kwargs["initial"]["tags"] = "AI generated"  # should be comma separated
             kwargs["base_prompt"] = self.base_prompt
         return kwargs
 
@@ -336,6 +376,7 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         instance = form.save(commit=False)
         success_message = "prompt updated successfully."
         instance.save()
+        form.save_m2m()
         if self.request.POST.get("submit") == "submit_for_review":
             # create a submission action
             submission = PromptReviewAction(
