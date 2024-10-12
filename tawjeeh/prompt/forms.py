@@ -70,7 +70,7 @@ class PromptReviewForm(forms.ModelForm):
     # these are prompt fields,
     # names are chosen to match the prompt fields in the prompt_create_update html template
     name = forms.CharField()
-    tags = forms.CharField()
+    tags = forms.CharField(required=False)
     template = forms.CharField(widget=forms.HiddenInput())
     text_direction = forms.ChoiceField(
         widget=forms.HiddenInput(),
@@ -129,6 +129,9 @@ class PromptReviewForm(forms.ModelForm):
             data["tags"] = ",".join(
                 tag for tag_dict in data["tags"] for tag in tag_dict.values()
             )
+            # tags should end with , so that django-taggit splits it based on ,
+            if data["tags"][-1] != ",":
+                data["tags"] = data["tags"] + ","
         if data.get("submitter_decision") not in (
             PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION,
             PromptReviewAction.DecisionChoices.APPROVED,
