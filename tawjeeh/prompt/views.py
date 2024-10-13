@@ -104,11 +104,26 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
     form_class = PromptCreateUpdateForm
     template_name = "prompt/prompt_create_update.html"
 
+    def error_redirect(self, request, message):
+        default_url = reverse_lazy(
+            "prompt:prompt_list",
+            kwargs={"dataset_pk": self.kwargs["dataset_pk"]},
+        )
+        redirect_link = request.META.get("HTTP_REFERER", default_url)
+        messages.error(request, message, extra_tags="danger")
+        return redirect(redirect_link)
+
     def get_success_url(self):
         return reverse_lazy(
             "prompt:prompt_list",
-            kwargs={"dataset_pk": self.object.dataset.pk},
+            kwargs={"dataset_pk": self.dataset.pk},
         )
+
+    def delete_translated_prompt(self):
+        session_key = f"ai_translated_prompts_{self.base_prompt_pk}"
+        if session_key in self.request.session:
+            self.request.session.pop(session_key)
+        return True
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
@@ -121,20 +136,36 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
 
     def get(self, request, *args, **kwargs):
         if self.action == "translate" and self.base_prompt_pk:
+            if not request.user.is_moderator:
+                return self.error_redirect(
+                    request,
+                    "This feature is for moderators only for the time being.",
+                )
             try:
                 self.base_prompt = Prompt.objects.get(pk=self.base_prompt_pk)
                 self.session_key = f"ai_translated_prompts_{self.base_prompt_pk}"
             except Prompt.DoesNotExist:
-                messages.error(request, "Base prompt not found.", extra_tags="danger")
-                return redirect("prompt:prompt_list", dataset_pk=self.dataset.pk)
+                return self.error_redirect(
+                    request=self.request,
+                    message="Base prompt not found.",
+                )
         elif self.action == "translate":
-            messages.error(
-                request,
-                "Base prompt not specified for translation.",
-                extra_tags="danger",
+            return self.error_redirect(
+                request=self.request,
+                message="Base prompt not specified for translation.",
             )
-            return redirect("prompt:prompt_list", dataset_pk=self.dataset.pk)
         return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("submit") == "reject":
+            self.delete_translated_prompt()
+            messages.success(
+                request=self.request,
+                message="translated prompt rejected successfully",
+                extra_tags="success",
+            )
+            return redirect(self.get_success_url())
+        return super().post(request, *args, **kwargs)
 
     def get_translated_prompt(self):
         if self.session_key not in self.request.session:
@@ -185,20 +216,13 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
         context["dataset_columns"] = self.dataset.get_columns_names()
+        if self.session_key:
+            context["add_rejection_button"] = True
         return context
 
 
 class MultiplePromptsCreateView(PromptCreateView):
     template_name = "prompt/multiple_prompts_create.html"
-
-    def error_redirect(self, request, message):
-        default_url = reverse_lazy(
-            "prompt:prompt_list",
-            kwargs={"dataset_pk": self.kwargs["dataset_pk"]},
-        )
-        redirect_link = request.META.get("HTTP_REFERER", default_url)
-        messages.error(request, message, extra_tags="danger")
-        return redirect(redirect_link)
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -246,7 +270,31 @@ class MultiplePromptsCreateView(PromptCreateView):
         context["prompt_index"] = self.prompt_index
         context["ai_prompts_count"] = len(self.get_ai_prompts())
         context["base_prompt"] = self.base_prompt
+        context["add_rejection_button"] = True
         return context
+
+    def delete_generated_prompt(self):
+        ai_prompts = self.get_ai_prompts()
+        if 0 <= self.prompt_index < len(ai_prompts):
+            del ai_prompts[self.prompt_index]
+            session_key = f"ai_generated_prompts_{self.base_prompt_pk}"
+            self.request.session[session_key] = [
+                prompt.as_dict() for prompt in ai_prompts
+            ]
+            if not ai_prompts:
+                del self.request.session[session_key]
+        return ai_prompts
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("submit") == "reject":
+            self.delete_generated_prompt()
+            messages.success(
+                request=self.request,
+                message="prompt rejected successfully",
+                extra_tags="success",
+            )
+            return redirect(self.get_success_url())
+        return super().post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -281,23 +329,16 @@ class MultiplePromptsCreateView(PromptCreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        ai_prompts = self.get_ai_prompts()
-        if 0 <= self.prompt_index < len(ai_prompts):
-            del ai_prompts[self.prompt_index]
-            session_key = f"ai_generated_prompts_{self.base_prompt_pk}"
-            self.request.session[session_key] = [
-                prompt.as_dict() for prompt in ai_prompts
-            ]
-            if not ai_prompts:
-                messages.success(
-                    self.request,
-                    "All AI-generated prompts have been saved.",
-                )
-                del self.request.session[session_key]
-                return redirect(
-                    "prompt:prompt_list",
-                    dataset_pk=self.object.dataset.pk,
-                )
+        ai_prompts = self.delete_generated_prompt()
+        if not ai_prompts:
+            messages.success(
+                self.request,
+                "All AI-generated prompts have been saved.",
+            )
+            return redirect(
+                "prompt:prompt_list",
+                dataset_pk=self.object.dataset.pk,
+            )
         return response
 
     def get_success_url(self):
@@ -306,14 +347,14 @@ class MultiplePromptsCreateView(PromptCreateView):
             return (
                 reverse_lazy(
                     "prompt:prompt_create_multiple",
-                    kwargs={"dataset_pk": self.object.dataset.pk},
+                    kwargs={"dataset_pk": self.dataset.pk},
                 )
                 + f"?base_prompt_pk={self.base_prompt_pk}&prompt_index={min(self.prompt_index, len(ai_prompts) - 1)}"
             )
         else:
             return reverse_lazy(
                 "prompt:prompt_list",
-                kwargs={"dataset_pk": self.object.dataset.pk},
+                kwargs={"dataset_pk": self.dataset.pk},
             )
 
 

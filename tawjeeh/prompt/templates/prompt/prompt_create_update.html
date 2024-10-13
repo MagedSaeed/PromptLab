@@ -409,6 +409,12 @@
                                                         <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
                                                     </button>
                                                 {% endif %}
+                                                {% if add_rejection_button %}
+                                                    <button type="submit" name="submit" value="reject" class="btn btn-danger">
+                                                        <span >Reject Prompt</span>
+                                                        <span class="spinner spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                                                    </button>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="row my-2 mx-1">
