@@ -144,6 +144,20 @@ def collect_dataset_configs_details(dataset_object):
 def generate_ai_prompts(prompt_dict):
     from prompt.models import Dataset, Prompt
 
+    """
+    prompt_dict will come as follows:
+        {
+            "name": "name",
+            "template": "prompt template",
+            "answer_choices": "{[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]}",
+            "text_direction": "rtl", # or "ltr"
+            "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)
+            "dataset_name": "huggingface name, for example: arbml/ashaar",
+            "dataset_subset": "train" # or "validation", "test",
+            "created_by": "zaid", # mostly not needed
+        }
+    """
+
     # you can implement the code that generates the prompts here
     # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
     generated_prompts_objects = []
@@ -164,6 +178,20 @@ def generate_ai_prompts(prompt_dict):
 
 def translate_prompt_with_ai(prompt_dict):
     from prompt.models import Dataset, Prompt
+
+    """
+    prompt_dict will come as follows:
+        {
+            "name": "name",
+            "template": "prompt template",
+            "answer_choices": "{[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]}",
+            "text_direction": "rtl", # or "ltr"
+            "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)
+            "dataset_name": "huggingface name, for example: arbml/ashaar",
+            "dataset_subset": "train" # or "validation", "test",
+            "created_by": "zaid", # mostly not needed
+        }
+    """
 
     # you can implement the code that generates the prompts here
     # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
