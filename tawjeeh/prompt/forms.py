@@ -123,6 +123,8 @@ class PromptReviewForm(forms.ModelForm):
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
+            self.fields["task"].disabled = True
+            self.fields["tags"].disabled = True
             self.prompt.can_edit_text = False
 
     def set_prompt_status(self):
