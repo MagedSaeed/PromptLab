@@ -1,7 +1,7 @@
 import json
 
 from django import forms
-from prompt.models import Prompt, PromptReviewAction
+from prompt.models import Prompt, PromptReviewAction, Task
 
 
 class PromptCreateUpdateForm(forms.ModelForm):
@@ -10,6 +10,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         fields = [
             "name",
             "tags",
+            "task",
             "template",
             "text_direction",
             "answer_choices",
@@ -19,6 +20,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.dataset = kwargs.pop("dataset")
         self.base_prompt = kwargs.pop("base_prompt", None)
+        self.task = kwargs.pop("task", None)
         super().__init__(*args, **kwargs)
         self.fields["answer_choices"].widget.attrs.update(
             {
@@ -35,6 +37,11 @@ class PromptCreateUpdateForm(forms.ModelForm):
         self.fields["name"].widget.attrs.update(
             {"placeholder": "Enter prompt name here"}
         )
+        self.fields["task"].choices = [
+            (task.pk, task.name) for task in self.dataset.tasks.all()
+        ]
+        if self.task:
+            self.fields["task"].initial = self.task
         # make dataset_subset hidden as this will be handled by the ui from the dataset information left sidebar
         self.fields["dataset_subset"].widget = forms.HiddenInput()
         self.fields["template"].widget = forms.HiddenInput()
@@ -54,6 +61,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
             self.fields["template"].disabled = True
             self.fields["text_direction"].disabled = True
             self.fields["answer_choices"].disabled = True
+            self.fields["task"].disabled = True
             self.instance.can_edit_text = False
         # self.fields["answer_choices"].label = False
 
@@ -71,6 +79,7 @@ class PromptReviewForm(forms.ModelForm):
     # names are chosen to match the prompt fields in the prompt_create_update html template
     name = forms.CharField()
     tags = forms.CharField(required=False)
+    task = forms.ChoiceField()
     template = forms.CharField(widget=forms.HiddenInput())
     text_direction = forms.ChoiceField(
         widget=forms.HiddenInput(),
@@ -99,6 +108,10 @@ class PromptReviewForm(forms.ModelForm):
                 )
             )
         )
+        self.fields["task"].choices = [
+            (task.pk, task.name) for task in self.dataset.tasks.all()
+        ]
+        self.fields["task"].initial = (self.prompt.task.pk, self.prompt.task.name)
         self.fields["template"].initial = self.prompt.template
         self.fields["text_direction"].initial = self.prompt.text_direction
         self.fields["answer_choices"].initial = self.prompt.answer_choices
@@ -121,6 +134,9 @@ class PromptReviewForm(forms.ModelForm):
 
     def clean(self):
         data = self.cleaned_data
+        # get the task from its pk
+        if data["task"]:
+            data["task"] = Task.objects.get(pk=data["task"])
         # transform tags to a string of comma separated tags list
         if data.get("tags"):
             # tags comes as a string of the following:
@@ -171,11 +187,17 @@ class PromptReviewForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.set_prompt_status()
+        data = self.cleaned_data
         self.instance.prompt = self.prompt
         self.instance.submitter = self.reviewer
         self.instance.prompt_before_submitter_modifications = {
             "tags": list(self.prompt.tags.names())
         }
+        if data["task"]:
+            self.instance.prompt_before_submitter_modifications["task_name"] = data[
+                "task"
+            ].name
+            data.pop("task")
         self.instance.prompt_before_submitter_modifications.update(
             {
                 key: getattr(self.prompt, key)
@@ -184,6 +206,7 @@ class PromptReviewForm(forms.ModelForm):
                     "submitter_comment",
                     "submitter_decision",
                     "tags",
+                    "task",
                 }
             }
         )

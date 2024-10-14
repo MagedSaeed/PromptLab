@@ -32,18 +32,14 @@
     {{ form.tags|as_crispy_field }}
 </div>
 <div class="my-2">
+    <div class="col col-3 mb-4">
+        {{form.task|as_crispy_field}}
+    </div>
     <label for="directionSwitcher" class="form-label">Text Direction: </label>
     <select id="directionSwitcher" class="form-select form-select-small mb-2 mx-2">
         <option value="ltr" {% if form.text_direction.value == 'ltr' %} selected {% endif %}>Left-To-Right</option>
         <option value="rtl" {% if form.text_direction.value == 'rtl' %} selected {% endif %}>Right-To-Left</option>
     </select>
-    <br>
-    <br>
-    <label>
-        The expected target column for this dataset: <u><b>{{dataset.target_column}}</u></b>
-    </label>
-    <br>
-    <br>
     <label for="tagifyTextarea" class="form-label">
         Prompt Template
         <i class="bi bi-info-circle info-icon" id="promptInfo" data-bs-toggle="modal" data-bs-target="#promptInfoModal"></i>
