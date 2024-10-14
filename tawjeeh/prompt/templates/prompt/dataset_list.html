@@ -122,15 +122,15 @@
                             <i class="bi bi-list-check breadcrumb-icon"></i>Tasks
                         </a>
                     </li>
-                    {% if task %}
-                        <li class="breadcrumb-item active" aria-current="page">
-                            <i class="bi bi-table breadcrumb-icon"></i>{{ task.name }} Datasets
-                        </li>
-                    {% else %}
-                        <li class="breadcrumb-item active" aria-current="page">
-                            <i class="bi bi-grid-3x3-gap-fill breadcrumb-icon"></i>All Datasets
-                        </li>
-                    {% endif %}
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <a>
+                            {% if task %}
+                                <i class="bi bi-table breadcrumb-icon"></i>{{ task.name }} Datasets
+                            {% else %}
+                                <i class="bi bi-grid-3x3-gap-fill breadcrumb-icon"></i>All Datasets
+                            {% endif %}
+                        </a>
+                    </li>
                 </ol>
             </nav>
         </div>

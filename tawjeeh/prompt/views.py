@@ -529,6 +529,13 @@ class PromptListView(LoginRequiredMixin, ListView):
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        task_pk = request.GET.get("task_pk", None)
+        if task_pk:
+            task_qs = Task.objects.filter(pk=task_pk)
+            if task_qs.exists():
+                task = task_qs.first()
+                if self.dataset in task.datasets.all():
+                    self.task = task
         return super().setup(request, *args, **kwargs)
 
     def get_context_data(self):
@@ -538,6 +545,7 @@ class PromptListView(LoginRequiredMixin, ListView):
             created_by=self.request.user,
             dataset=self.dataset,
         )
+        context["task"] = self.task
 
         # get prompts that are available to review
 

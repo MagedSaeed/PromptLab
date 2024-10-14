@@ -34,7 +34,7 @@
                     </td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}" class="btn btn-sm btn-outline-primary" title="View Prompts">
+                            <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}" class="btn btn-sm btn-outline-primary" title="View Prompts">
                                 <i class="bi bi-list-ul"></i>
                             </a>
                             <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}" class="btn btn-sm btn-outline-success" title="Create Prompt">

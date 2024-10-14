@@ -218,11 +218,19 @@
                             <i class="fas fa-tasks breadcrumb-icon"></i>Tasks
                         </a>
                     </li>
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'prompt:dataset_list' %}">
-                            <i class="fas fa-database breadcrumb-icon"></i>Datasets
-                        </a>
-                    </li>
+                    {% if task %}
+                        <li class="breadcrumb-item" aria-current="page">
+                            <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
+                                <i class="fas fa-list breadcrumb-icon"></i>{{ task.name }} Datasets
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'prompt:dataset_list' %}">
+                                <i class="fas fa-database breadcrumb-icon"></i>Datasets
+                            </a>
+                        </li>
+                    {% endif %}
                     <li class="breadcrumb-item active" aria-current="page">
                         <i class="fas fa-list-alt breadcrumb-icon"></i>{{ dataset.name }} Prompts
                     </li>
