@@ -5,6 +5,7 @@ import tempfile
 import datasets
 from prompt import constants
 from sklearn.model_selection import train_test_split
+from templator import TemplateCreator
 
 
 def get_split_samples(
@@ -24,13 +25,10 @@ def get_split_samples(
         *args,
         **kwargs,
     )
-
     if shuffled:
         # Shuffle the dataset
         dataset = dataset.shuffle()
-
     df = dataset.to_pandas()
-
     try:
         stratified_sample_df, _ = train_test_split(
             df,
@@ -149,7 +147,7 @@ def generate_ai_prompts(prompt_dict):
         {
             "name": "name",
             "template": "prompt template",
-            "answer_choices": "{[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]}",
+            "answer_choices": "[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]",
             "text_direction": "rtl", # or "ltr"
             "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)
             "dataset_name": "huggingface name, for example: arbml/ashaar",
@@ -157,18 +155,33 @@ def generate_ai_prompts(prompt_dict):
             "created_by": "zaid", # mostly not needed
         }
     """
+    answer_choices = json.loads(prompt_dict["answer_choices"])
+    answer_choices = [item["value"] for item in answer_choices]
+    templator = TemplateCreator(
+        prompt_dict["dataset_name"],
+        config=prompt_dict["dataset_subset"],
+        answer_choices=answer_choices,
+        lang="English",
+    )
+
+    templates = templator.prompt_chatgpt(
+        "sentiment analysis",
+        prompt_dict["template"],
+        version="gpt-4-turbo",
+        num_templates=5,
+    )
 
     # you can implement the code that generates the prompts here
     # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
     generated_prompts_objects = []
-    for i in range(5):
+    for t in templates:
         new_prompt = Prompt(
-            name=f"AI Generated {i+1}",
-            template=f"(AI variation {i+1})",
+            name=t.name,
+            template=t.text,
             dataset=Dataset.objects.get(pk=prompt_dict["dataset_pk"]),
             text_direction="ltr",
             answer_choices=json.dumps(
-                [{"value": f"answer_choice {j+1}"} for j in range(5)]
+                [{"value": answer_choice} for answer_choice in t.answer_choices]
             ),  # answer choices need to be in this format
             dataset_subset=prompt_dict["dataset_subset"],
         )
@@ -185,7 +198,7 @@ def translate_prompt_with_ai(prompt_dict):
             "name": "name",
             "template": "prompt template",
             "answer_choices": "{[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]}",
-            "text_direction": "rtl", # or "ltr"
+            "text_direction": "ltr", # or "rtl"
             "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)
             "dataset_name": "huggingface name, for example: arbml/ashaar",
             "dataset_subset": "train" # or "validation", "test",
