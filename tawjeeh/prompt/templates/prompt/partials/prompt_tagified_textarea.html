@@ -40,6 +40,7 @@
         <option value="ltr" {% if form.text_direction.value == 'ltr' %} selected {% endif %}>Left-To-Right</option>
         <option value="rtl" {% if form.text_direction.value == 'rtl' %} selected {% endif %}>Right-To-Left</option>
     </select>
+    <br>
     <label for="tagifyTextarea" class="form-label">
         Prompt Template
         <i class="bi bi-info-circle info-icon" id="promptInfo" data-bs-toggle="modal" data-bs-target="#promptInfoModal"></i>
@@ -53,151 +54,8 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="promptInfoModal" tabindex="-1" aria-labelledby="promptInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="promptInfoModalLabel">Creating Effective LLM Prompts with Jinja Syntax</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <h6 class="mb-3">Introduction to LLM Prompt Engineering</h6>
-                <p>Prompt engineering is crucial for effectively instructing Language Models (LLMs) in Natural Language Processing (NLP) tasks. Well-crafted prompts can significantly improve the model's performance and output quality.</p>
-
-                <p>Example usage in a prompt:</p>
-                <pre><code>{% verbatim %}Classify the sentiment of the following text as {% for choice in answer_choices %}{{ choice }}{% if not loop.last %} or {% endif %}{% endfor %}.
-
-Text: {{ input_text }}
-
-Sentiment:
-|||
-{{ target_column }}{% endverbatim %}</code></pre>
-                <p>This will render as "Classify the sentiment of the following text as negative or positive." if your answer choices are set to "0:negative,1:positive".</p>
-
-                <div class="alert alert-info" role="alert">
-                    <strong>Quick Tip:</strong> Type '\\' in the prompt template to see a list of all available dataset columns, i.e., the ones enclosed with {% verbatim %} {{}} {% endverbatim %}.
-                </div>
-
-                <h6 class="mt-4">Using Answer Choices</h6>
-                <p>Answer choices are particularly useful for transforming numeric or coded classes into descriptive labels, making prompts more interpretable for LLMs. Here's how to use them:</p>
-                <ol>
-                    <li>Define your answer choices in the designated field (e.g., "0:negative,1:positive" for binary sentiment)</li>
-                    <li>Use the <code>answer_choices</code> variable in your prompt template</li>
-                    <li>Access specific choices using index (e.g., <code>answer_choices[0]</code> for the first choice)</li>
-                </ol>
-
-                <h6 class="mt-4">Best Practices for LLM Prompt Creation:</h6>
-                <ol>
-                    <li><strong>Be Clear and Specific:</strong> Clearly state the task and desired output format.</li>
-                    <li><strong>Provide Context:</strong> Include relevant background information when necessary.</li>
-                    <li><strong>Use Examples:</strong> Incorporate few-shot learning by providing examples when possible.</li>
-                    <li><strong>Control Output Format:</strong> Specify the desired structure of the output.</li>
-                    <li><strong>Iterate and Refine:</strong> Test your prompts and refine them based on the results.</li>
-                    <li><strong>Leverage Answer Choices:</strong> Use descriptive labels to make tasks more intuitive for the model.</li>
-                </ol>
-
-                <h6 class="mt-4">Key Elements of Jinja Syntax in Prompts:</h6>
-                <ul>
-                    <li><strong>Variables:</strong> {% verbatim %}{{ column_name }}{% endverbatim %} - Insert values from your dataset</li>
-                    <li><strong>Control Structures:</strong>
-                        <ul>
-                            <li>{% verbatim %}{% if condition %}{% endif %}{% endverbatim %} - Conditional rendering</li>
-                            <li>{% verbatim %}{% for item in items %}{% endfor %}{% endverbatim %} - Iterate over lists</li>
-                        </ul>
-                    </li>
-                    <li><strong>Comments:</strong> {# This won't be rendered #} - Add notes to your prompts</li>
-                    <li><strong>Filters:</strong> {% verbatim %}{{ text|lower }}{% endverbatim %} - Modify variables (e.g., lowercase)</li>
-                </ul>
-
-                <h6 class="mt-4">NLP Task-Specific Examples:</h6>
-                <div class="accordion" id="promptExamples">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                Text Classification (with Answer Choices)
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#promptExamples">
-                            <div class="accordion-body">
-                                <pre><code>{% verbatim %}Task: Classify the following text into one of these categories: {% for choice in answer_choices %}{{ choice }}{% if not loop.last %}, {% endif %}{% endfor %}.
-
-Text: {{ input_text }}
-
-Provide your classification as one of the given categories.
-
-Classification:
-|||
-{{ target_column }}{% endverbatim %}</code></pre>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                Question Answering
-                            </button>
-                        </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#promptExamples">
-                            <div class="accordion-body">
-                                <pre><code>{% verbatim %}Context: {{ context }}
-
-Question: {{ question }}
-
-Provide a concise answer based solely on the information given in the context. If the answer cannot be determined from the context, state "Cannot be answered based on the given context."
-
-Answer:
-|||
-{{ target_column }}{% endverbatim %}</code></pre>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFour">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                                Summarization
-                            </button>
-                        </h2>
-                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#promptExamples">
-                            <div class="accordion-body">
-                                <pre><code>{% verbatim %}Task: Summarize the following text in one to two sentences, capturing the main points.
-
-Text: {{ long_text }}
-
-Summary:
-|||
-{{ target_column }}{% endverbatim %}</code></pre>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFive">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                                Sentiment Analysis (with Answer Choices)
-                            </button>
-                        </h2>
-                        <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#promptExamples">
-                            <div class="accordion-body">
-                                <pre><code>{% verbatim %}Task: Analyze the sentiment of the following tweet and provide a brief explanation.
-
-Tweet: {{ tweet_text }}
-
-Classify the sentiment as {% for choice in answer_choices %}{{ choice }}{% if not loop.last %}, {% endif %}{% endfor %}, and provide a one-sentence explanation for your classification.
-
-Sentiment:
-|||
-{{ target_column }}{% endverbatim %}</code></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- templates guidelines modal -->
+{% include "prompt/partials/static_content/template_guidelines_modal.html" %}
 
 
 <script>
