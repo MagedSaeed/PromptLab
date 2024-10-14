@@ -351,7 +351,12 @@
                                         {% csrf_token %}
                                         <div class="row justify-content-center">
                                             <div class="mb-3 col-12 full-width" id="templateFieldContainer">
+                                                <label for="id_prompt_name" class="form-label">
+                                                    Name
+                                                    <i class="bi bi-info-circle info-icon ms-2" id="nameInfo" data-bs-toggle="modal" data-bs-target="#nameInfoModal"></i>
+                                                </label>
                                                 {{ form.name|as_crispy_field }}
+                                                {% include "prompt/partials/static_content/template_name_guidelines.html" %}
                                                 {% include 'prompt/partials/prompt_tagified_textarea.html' %}
                                                 {{ form.template|as_crispy_field }}
                                                 {{ form.dataset_subset }}

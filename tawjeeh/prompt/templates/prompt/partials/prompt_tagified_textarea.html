@@ -29,7 +29,12 @@
     {{ form.answer_choices|as_crispy_field }}
 </div>
 <div id="tags_div" class="my-2">
+    <label for="id_prompt_tags" class="form-label">
+        Tags
+        <i class="bi bi-info-circle info-icon ms-2" id="tagsInfo" data-bs-toggle="modal" data-bs-target="#tagsInfoModal"></i>
+    </label>
     {{ form.tags|as_crispy_field }}
+    {% include "prompt/partials/static_content/template_tags_guidelines.html" %}
 </div>
 <div class="my-2">
     <div class="col col-3 mb-4">
