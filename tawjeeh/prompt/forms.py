@@ -37,6 +37,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
         self.fields["name"].widget.attrs.update(
             {"placeholder": "Enter prompt name here"}
         )
+        self.fields["name"].label = False
         self.fields["task"].choices = [
             (task.pk, task.name) for task in self.dataset.tasks.all()
         ]
@@ -54,6 +55,7 @@ class PromptCreateUpdateForm(forms.ModelForm):
             }
         # override the default help text that is useful in the admin page.
         self.fields["tags"].help_text = ""
+        self.fields["tags"].label = False
         self.instance.can_edit_text = True
         if not self.instance.updateable:
             self.fields["name"].disabled = True
@@ -77,8 +79,8 @@ class PromptCreateUpdateForm(forms.ModelForm):
 class PromptReviewForm(forms.ModelForm):
     # these are prompt fields,
     # names are chosen to match the prompt fields in the prompt_create_update html template
-    name = forms.CharField()
-    tags = forms.CharField(required=False)
+    name = forms.CharField(label=False)
+    tags = forms.CharField(required=False, label=False)
     task = forms.ChoiceField()
     template = forms.CharField(widget=forms.HiddenInput())
     text_direction = forms.ChoiceField(
