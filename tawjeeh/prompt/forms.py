@@ -111,7 +111,8 @@ class PromptReviewForm(forms.ModelForm):
         self.fields["task"].choices = [
             (task.pk, task.name) for task in self.dataset.tasks.all()
         ]
-        self.fields["task"].initial = (self.prompt.task.pk, self.prompt.task.name)
+        if self.prompt.task:
+            self.fields["task"].initial = (self.prompt.task.pk, self.prompt.task.name)
         self.fields["template"].initial = self.prompt.template
         self.fields["text_direction"].initial = self.prompt.text_direction
         self.fields["answer_choices"].initial = self.prompt.answer_choices
