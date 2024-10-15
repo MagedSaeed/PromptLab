@@ -157,8 +157,10 @@ def generate_ai_prompts(prompt_dict):
             "created_by": "zaid", # mostly not needed
         }
     """
-    answer_choices = json.loads(prompt_dict["answer_choices"])
-    answer_choices = [item["value"] for item in answer_choices]
+    answer_choices = []
+    if prompt_dict["answer_choices"]:
+        answer_choices = json.loads(prompt_dict["answer_choices"])
+        answer_choices = [item["value"] for item in answer_choices]
     templator = TemplateCreator(
         prompt_dict["dataset_name"],
         config=prompt_dict["dataset_subset"],
