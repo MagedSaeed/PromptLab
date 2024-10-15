@@ -11,7 +11,6 @@
         </a>
     </div>
 
-    <!-- New section for associated tasks -->
     <div class="mb-3">
         <h6 class="mb-2">Associated Tasks:</h6>
         <div class="d-flex flex-wrap gap-2">
@@ -47,6 +46,11 @@
             <div id="split-details" style="display: none;">
                 <!-- Split details will be loaded here -->
             </div>
+        </div>
+    {% endif %}
+    {% if dataset.target_column %}
+        <div class="mt-4">
+            <p class="mb-2">An Expected Target Column: <strong class="mx-1"><u>{{dataset.target_column}}</u></strong> </p>
         </div>
     {% endif %}
 </div>

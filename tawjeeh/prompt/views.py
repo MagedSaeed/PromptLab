@@ -132,6 +132,14 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
         self.action = request.GET.get("action")
         self.base_prompt_pk = request.GET.get("base_prompt_pk")
         self.session_key = None
+        self.task = None
+        task_pk = request.GET.get("task_pk")
+        if task_pk:
+            task_qs = Task.objects.filter(pk=task_pk)
+            if task_qs.exists():
+                task = task_qs.first()
+                if self.dataset in task.datasets.all():
+                    self.task = task
         return super().setup(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -183,6 +191,7 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs(**kwargs)
         kwargs["dataset"] = self.dataset
+        kwargs["task"] = self.task
         if self.session_key:
             translated_prompt = self.get_translated_prompt()
             kwargs["instance"] = translated_prompt
@@ -218,6 +227,7 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
         context["dataset_columns"] = self.dataset.get_columns_names()
         if self.session_key:
             context["add_rejection_button"] = True
+        context["task"] = self.task
         return context
 
 
@@ -374,6 +384,14 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.subset = request.GET.get("subset")
         self.split = request.GET.get("split")
+        self.task = None
+        task_pk = request.GET.get("task_pk")
+        if task_pk:
+            task_qs = Task.objects.filter(pk=task_pk)
+            if task_qs.exists():
+                task = task_qs.first()
+                if self.dataset in task.datasets.all():
+                    self.task = task
         return super().setup(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -411,6 +429,7 @@ class PromptUpdateView(LoginRequiredMixin, UpdateView):
         context["dataset_columns"] = self.dataset.get_columns_names()
         if self.object.dataset_subset:
             context["subset"] = self.object.dataset_subset
+        context["task"] = self.task
         return context
 
     def form_valid(self, form):
@@ -448,6 +467,14 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         self.prompt = get_object_or_404(Prompt, pk=kwargs["prompt_pk"])
+        self.task = None
+        task_pk = request.GET.get("task_pk")
+        if task_pk:
+            task_qs = Task.objects.filter(pk=task_pk)
+            if task_qs.exists():
+                task = task_qs.first()
+                if self.dataset in task.datasets.all():
+                    self.task = task
         return super().setup(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -471,6 +498,7 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["dataset"] = self.dataset
         context["dataset_columns"] = self.dataset.get_columns_names()
+        context["task"] = self.task
         return context
 
     def get_form_kwargs(self):
@@ -529,6 +557,14 @@ class PromptListView(LoginRequiredMixin, ListView):
 
     def setup(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
+        self.task = None
+        task_pk = request.GET.get("task_pk", None)
+        if task_pk:
+            task_qs = Task.objects.filter(pk=task_pk)
+            if task_qs.exists():
+                task = task_qs.first()
+                if self.dataset in task.datasets.all():
+                    self.task = task
         return super().setup(request, *args, **kwargs)
 
     def get_context_data(self):
@@ -538,6 +574,7 @@ class PromptListView(LoginRequiredMixin, ListView):
             created_by=self.request.user,
             dataset=self.dataset,
         )
+        context["task"] = self.task
 
         # get prompts that are available to review
 
