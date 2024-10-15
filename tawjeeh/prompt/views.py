@@ -185,6 +185,11 @@ class PromptCreateView(LoginRequiredMixin, CreateView):
                 pk=translated_prompt.pop("dataset_pk")
             )
             translated_prompt.pop("dataset_name")
+            if translated_prompt.get("task_pk"):
+                translated_prompt["task"] = Task.objects.get(
+                    pk=translated_prompt.pop("task_pk")
+                )
+                translated_prompt.pop("task_name")
             translated_prompt = Prompt(**translated_prompt)
         return translated_prompt
 
@@ -336,6 +341,9 @@ class MultiplePromptsCreateView(PromptCreateView):
                 prompt = {k: v for k, v in prompt_dict.items()}
                 prompt["dataset"] = Dataset.objects.get(pk=prompt.pop("dataset_pk"))
                 prompt.pop("dataset_name")
+                if prompt.get("task_pk"):
+                    prompt["task"] = Task.objects.get(pk=prompt.pop("task_pk"))
+                    prompt.pop("task_name")
                 ai_prompts.append(prompt)
             ai_prompts = [Prompt(**prompt) for prompt in ai_prompts]
         return ai_prompts

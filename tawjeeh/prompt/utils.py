@@ -147,6 +147,8 @@ def generate_ai_prompts(prompt_dict):
         {
             "name": "name",
             "template": "prompt template",
+            "task_name": "task name",
+            "task_pk": self.task.pk # mostly not needed
             "answer_choices": "[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]",
             "text_direction": "rtl", # or "ltr"
             "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)
@@ -165,7 +167,7 @@ def generate_ai_prompts(prompt_dict):
     )
 
     templates = templator.prompt_chatgpt(
-        "sentiment analysis",
+        prompt_dict["task_name"],
         prompt_dict["template"],
         version="gpt-4-turbo",
         num_templates=5,
@@ -197,6 +199,8 @@ def translate_prompt_with_ai(prompt_dict):
         {
             "name": "name",
             "template": "prompt template",
+            "task_name": "task name",
+            "task_pk": self.task.pk # mostly not needed
             "answer_choices": "[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]",
             "text_direction": "rtl", # or "ltr"
             "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)

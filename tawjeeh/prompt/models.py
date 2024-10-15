@@ -369,6 +369,8 @@ class Prompt(models.Model):
         return {
             "name": self.name,
             "template": self.template,
+            "task_name": self.task,
+            "task_pk": self.task.pk if self.task else None,
             "answer_choices": self.answer_choices,
             "text_direction": self.text_direction,
             "dataset_pk": self.dataset.pk,
