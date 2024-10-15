@@ -283,7 +283,7 @@ class MultiplePromptsCreateView(PromptCreateView):
         context["add_rejection_button"] = True
         return context
 
-    def delete_generated_prompt(self):
+    def reject_generated_prompt(self):
         ai_prompts = self.get_ai_prompts()
         if 0 <= self.prompt_index < len(ai_prompts):
             del ai_prompts[self.prompt_index]
@@ -297,7 +297,7 @@ class MultiplePromptsCreateView(PromptCreateView):
 
     def post(self, request, *args, **kwargs):
         if request.POST.get("submit") == "reject":
-            self.delete_generated_prompt()
+            self.reject_generated_prompt()
             messages.success(
                 request=self.request,
                 message="prompt rejected successfully",
@@ -321,13 +321,16 @@ class MultiplePromptsCreateView(PromptCreateView):
         # if f"ai_generated_prompts_{self.base_prompt_pk}" in self.request.session:
         #     self.request.session.pop(f"ai_generated_prompts_{self.base_prompt_pk}")
         session_key = f"ai_generated_prompts_{self.base_prompt_pk}"
-        if session_key not in self.request.session:
+        if (
+            session_key not in self.request.session
+            and self.request.POST.get("submit") != "reject"
+        ):
             ai_prompts = generate_ai_prompts(self.base_prompt.as_dict())
             self.request.session[session_key] = [
                 prompt.as_dict() for prompt in ai_prompts
             ]
         else:
-            prompt_dicts = self.request.session[session_key]
+            prompt_dicts = self.request.session.get(session_key, [])
             ai_prompts = []
             for prompt_dict in prompt_dicts:
                 prompt = {k: v for k, v in prompt_dict.items()}
@@ -339,7 +342,7 @@ class MultiplePromptsCreateView(PromptCreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        ai_prompts = self.delete_generated_prompt()
+        ai_prompts = self.reject_generated_prompt()
         if not ai_prompts:
             messages.success(
                 self.request,
