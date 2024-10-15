@@ -24,6 +24,3 @@ django-celery-results~=2.5
 
 # raised duing huggingace load_datasets
 conllu
-
-# prompting tool
-git+https://github.com/zaidalyafeai/templator.git
