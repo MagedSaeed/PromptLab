@@ -28,7 +28,7 @@ RUN python -m venv venv
 COPY --chown=celery:celery requirements.txt /app/
 
 # Install dependencies in the virtual environment
-RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /app/requirements.txt"
+RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /app/requirements.txt && pip install git+https://${GH_TOKEN}@github.com/zaidalyafeai/templator.git"
 
 # Copy the rest of the application code
 COPY --chown=celery:celery . /app
