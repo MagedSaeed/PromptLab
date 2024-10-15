@@ -3,14 +3,15 @@
 
 {% block prompt_template_content %}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">{{ dataset.config_details }}</h5>
-        </div>
         <div class="card-body">
             <form id="promptForm" method="POST">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col-12 mb-3" id="templateFieldContainer">
+                        <label for="id_prompt_name" class="form-label">
+                            Name
+                            <i class="bi bi-info-circle info-icon ms-2" id="nameInfo" data-bs-toggle="modal" data-bs-target="#nameInfoModal"></i>
+                        </label>
                         {{ form.name|as_crispy_field }}
                         {% include 'prompt/partials/prompt_tagified_textarea.html' with prompt=form.prompt %}
                         {{ form.template|as_crispy_field }}

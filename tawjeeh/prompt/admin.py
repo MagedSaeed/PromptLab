@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import admin, messages
+from django.db.models import OuterRef, Subquery
 from django.utils.safestring import mark_safe
 
 # from django.core.management import call_command
@@ -160,9 +161,40 @@ class DatasetAdmin(admin.ModelAdmin):
         }
 
 
+class PromptStatusFilter(admin.SimpleListFilter):
+    title = "Status"
+    parameter_name = "status"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("DRAFT", "Draft"),
+            ("SUBMITTED", "Submitted"),
+            ("RETURNED_FOR_MODIFICATION", "Returned for modification"),
+            ("APPROVED", "Approved"),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            latest_review = PromptReviewAction.objects.filter(
+                prompt=OuterRef("pk")
+            ).order_by("-taken_on")
+
+            if self.value() in ["DRAFT", "SUBMITTED"]:
+                return queryset.annotate(
+                    latest_status=Subquery(latest_review.values("prompt_status")[:1])
+                ).filter(latest_status=self.value())
+            else:
+                return queryset.annotate(
+                    latest_decision=Subquery(
+                        latest_review.values("submitter_decision")[:1]
+                    )
+                ).filter(latest_decision=self.value())
+        return queryset
+
+
 class PromptAdmin(admin.ModelAdmin):
     search_fields = ["dataset__name", "dataset__tasks__name"]
-    list_filter = ["dataset", "dataset__tasks", "created_by"]
+    list_filter = [PromptStatusFilter, "dataset", "dataset__tasks", "created_by"]
 
 
 class PromptReviewActionAdmin(admin.ModelAdmin):

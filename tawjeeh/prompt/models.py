@@ -318,6 +318,13 @@ class Prompt(models.Model):
         on_delete=models.RESTRICT,
         related_name="child_prompts",
     )
+    task = models.ForeignKey(
+        to=Task,
+        null=True,
+        blank=True,
+        related_name="prompts",
+        on_delete=models.SET_NULL,
+    )
 
     def __str__(self):
         return f"prompt for dataset {self.dataset}"

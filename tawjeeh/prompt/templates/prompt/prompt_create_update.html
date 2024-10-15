@@ -343,37 +343,7 @@
                 <!-- Main Content -->
                 <div class="main-content col" id="mainContent">
                     {% block prompt_template_content %}
-                        <div class="accordion mb-4" id="instructionsAccordion">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="headingInstructions">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions" style="background-color: #f8f9fa;">
-                                        <h4 style="margin: 0;">Creating Diverse Prompts for dataset: {{dataset}}</h4>
-                                    </button>
-                                </h2>
-                                <div id="collapseInstructions" class="accordion-collapse collapse" aria-labelledby="headingInstructions" data-bs-parent="#instructionsAccordion">
-                                    <div class="accordion-body">
-                                        <p>
-                                            Creating a diverse set of prompts whose differences go beyond surface wordings (i.e., marginally changing 2 or 3 words) is highly encouraged.
-                                            Ultimately, the hope is that exposing the model to such a diversity will have a non-trivial impact on the model's robustness to the prompt formulation.
-                                        </p>
-                                        <p>
-                                            <strong>To get various prompts, you can try moving the cursor along these axes:</strong>
-                                        </p>
-                                        <ul>
-                                            <li>
-                                                <strong>Interrogative vs affirmative form:</strong> Ask a question about an attribute of the inputs or tell the model to decide something about the input.
-                                            </li>
-                                            <li>
-                                                <strong>Task description localization:</strong> Where is the task description blended with the inputs? In the beginning, in the middle, at the end?
-                                            </li>
-                                            <li>
-                                                <strong>Implicit situation or contextualization:</strong> How explicit is the query? For instance, <em>Given this review, would you buy this product?</em> is an indirect way to ask whether the review is positive.
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {% include 'prompt/partials/static_content/prompt_creation_card.html' %}
                         {% block prompt_form_card %}
                             <div class="card my-4">
                                 <div class="card-body">
@@ -381,7 +351,12 @@
                                         {% csrf_token %}
                                         <div class="row justify-content-center">
                                             <div class="mb-3 col-12 full-width" id="templateFieldContainer">
+                                                <label for="id_prompt_name" class="form-label">
+                                                    Name
+                                                    <i class="bi bi-info-circle info-icon ms-2" id="nameInfo" data-bs-toggle="modal" data-bs-target="#nameInfoModal"></i>
+                                                </label>
                                                 {{ form.name|as_crispy_field }}
+                                                {% include "prompt/partials/static_content/template_name_guidelines.html" %}
                                                 {% include 'prompt/partials/prompt_tagified_textarea.html' %}
                                                 {{ form.template|as_crispy_field }}
                                                 {{ form.dataset_subset }}

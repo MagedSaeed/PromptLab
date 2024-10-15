@@ -197,8 +197,8 @@ def translate_prompt_with_ai(prompt_dict):
         {
             "name": "name",
             "template": "prompt template",
-            "answer_choices": "{[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]}",
-            "text_direction": "ltr", # or "rtl"
+            "answer_choices": "[{'value': 'answer choice 1'}, {'value': 'answer choice 2'}, ..., {'value': 'answer choice 5'}]",
+            "text_direction": "rtl", # or "ltr"
             "dataset_pk": self.dataset.pk, # primary key to the dataset object, (needed in the return)
             "dataset_name": "huggingface name, for example: arbml/ashaar",
             "dataset_subset": "train" # or "validation", "test",
