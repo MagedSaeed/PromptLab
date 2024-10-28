@@ -295,6 +295,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Name</th>
+                                            <th>Task</th>
                                             <th>Dataset Subset</th>
                                             <th>Created On</th>
                                             <th>Status</th>
@@ -310,6 +311,7 @@
                                                         {{ prompt.name }}
                                                     </a>
                                                 </td>
+                                                <td>{{ prompt.task }}</td>
                                                 <td>{{ prompt.dataset_subset }}</td>
                                                 <td>{{ prompt.created_on|date:"M d, Y" }}</td>
                                                 <td><span class="status-badge status-{{ prompt.status|lower }}">{{ prompt.status }}</span></td>
@@ -341,6 +343,7 @@
                                             <tr>
                                                 <th>#</th>
                                                 <th>Name</th>
+                                                <th>Task</th>
                                                 <th>Dataset Subset</th>
                                                 <th>Created By</th>
                                                 <th>Created On</th>
@@ -357,6 +360,7 @@
                                                             {{ prompt.name }}
                                                         </a>
                                                     </td>
+                                                    <td>{{ prompt.task }}</td>
                                                     <td>{{ prompt.dataset_subset }}</td>
                                                     <td>{{ prompt.created_by }}</td>
                                                     <td>{{ prompt.created_on|date:"M d, Y" }}</td>
@@ -389,6 +393,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Name</th>
+                                            <th>Task</th>
                                             <th>Dataset Subset</th>
                                             <th>Created By</th>
                                             <th>Created On</th>
@@ -408,6 +413,7 @@
                                                         {{ prompt.name }}
                                                     </a>
                                                 </td>
+                                                <td>{{ prompt.task }}</td>
                                                 <td>{{ prompt.dataset_subset }}</td>
                                                 <td>{{ prompt.created_by }}</td>
                                                 <td>{{ prompt.created_on|date:"M d, Y" }}</td>
