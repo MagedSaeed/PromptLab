@@ -244,9 +244,9 @@
     <div id="prompts-list" class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">Prompts for Dataset: <a href="{{dataset.huggingface_link}}" target="_blank" class="text-primary">{{dataset}}</a></h1>
-            <a href="{% url 'prompt:task_list' %}" class="btn btn-outline-secondary">
+            {% comment %} <a href="{% url 'prompt:task_list' %}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Back to Tasks
-            </a>
+            </a> {% endcomment %}
         </div>
 
         {% if dataset.tasks.count > 1 %}
