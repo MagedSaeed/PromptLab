@@ -249,6 +249,20 @@
             </a>
         </div>
 
+        {% if dataset.tasks.count > 1 %}
+            <hr>
+            <div class="my-4 text-center">
+                {% for dataset_task in dataset.tasks.all %}
+                    <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}?task_pk={{ dataset_task.pk }}" class="btn btn-outline-secondary btn-sm {% if task and task.pk == dataset_task.pk %}active{% endif %}">
+                        <b>{{dataset_task}}</b> prompts
+                    </a>
+                {% endfor %}
+                <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}" class="btn btn-outline-secondary btn-sm {% if not task %}active{% endif %}">
+                    all <b>{{dataset.name}}</b> prompts
+                </a>
+            </div>
+        {% endif %}
+
         <div class="card">
             <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" id="promptTabs" role="tablist">
@@ -444,7 +458,7 @@
         </div>
 
         <div class="d-flex justify-content-end mt-4">
-            <a id="create-prompt-btn" class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}">
+            <a id="create-prompt-btn" class="btn btn-primary" href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}">
                 <i class="fas fa-plus me-2"></i>
                 <span id="btn-text">Create New Prompt</span>
                 <span id="spinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>

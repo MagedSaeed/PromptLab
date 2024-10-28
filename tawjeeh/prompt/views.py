@@ -563,6 +563,8 @@ class PromptListView(LoginRequiredMixin, ListView):
         queryset = queryset.filter(dataset__pk=self.kwargs["dataset_pk"])
         # filter out draft prompts
         queryset = queryset.filter(review_actions__isnull=False).distinct()
+        if self.task:
+            queryset = queryset.filter(task=self.task)
         if not self.request.user.is_moderator:
             queryset = list(filter(lambda prompt: prompt.is_approved, queryset))
             queryset = queryset[:5]
@@ -587,6 +589,8 @@ class PromptListView(LoginRequiredMixin, ListView):
             created_by=self.request.user,
             dataset=self.dataset,
         )
+        if self.task:
+            context["user_prompts"] = context["user_prompts"].filter(task=self.task)
         context["task"] = self.task
 
         # get prompts that are available to review
@@ -605,6 +609,8 @@ class PromptListView(LoginRequiredMixin, ListView):
             latest_decision__isnull=True,
             latest_status=PromptReviewAction.PromptStatus.SUBMITTED,
         )
+        if self.task:
+            prompts_ready_for_review = prompts_ready_for_review.filter(task=self.task)
         context["prompts_to_review"] = prompts_ready_for_review
         return context
 

@@ -261,23 +261,24 @@ class Dataset(models.Model):
         self.save()
         return True
 
-    @property
-    def default_answer_choices(self):
+    def get_default_answer_choices(self, task):
+        prompt_query = Prompt.objects.filter(
+            dataset=self,
+            tags__name__icontains="Example Prompt",
+        )
+        if task:
+            prompt_query = prompt_query.filter(task=task)
+        if prompt_query.exists():
+            prompt = prompt_query.first()
+            if prompt.answer_choices:
+                return prompt.answer_choices
+        # if this is not the case, we can get them from the target column features labels:
         if not self.target_column:
             return None
         features = self.get_features()
         if features.get(self.target_column) and "names" in features[self.target_column]:
             answer_choices = features[self.target_column]["names"]
             return json.dumps([{"value": choice} for choice in answer_choices])
-        # if this is not the case, we can get them from an example prompt:
-        prompt_query = Prompt.objects.filter(
-            dataset=self,
-            tags__name__icontains="Example Prompt",
-        )
-        if prompt_query.exists():
-            prompt = prompt_query.first()
-            if prompt.answer_choices:
-                return prompt.answer_choices
         return None
 
 

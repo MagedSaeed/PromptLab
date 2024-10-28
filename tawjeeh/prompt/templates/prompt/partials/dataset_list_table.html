@@ -15,7 +15,7 @@
                 <tr>
                     <th scope="row">{{ forloop.counter }}</th>
                     <td>
-                        <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}" class="dataset-name">
+                        <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}" class="dataset-name">
                             {{ dataset.name }}
                         </a>
                     </td>
@@ -37,7 +37,7 @@
                             <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}" class="btn btn-sm btn-outline-primary" title="View Prompts">
                                 <i class="bi bi-list-ul"></i>
                             </a>
-                            <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}" class="btn btn-sm btn-outline-success" title="Create Prompt">
+                            <a href="{% url 'prompt:prompt_create' dataset_pk=dataset.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}" class="btn btn-sm btn-outline-success" title="Create Prompt">
                                 <i class="bi bi-plus-lg"></i>
                             </a>
                             <a href="{{ dataset.huggingface_link }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="View on Hugging Face">

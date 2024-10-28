@@ -294,7 +294,7 @@
                             </ul>
                         </li>
                         <li class="breadcrumb-item">
-                            <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}">
+                            <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}">
                                 <i class="bi bi-file-text breadcrumb-icon"></i>{{ dataset.name }} Prompts
                             </a>
                         </li>
