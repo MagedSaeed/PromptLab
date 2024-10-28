@@ -621,6 +621,13 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
             if self.request.GET.get("show_all_prompts"):
                 return queryset
         queryset = queryset.filter(created_by=self.request.user)
+        status_order_map = {
+            "RETURNED_FOR_MODIFICATION": 0,
+            "DRAFT": 1,
+            "SUBMITTED": 2,
+            "APPROVED": 3,
+        }
+        queryset = sorted(queryset, key=lambda p: status_order_map[p.status])
         return queryset
 
     def render_to_response(self, context, **response_kwargs):
