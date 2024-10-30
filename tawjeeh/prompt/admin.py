@@ -1,7 +1,7 @@
 import json
 
 from django.contrib import admin, messages
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.utils.safestring import mark_safe
 
 # from django.core.management import call_command
@@ -53,6 +53,18 @@ class DatasetAdmin(admin.ModelAdmin):
         "columns_names_prettified",
         "huggingface_raw_prettified",
     ]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "tasks",
+                Prefetch(
+                    "prompts", queryset=Prompt.objects.select_related("created_by")
+                ),
+            )
+        )
 
     def _prettify_json(self, data):
         """Helper function to prettify JSON data"""
@@ -195,6 +207,17 @@ class PromptStatusFilter(admin.SimpleListFilter):
 class PromptAdmin(admin.ModelAdmin):
     search_fields = ["dataset__name", "dataset__tasks__name"]
     list_filter = [PromptStatusFilter, "dataset", "dataset__tasks", "created_by"]
+    list_select_related = ["dataset", "created_by", "task"]
+    search_fields = ["name", "dataset__name", "created_by__username"]
+    list_display = ("name", "dataset", "created_by", "status", "created_on")
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("tags", "review_actions")
+            .select_related("dataset", "created_by", "task", "base_prompt")
+        )
 
 
 class PromptReviewActionAdmin(admin.ModelAdmin):
@@ -215,6 +238,10 @@ class PromptingProjectAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "get_prompters_count", "get_datasets_count")
     search_fields = ("name", "owner__username", "prompters__username")
     filter_horizontal = ("prompters", "datasets")
+    list_select_related = ["owner"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("prompters", "datasets")
 
     def get_prompters_count(self, obj):
         return obj.prompters.count()
