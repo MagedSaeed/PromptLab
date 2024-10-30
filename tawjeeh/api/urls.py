@@ -6,7 +6,7 @@ app_name = "api"
 urlpatterns = [
     path(
         "prompt/create",
-        views.PromptViewSet.as_view({"post": "create"}),
+        views.PromptCreateView.as_view(),
         name="prompt_create",
     ),
 ]
