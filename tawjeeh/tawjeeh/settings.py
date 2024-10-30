@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django_htmx",
     "crispy_forms",
     "django_filters",
+    "rest_framework",
     "crispy_bootstrap4",
     "django_celery_beat",
     "django_celery_results",

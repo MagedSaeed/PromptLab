@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth import get_user_model
 from prompt.models import Dataset, Prompt, PromptingProject
 from rest_framework import serializers
@@ -6,7 +8,7 @@ from taggit.serializers import TaggitSerializer, TagListSerializerField
 User = get_user_model()
 
 
-class PromptSerializer(TaggitSerializer, serializers.ModelSerializer):
+class PromptCreateSerializer(TaggitSerializer, serializers.ModelSerializer):
     project_secret_key = serializers.CharField(write_only=True)
     dataset_huggingface_name = serializers.CharField(write_only=True)
     created_by = serializers.CharField(write_only=True)
@@ -57,3 +59,38 @@ class PromptSerializer(TaggitSerializer, serializers.ModelSerializer):
         instance = Prompt.objects.create(**validated_data)
         instance.tags.add(*map(str, tags))
         return instance
+
+
+class PromptListSerializer(TaggitSerializer, serializers.ModelSerializer):
+    tags = TagListSerializerField(read_only=True)
+    dataset_name = serializers.CharField(
+        source="dataset.huggingface_name",
+        read_only=True,
+    )
+    answer_choices = serializers.SerializerMethodField()
+    task = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Prompt
+        fields = [
+            "id",
+            "tags",
+            "name",
+            "task",
+            "template",
+            "dataset_name",
+            "dataset_subset",
+            "answer_choices",
+            "text_direction",
+        ]
+
+    def get_answer_choices(self, obj):
+        if not obj.answer_choices:
+            return []
+        answer_choices = json.loads(obj.answer_choices)
+        return [choice["value"] for choice in answer_choices]
+
+    def get_task(self, obj):
+        if not obj.task:
+            return None
+        return {"name": str(obj.task.name)}

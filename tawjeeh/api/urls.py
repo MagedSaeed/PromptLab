@@ -9,4 +9,9 @@ urlpatterns = [
         views.PromptCreateView.as_view(),
         name="prompt_create",
     ),
+    path(
+        "prompt/list",
+        views.PromptListView.as_view(),
+        name="prompt_list",
+    ),
 ]
