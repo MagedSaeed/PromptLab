@@ -69,6 +69,7 @@ class PromptListSerializer(TaggitSerializer, serializers.ModelSerializer):
     )
     answer_choices = serializers.SerializerMethodField()
     task = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()  # Add this line
 
     class Meta:
         model = Prompt
@@ -77,6 +78,7 @@ class PromptListSerializer(TaggitSerializer, serializers.ModelSerializer):
             "tags",
             "name",
             "task",
+            "status",
             "template",
             "dataset_name",
             "dataset_subset",
@@ -94,3 +96,6 @@ class PromptListSerializer(TaggitSerializer, serializers.ModelSerializer):
         if not obj.task:
             return None
         return {"name": str(obj.task.name)}
+
+    def get_status(self, obj):
+        return obj.status
