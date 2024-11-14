@@ -48,17 +48,27 @@ def get_split_samples(
 
 def collect_dataset_configs_details(dataset_object):
     configs_and_splits = {}
-    if not dataset_object.subsets:
-        config_names = datasets.get_dataset_config_names(
-            dataset_object.huggingface_name,
-            trust_remote_code=True,
-        )
-    else:
-        config_names = dataset_object.subsets.split(",")
 
-    if dataset_object.default_subset:
-        if dataset_object.default_subset not in config_names:
-            config_names.append(dataset_object.default_subset)
+    # Check if we should only download the default subset
+    if getattr(dataset_object, "download_only_the_default_subset", False):
+        if not dataset_object.default_subset:
+            raise ValueError(
+                "default_subset must be specified when download_only_the_default_subset is True"
+            )
+        config_names = [dataset_object.default_subset]
+    else:
+        # Original logic for getting all configs
+        if not dataset_object.subsets:
+            config_names = datasets.get_dataset_config_names(
+                dataset_object.huggingface_name,
+                trust_remote_code=True,
+            )
+        else:
+            config_names = dataset_object.subsets.split(",")
+
+        if dataset_object.default_subset:
+            if dataset_object.default_subset not in config_names:
+                config_names.append(dataset_object.default_subset)
 
     # Function to fetch splits for a given config name
     def fetch_splits_details(config_name):
@@ -92,7 +102,7 @@ def collect_dataset_configs_details(dataset_object):
             )
             return None
 
-    # Process configs in parallel if there are more than 10
+    # Since we might only be processing one config now, adjust the parallel processing threshold
     if len(config_names) > 10:
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             future_to_config = {
@@ -101,7 +111,7 @@ def collect_dataset_configs_details(dataset_object):
             }
             for future in concurrent.futures.as_completed(future_to_config):
                 try:
-                    results = future.result()  # Use the result() method
+                    results = future.result()
                     if results is None:
                         continue
                     config_name, splits_details = results
@@ -119,6 +129,7 @@ def collect_dataset_configs_details(dataset_object):
                 continue
             config_name, splits_details = fetch_splits_details(config_name)
             configs_and_splits[config_name] = splits_details
+
     try:
         dataset_object.configs_details = configs_and_splits
         dataset_object.save()

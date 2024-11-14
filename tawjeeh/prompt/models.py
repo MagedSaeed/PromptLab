@@ -113,6 +113,7 @@ class Dataset(models.Model):
         blank=True,
         help_text="Subset to show by default when accessing the dataset from the left bar. If empty, the first subset will be chosen. Useful when the dataset has many subsets.",
     )
+    download_only_the_default_subset = models.BooleanField(default=False)
     subsets = models.CharField(
         max_length=10_000,
         null=True,
