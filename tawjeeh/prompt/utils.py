@@ -3,11 +3,13 @@ import json
 import tempfile
 
 import datasets
+from core.utils import redis_cache
 from prompt import constants
 from sklearn.model_selection import train_test_split
 from templator import TemplateCreator
 
 
+@redis_cache()
 def get_split_samples(
     dataset_object,
     split,
@@ -46,6 +48,7 @@ def get_split_samples(
     return dataset.to_dict()
 
 
+@redis_cache()
 def collect_dataset_configs_details(dataset_object):
     configs_and_splits = {}
 
