@@ -69,7 +69,8 @@ class PromptListSerializer(TaggitSerializer, serializers.ModelSerializer):
     )
     answer_choices = serializers.SerializerMethodField()
     task = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()  # Add this line
+    status = serializers.SerializerMethodField()
+    created_by = serializers.CharField(source="created_by.username", read_only=True)
 
     class Meta:
         model = Prompt
