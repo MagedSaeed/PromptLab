@@ -80,6 +80,7 @@ class PromptListSerializer(TaggitSerializer, serializers.ModelSerializer):
             "task",
             "status",
             "template",
+            "created_by",
             "dataset_name",
             "dataset_subset",
             "answer_choices",
