@@ -3,7 +3,8 @@ import json
 from django.contrib import admin, messages
 from django.db.models import OuterRef, Prefetch, Subquery
 from django.utils.safestring import mark_safe
-from import_export import fields, resources
+
+# from import_export import fields, resources
 from import_export.admin import ImportExportModelAdmin
 
 # from django.core.management import call_command
@@ -207,33 +208,33 @@ class PromptStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
-class PromptResource(resources.ModelResource):
-    dataset_name = fields.Field(
-        column_name="dataset_name",
-        attribute="dataset",
-    )
+# class PromptResource(resources.ModelResource):
+#     dataset_name = fields.Field(
+#         column_name="dataset_name",
+#         attribute="dataset",
+#     )
 
-    def dehydrate_dataset_name(self, obj):
-        return obj.dataset.name if obj.dataset else ""
+#     def dehydrate_dataset_name(self, obj):
+#         return obj.dataset.name if obj.dataset else ""
 
-    def dehydrate_creator_name(self, obj):
-        return obj.created_by.username if obj.created_by else ""
+#     def dehydrate_creator_name(self, obj):
+#         return obj.created_by.username if obj.created_by else ""
 
-    class Meta:
-        model = Prompt
-        fields = (
-            "id",
-            "name",
-            "dataset",
-            "dataset_name",
-            "task",
-            "dataset_subset",
-            "tags",
-        )
+#     class Meta:
+#         model = Prompt
+#         fields = (
+#             "id",
+#             "name",
+#             "dataset",
+#             "dataset_name",
+#             "task",
+#             "dataset_subset",
+#             "tags",
+#         )
 
 
 class PromptAdmin(ImportExportModelAdmin):
-    resource_class = PromptResource
+    # resource_class = PromptResource
     search_fields = ["dataset__name", "dataset__tasks__name"]
     list_filter = [PromptStatusFilter, "dataset", "dataset__tasks", "created_by"]
     list_select_related = ["dataset", "created_by", "task"]
