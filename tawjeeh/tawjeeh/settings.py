@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "taggit",
     "django_htmx",
     "crispy_forms",
+    "import_export",
     "django_filters",
     "rest_framework",
     "crispy_bootstrap4",

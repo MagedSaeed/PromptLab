@@ -3,6 +3,7 @@ import json
 from django.contrib import admin, messages
 from django.db.models import OuterRef, Prefetch, Subquery
 from django.utils.safestring import mark_safe
+from import_export.admin import ImportExportModelAdmin
 
 # from django.core.management import call_command
 from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
@@ -204,7 +205,7 @@ class PromptStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
-class PromptAdmin(admin.ModelAdmin):
+class PromptAdmin(ImportExportModelAdmin):
     search_fields = ["dataset__name", "dataset__tasks__name"]
     list_filter = [PromptStatusFilter, "dataset", "dataset__tasks", "created_by"]
     list_select_related = ["dataset", "created_by", "task"]
