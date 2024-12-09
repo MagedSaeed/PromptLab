@@ -84,7 +84,9 @@ class Task(models.Model):
 
     @property
     def prompts(self):
-        return Prompt.objects.filter(dataset__tasks__pk=self.pk)
+        return Prompt.objects.filter(dataset__tasks__pk=self.pk).select_related(
+            "dataset"
+        )
 
     def __str__(self):
         return self.name
