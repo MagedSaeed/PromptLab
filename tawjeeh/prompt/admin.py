@@ -212,10 +212,6 @@ class PromptResource(resources.ModelResource):
         column_name="dataset_name",
         attribute="dataset",
     )
-    creator_name = fields.Field(
-        column_name="creator_name",
-        attribute="created_by",
-    )
 
     def dehydrate_dataset_name(self, obj):
         return obj.dataset.name if obj.dataset else ""
@@ -230,10 +226,9 @@ class PromptResource(resources.ModelResource):
             "name",
             "dataset",
             "dataset_name",
-            "created_by",
-            "creator_name",
-            "status",
-            "created_on",
+            "task",
+            "dataset_subset",
+            "tags",
         )
 
 
