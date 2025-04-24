@@ -305,6 +305,7 @@ class PromptReviewActionAdmin(admin.ModelAdmin):
         "submitter",
     ]
     list_select_related = ["prompt", "prompt__dataset", "submitter"]
+    raw_id_fields = ["prompt", "submitter"]
 
     def get_queryset(self, request):
         return (
