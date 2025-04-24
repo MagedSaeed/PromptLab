@@ -54,4 +54,4 @@ pip install gunicorn
 celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 
 # Start the Gunicorn server in the background
-gunicorn tawjeeh.wsgi --workers 2 --bind 0.0.0.0:8080 --max-requests 4 --preload True
+gunicorn tawjeeh.wsgi --workers 2 --bind 0.0.0.0:8080 --max-requests 4 --reload True
