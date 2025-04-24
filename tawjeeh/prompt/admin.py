@@ -57,6 +57,7 @@ class DatasetAdmin(admin.ModelAdmin):
         "columns_names_prettified",
         "huggingface_raw_prettified",
     ]
+    raw_id_fields = ["tasks"]
 
     def get_queryset(self, request):
         return (
