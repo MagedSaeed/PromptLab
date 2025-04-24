@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap4",
     "django_celery_beat",
     "django_celery_results",
+    "debug_toolbar",  # for debugging
     # allauth
     "allauth",
     "allauth.account",
@@ -81,6 +82,8 @@ MIDDLEWARE = [
     # whitenoise
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    # django-debug-toolbar
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 
@@ -110,11 +113,22 @@ WSGI_APPLICATION = "tawjeeh.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     },
+# }
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    },
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
+    }
 }
 
 
@@ -200,7 +214,7 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_EMAIL_REQUIRED = True
 
-SITE_ID = 2
+SITE_ID = 1
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
@@ -232,3 +246,10 @@ CELERY_RESULT_EXTENDED = True
 
 # django-taggit settings
 TAGGIT_CASE_INSENSITIVE = True
+
+
+INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
+]

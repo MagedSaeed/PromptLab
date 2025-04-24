@@ -17,6 +17,13 @@ DATABASES = {
     }
 }
 
+# pop 'django_toolbar' from INSTALLED_APPS if it exists
+if "django_toolbar" in INSTALLED_APPS:  # noqa: F405
+    INSTALLED_APPS.remove("django_toolbar")  # noqa: F405
+
+# pop 'debug_toolbar.middleware.DebugToolbarMiddleware' from MIDDLEWARE if it exists
+if "debug_toolbar.middleware.DebugToolbarMiddleware" in MIDDLEWARE:  # noqa: F405
+    MIDDLEWARE.remove("debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
 
 CACHES = {
     "default": {
@@ -31,8 +38,8 @@ CACHES = {
     }
 }
 
-CELERY_BROKER_URL = f'redis://{os.environ["REDIS_USER"]}:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
-CELERY_RESULT_BACKEND = f'redis://{os.environ["REDIS_USER"]}:{os.environ["REDIS_PASSWORD"]}@{os.environ["REDIS_HOST"]}:{os.environ["REDIS_PORT"]}'
+CELERY_BROKER_URL = f"redis://{os.environ['REDIS_USER']}:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}"
+CELERY_RESULT_BACKEND = f"redis://{os.environ['REDIS_USER']}:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}"
 
 CSRF_TRUSTED_ORIGINS = [
     "https://tawjeeh-production.up.railway.app",
