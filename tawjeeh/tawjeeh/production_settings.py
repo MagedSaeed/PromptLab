@@ -59,3 +59,7 @@ if server_ip:
 
 
 CELERY_BROKER_URL = f"redis://{os.environ['REDIS_USER']}:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}"
+
+
+# suppress system checks for debug_toolbar
+SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W001"]
