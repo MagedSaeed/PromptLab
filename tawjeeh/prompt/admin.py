@@ -240,6 +240,7 @@ class PromptAdmin(ImportExportModelAdmin):
     list_select_related = ["dataset", "created_by", "task"]
     search_fields = ["name", "dataset__name", "created_by__username"]
     list_display = ("name", "dataset", "created_by", "status", "created_on")
+    raw_id_fields = ["dataset", "task", "base_prompt", "created_by"]
 
     def get_queryset(self, request):
         return (

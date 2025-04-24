@@ -1,6 +1,6 @@
 from api.permissions import HasProjectSecretKey
 from api.serializers import PromptCreateSerializer, PromptListSerializer
-from prompt.models import Prompt
+from prompt.models import Prompt, PromptingProject
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import CreateAPIView, ListAPIView
@@ -39,10 +39,32 @@ class PromptListView(ListAPIView):
         if not project_secret_key:
             return Prompt.objects.none()
 
+        # Get project and dataset IDs in one efficient query
+        try:
+            # Cache this result if project_secret_key doesn't change often
+            dataset_ids = PromptingProject.objects.get(
+                secret_key=project_secret_key
+            ).datasets.values_list("id", flat=True)
+        except PromptingProject.DoesNotExist:
+            return Prompt.objects.none()
+
+        # Build optimized queryset
         return (
-            Prompt.objects.filter(
-                dataset__prompting_projects__secret_key=project_secret_key
-            )
-            .select_related("dataset")
+            Prompt.objects.filter(dataset_id__in=dataset_ids)
+            .select_related("dataset", "task", "created_by")
             .prefetch_related("tags")
+            .only(
+                # Only fields actually used in your serializer
+                "id",
+                "tags",
+                "name",
+                "template",
+                "text_direction",
+                "dataset_subset",
+                "answer_choices",
+                # "dataset__name",
+                "dataset__huggingface_name",
+                "task__name",
+                "created_by__username",
+            )
         )
