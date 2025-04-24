@@ -1,7 +1,8 @@
 import json
 
 from django.contrib import admin, messages
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db import models
+from django.db.models import Case, F, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.utils.safestring import mark_safe
 
 # from import_export import fields, resources
@@ -190,72 +191,105 @@ class PromptStatusFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        if self.value():
-            latest_review = PromptReviewAction.objects.filter(
-                prompt=OuterRef("pk")
-            ).order_by("-taken_on")
+        if not self.value():
+            return queryset
 
-            if self.value() in ["DRAFT", "SUBMITTED"]:
-                return queryset.annotate(
-                    latest_status=Subquery(latest_review.values("prompt_status")[:1])
-                ).filter(latest_status=self.value())
-            else:
-                return queryset.annotate(
-                    latest_decision=Subquery(
-                        latest_review.values("submitter_decision")[:1]
-                    )
-                ).filter(latest_decision=self.value())
-        return queryset
+        # Get the latest review action for each prompt using a subquery
+        latest_review = PromptReviewAction.objects.filter(
+            prompt=OuterRef("pk")
+        ).order_by("-taken_on")
 
+        # Annotate the queryset with both prompt_status and submitter_decision
+        # from the latest review action
+        annotated_queryset = queryset.annotate(
+            latest_status=Subquery(latest_review.values("prompt_status")[:1]),
+            latest_decision=Subquery(latest_review.values("submitter_decision")[:1]),
+        )
 
-# class PromptResource(resources.ModelResource):
-#     dataset_name = fields.Field(
-#         column_name="dataset_name",
-#         attribute="dataset",
-#     )
+        # Use Case expressions to implement the same logic as the status property
+        # First, check if submitter_decision exists (not None) and use it if available
+        # Otherwise, fall back to prompt_status
+        # If neither exists, default to DRAFT
+        annotated_queryset = annotated_queryset.annotate(
+            calculated_status=Case(
+                # First check if submitter_decision exists and is not empty
+                When(
+                    ~Q(latest_decision__isnull=True) & ~Q(latest_decision=""),
+                    then=F("latest_decision"),
+                ),
+                # Then check if prompt_status exists
+                When(~Q(latest_status__isnull=True), then=F("latest_status")),
+                # Default to DRAFT if neither condition is met
+                default=Value(PromptReviewAction.PromptStatus.DRAFT),
+                output_field=models.CharField(),
+            )
+        )
 
-#     def dehydrate_dataset_name(self, obj):
-#         return obj.dataset.name if obj.dataset else ""
-
-#     def dehydrate_creator_name(self, obj):
-#         return obj.created_by.username if obj.created_by else ""
-
-#     class Meta:
-#         model = Prompt
-#         fields = (
-#             "id",
-#             "name",
-#             "dataset",
-#             "dataset_name",
-#             "task",
-#             "dataset_subset",
-#             "tags",
-#         )
+        # Now filter based on the calculated status
+        return annotated_queryset.filter(calculated_status=self.value())
 
 
 class PromptAdmin(ImportExportModelAdmin):
-    # resource_class = PromptResource
-    search_fields = ["dataset__name", "dataset__tasks__name"]
+    search_fields = ["name", "dataset__name", "created_by__username"]
     list_filter = [PromptStatusFilter, "dataset", "dataset__tasks", "created_by"]
     list_select_related = ["dataset", "created_by", "task"]
-    search_fields = ["name", "dataset__name", "created_by__username"]
     list_display = ("name", "dataset", "created_by", "status", "created_on")
     raw_id_fields = ["dataset", "task", "base_prompt", "created_by"]
+    readonly_fields = ["status"]
 
     def get_queryset(self, request):
-        return (
+        # Start with base queryset with essential select_related
+        qs = (
             super()
             .get_queryset(request)
-            .select_related("dataset", "created_by", "task", "base_prompt")
-            .prefetch_related(
+            .select_related("dataset", "created_by", "task")
+        )
+
+        # Only prefetch related review actions if we're viewing a detail page
+        # or a page with status column (saves overhead on changelist pages)
+        if "change" in request.path or any(
+            param.startswith("status") for param in request.GET
+        ):
+            qs = qs.prefetch_related(
                 Prefetch(
                     "review_actions",
                     queryset=PromptReviewAction.objects.select_related(
                         "submitter"
-                    ).order_by("-taken_on"),
+                    ).only(
+                        "id",
+                        "prompt_id",
+                        "submitter_id",
+                        "prompt_status",
+                        "submitter_decision",
+                        "taken_on",
+                        "submitter__username",
+                    ),
                 )
             )
-        )
+
+        # Use .only() to limit fields fetched
+        return qs.only(
+            "id",
+            "name",
+            "template",
+            "text_direction",
+            "dataset_id",
+            "dataset_subset",
+            "created_by_id",
+            "created_on",
+            "last_updated_on",
+            "task_id",
+            "answer_choices",
+            "dataset__name",
+            "dataset__huggingface_name",
+            "created_by__username",
+            "task__name",
+        ).order_by("-review_actions__taken_on")
+
+    # Add a cached property version of status to avoid redundant calculations
+    @admin.display(description="Status")
+    def status(self, obj):
+        return obj.status
 
 
 class PromptReviewActionAdmin(admin.ModelAdmin):
@@ -270,6 +304,32 @@ class PromptReviewActionAdmin(admin.ModelAdmin):
         "prompt__dataset__tasks",
         "submitter",
     ]
+    list_select_related = ["prompt", "prompt__dataset", "submitter"]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("prompt", "prompt__dataset", "submitter")
+            .only(
+                "id",
+                "prompt_id",
+                "submitter_id",
+                "prompt_status",
+                "submitter_decision",
+                "taken_on",
+                "submitter_comment",
+                "prompt__name",
+                "prompt__dataset__name",
+                "submitter__username",
+            )
+            # Prefetch tasks with a limited set of fields
+            .prefetch_related(
+                Prefetch(
+                    "prompt__dataset__tasks", queryset=Task.objects.only("id", "name")
+                )
+            )
+        ).order_by("-taken_on")
 
 
 class PromptingProjectAdmin(admin.ModelAdmin):
