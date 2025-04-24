@@ -1,8 +1,7 @@
 import json
 
 from django.contrib import admin, messages
-from django.db import models
-from django.db.models import Case, F, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models import Prefetch
 from django.utils.safestring import mark_safe
 
 # from import_export import fields, resources
@@ -194,39 +193,10 @@ class PromptStatusFilter(admin.SimpleListFilter):
         if not self.value():
             return queryset
 
-        # Get the latest review action for each prompt using a subquery
-        latest_review = PromptReviewAction.objects.filter(
-            prompt=OuterRef("pk")
-        ).order_by("-taken_on")
-
-        # Annotate the queryset with both prompt_status and submitter_decision
-        # from the latest review action
-        annotated_queryset = queryset.annotate(
-            latest_status=Subquery(latest_review.values("prompt_status")[:1]),
-            latest_decision=Subquery(latest_review.values("submitter_decision")[:1]),
+        # Use the model's annotation method
+        return Prompt.with_status_annotations(queryset).filter(
+            calculated_status=self.value()
         )
-
-        # Use Case expressions to implement the same logic as the status property
-        # First, check if submitter_decision exists (not None) and use it if available
-        # Otherwise, fall back to prompt_status
-        # If neither exists, default to DRAFT
-        annotated_queryset = annotated_queryset.annotate(
-            calculated_status=Case(
-                # First check if submitter_decision exists and is not empty
-                When(
-                    ~Q(latest_decision__isnull=True) & ~Q(latest_decision=""),
-                    then=F("latest_decision"),
-                ),
-                # Then check if prompt_status exists
-                When(~Q(latest_status__isnull=True), then=F("latest_status")),
-                # Default to DRAFT if neither condition is met
-                default=Value(PromptReviewAction.PromptStatus.DRAFT),
-                output_field=models.CharField(),
-            )
-        )
-
-        # Now filter based on the calculated status
-        return annotated_queryset.filter(calculated_status=self.value())
 
 
 class PromptAdmin(ImportExportModelAdmin):
@@ -246,10 +216,7 @@ class PromptAdmin(ImportExportModelAdmin):
         )
 
         # Only prefetch related review actions if we're viewing a detail page
-        # or a page with status column (saves overhead on changelist pages)
-        if "change" in request.path or any(
-            param.startswith("status") for param in request.GET
-        ):
+        if "change" in request.path:
             qs = qs.prefetch_related(
                 Prefetch(
                     "review_actions",
@@ -266,6 +233,11 @@ class PromptAdmin(ImportExportModelAdmin):
                     ),
                 )
             )
+        # For list views, annotate with status calculations instead of prefetching
+        elif (
+            any(param.startswith("status") for param in request.GET) or not request.GET
+        ):
+            qs = Prompt.with_status_annotations(qs)
 
         # Use .only() to limit fields fetched
         return qs.only(
@@ -284,11 +256,14 @@ class PromptAdmin(ImportExportModelAdmin):
             "dataset__huggingface_name",
             "created_by__username",
             "task__name",
-        ).order_by("-review_actions__taken_on")
+        )
 
-    # Add a cached property version of status to avoid redundant calculations
     @admin.display(description="Status")
     def status(self, obj):
+        # Use annotated field if available
+        if hasattr(obj, "calculated_status"):
+            return obj.calculated_status
+        # Fall back to property which uses prefetched data if available
         return obj.status
 
 

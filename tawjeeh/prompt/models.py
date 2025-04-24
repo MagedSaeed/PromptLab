@@ -8,6 +8,7 @@ from core.utils import redis_cache  # noqa: F401
 from django.contrib.auth import get_user_model
 from django.core.cache import cache  # noqa: F401
 from django.db import models, transaction
+from django.db.models import Case, F, OuterRef, Q, Subquery, Value, When
 from prompt.utils import collect_dataset_configs_details
 from taggit.managers import TaggableManager
 
@@ -334,24 +335,29 @@ class Prompt(models.Model):
         return f"prompt for dataset {self.dataset}"
 
     @property
+    def last_review_action(self):
+        if not hasattr(self, "_last_review_action"):
+            # Fall back to database query
+            self._last_review_action = self.review_actions.order_by("-taken_on").first()
+        return self._last_review_action
+
+    @property
     def updateable(self):
         # catch the case when the prompt is not yet created
         # it should be updateable in this case
-        if not self.pk:
-            return True
-        return self.status in (
+        return not self.pk or self.status in (
             PromptReviewAction.PromptStatus.DRAFT,
             PromptReviewAction.DecisionChoices.RETURNED_FOR_MODIFICATION,
         )
 
     @property
     def reviewable(self):
-        if not self.review_actions.exists():
+        if self.last_review_action is None:
             return False
 
         return (
             self.status == PromptReviewAction.PromptStatus.SUBMITTED
-            and self.review_actions.last().submitter_decision
+            and self.last_review_action.submitter_decision
             != PromptReviewAction.DecisionChoices.APPROVED
         )
 
@@ -362,11 +368,10 @@ class Prompt(models.Model):
     @property
     def status(self):
         status = PromptReviewAction.PromptStatus.DRAFT
-        if self.review_actions.exists():
-            last_review_action = self.review_actions.last()
-            status = last_review_action.prompt_status
-            if last_review_action.submitter_decision:
-                status = last_review_action.submitter_decision
+        if self.last_review_action:
+            status = self.last_review_action.prompt_status
+            if self.last_review_action.submitter_decision:
+                status = self.last_review_action.submitter_decision
         return status
 
     def as_dict(self):
@@ -382,6 +387,29 @@ class Prompt(models.Model):
             "dataset_subset": self.dataset_subset,
             "created_by": self.created_by,
         }
+
+    @classmethod
+    def with_status_annotations(cls, queryset=None):
+        if queryset is None:
+            queryset = cls.objects.all()
+
+        latest_review = PromptReviewAction.objects.filter(
+            prompt=OuterRef("pk")
+        ).order_by("-taken_on")
+
+        return queryset.annotate(
+            latest_status=Subquery(latest_review.values("prompt_status")[:1]),
+            latest_decision=Subquery(latest_review.values("submitter_decision")[:1]),
+            calculated_status=Case(
+                When(
+                    ~Q(latest_decision__isnull=True) & ~Q(latest_decision=""),
+                    then=F("latest_decision"),
+                ),
+                When(~Q(latest_status__isnull=True), then=F("latest_status")),
+                default=Value(PromptReviewAction.PromptStatus.DRAFT),
+                output_field=models.CharField(),
+            ),
+        )
 
 
 class PromptReviewAction(models.Model):
