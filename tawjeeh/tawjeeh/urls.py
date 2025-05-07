@@ -30,6 +30,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     path("prompt/", include("prompt.urls")),
     path("api/", include("api.urls")),
+    path("core/", include("core.urls")),
 ]
 
 # add static urls
