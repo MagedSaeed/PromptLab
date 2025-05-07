@@ -254,4 +254,7 @@ INTERNAL_IPS = [
     # ...
 ]
 
-from .local_settings import *  # noqa: E402 F403
+try:
+    from .local_settings import *  # noqa: E402 F403
+except ImportError:
+    pass
