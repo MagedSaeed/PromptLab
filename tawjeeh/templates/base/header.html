@@ -34,6 +34,15 @@
                                 <li><a class="dropdown-item" href="{% url 'account_logout' %}">Log out</a></li>
                             </ul>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="projectsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Prompting Projects
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="projectsDropdown">
+                                <li><a class="dropdown-item" href="{% url 'prompt:project_list' %}">My Projects</a></li>
+                                <li><a class="dropdown-item" href="{% url 'prompt:project_create' %}">Create New Project</a></li>
+                            </ul>
+                        </li>
                     {% else %}
                         <li class="nav-item">
                             <a class="nav-link btn btn-outline-light me-2" href="{% url 'account_login' %}">Log in</a>

@@ -6,6 +6,11 @@ from prompt.views import (
     DatasetResetCacheView,
     HFSynchView,
     MultiplePromptsCreateView,
+    ProjectCreateView,
+    ProjectDetailView,
+    ProjectDistributeView,
+    ProjectListView,
+    ProjectUpdateView,
     PromptCreateView,
     PromptDeleteView,
     PromptListView,
@@ -84,5 +89,31 @@ urlpatterns = [
         "user-distributed-datasets/",
         UserDistributedDatasetsView.as_view(),
         name="my_datasets",
+    ),
+    # prompting project urls
+    path(
+        "project/create/",
+        ProjectCreateView.as_view(),
+        name="project_create",
+    ),
+    path(
+        "project/list/",
+        ProjectListView.as_view(),
+        name="project_list",
+    ),
+    path(
+        "project/<int:pk>/",
+        ProjectDetailView.as_view(),
+        name="project_detail",
+    ),
+    path(
+        "project/<int:pk>/update/",
+        ProjectUpdateView.as_view(),
+        name="project_update",
+    ),
+    path(
+        "project/<int:pk>/distribute-datasets/",
+        ProjectDistributeView.as_view(),
+        name="distribute_datasets",
     ),
 ]

@@ -1,0 +1,981 @@
+{% extends "base/base.html" %}
+{% load prompt_extras %}
+
+{% block style %}
+    <style>
+        .project-header {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .project-title {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .project-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .project-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-meta-item {
+            display: flex;
+            align-items: center;
+            color: #666;
+        }
+
+        .project-meta-item i {
+            margin-right: 0.5rem;
+            color: #007bff;
+        }
+
+        .project-section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .project-section-title {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .api-key-container {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .api-key-display {
+            font-family: monospace;
+            background-color: #e9ecef;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .api-example {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .api-example-container {
+            margin-top: 1rem;
+        }
+
+        .dataset-card {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .dataset-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .member-item:last-child {
+            border-bottom: none;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #6c757d;
+        }
+
+        .member-info {
+            flex-grow: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .member-role {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .distribute-btn {
+            margin-top: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            padding-left: 2.5rem;
+            border-radius: 20px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .highlight {
+            background-color: #ffff00;
+            padding: 0 0.25rem;
+            border-radius: 2px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .table-responsive {
+            margin-bottom: 1rem;
+        }
+
+        .dataset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .dataset-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+
+        .pagination li {
+            margin: 0 0.25rem;
+        }
+
+        .pagination li a, .pagination li span {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            color: #007bff;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .pagination li.active a, .pagination li.active span {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+            z-index: 1;
+        }
+
+        .pagination li.disabled a, .pagination li.disabled span {
+            color: #6c757d;
+            pointer-events: none;
+            cursor: not-allowed;
+            border-color: #dee2e6;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            color: #6c757d;
+        }
+    </style>
+{% endblock %}
+
+{% block main_content %}
+    <div class="container mt-4 mb-5">
+        <div class="project-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="project-title">{{ project.name }}</h1>
+                    <p class="project-description">{{ project.description|default:"No description provided" }}</p>
+
+                    <div class="project-meta">
+                        <div class="project-meta-item">
+                            <i class="bi bi-person"></i>
+                            <span>Owner: {{ project.owner.username }}</span>
+                        </div>
+                        <div class="project-meta-item">
+                            <i class="bi bi-calendar"></i>
+                            <span>Created: {{ project.created_on|date:"M d, Y" }}</span>
+                        </div>
+                        {% if project.minimum_prompts_per_prompter %}
+                            <div class="project-meta-item">
+                                <i class="bi bi-check-circle"></i>
+                                <span>Minimum prompts: {{ project.minimum_prompts_per_prompter }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if request.user == project.owner or request.user.is_superuser %}
+                    <div>
+                        <a href="{% url 'prompt:project_update' project.pk %}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Edit Project
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+            <!-- API Information Section -->
+                {% if request.user == project.owner or request.user.is_superuser %}
+                    <div class="project-section">
+                        <h3 class="project-section-title">API Information</h3>
+
+                        <div class="api-key-container">
+                            <label>Project Secret Key (for API access)</label>
+                            <div class="api-key-display">
+                                <code id="apiKey">{{ project.secret_key }}</code>
+                                <button class="btn btn-sm btn-outline-secondary" id="copyApiKey">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                            <small class="text-muted">Use this key for API access to this project. Keep it secure.</small>
+                        </div>
+
+                        <div class="api-code-container">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">Example API Usage</h5>
+                                <button class="btn btn-sm btn-outline-secondary" id="copyApiExample">
+                                    <i class="bi bi-clipboard"></i> Copy Code
+                                </button>
+                            </div>
+                            <div class="api-code-display">
+                                <pre id="apiExampleCode" style="margin: 0; overflow: auto; white-space: pre-wrap;">import requests
+import json
+
+# API endpoint for creating prompts
+url = "https://tawjeeh.up.railway.app/api/prompt/create"
+
+# Request data with your project secret key
+data = {
+    "name": "Example Prompt",
+    "template": "Translate {text} to {language}",
+    "dataset_huggingface_name": "arbml/watan_2004",
+    "project_secret_key": "{{ project.secret_key }}",
+    "created_by": "username",
+    "tags": ["translation", "api-test"]
+}
+
+# Send the request
+response = requests.post(url, 
+    headers={"Content-Type": "application/json"},
+    json=data
+)
+
+# Check the response
+print(response.status_code)
+print(response.json())</pre>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+            <!-- Datasets Section -->
+                <div class="project-section" id="datasets-section">
+                    <div class="section-header">
+                        <h3 class="project-section-title mb-0">Datasets ({{ project.datasets.count }})</h3>
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" class="form-control" id="datasetSearch"
+                                   placeholder="Search datasets...">
+                        </div>
+                    </div>
+
+                    <div class="dataset-container">
+                        <div class="dataset-grid" id="datasetGrid">
+                            {% for dataset in project.datasets.all %}
+                                <div class="dataset-card" data-name="{{ dataset.name|lower }}" data-hf-name="{{ dataset.huggingface_name|lower }}">
+                                    <h5>{{ dataset.name }}</h5>
+                                    <p class="text-muted small mb-2">{{ dataset.huggingface_name }}</p>
+                                    <div class="d-flex mt-2">
+                                        <a href="{% url 'prompt:prompt_list' dataset_pk=dataset.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View Prompts
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="no-results" id="datasetsNoResults" style="display: none;">
+                            <p>No datasets found matching your search.</p>
+                            <button class="btn btn-sm btn-outline-secondary" id="clearDatasetSearch">
+                                Clear search
+                            </button>
+                        </div>
+
+                        <div class="pagination-container">
+                            <ul class="pagination" id="datasetPagination"></ul>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Dataset Assignments Section -->
+                {% if project.owner == request.user or request.user.is_superuser %}
+                    <div class="project-section" id="assignments-section">
+                        <div class="section-header">
+                            <h3 class="project-section-title mb-0">Dataset Assignments</h3>
+                            <div class="search-box">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="form-control" id="assignmentSearch"
+                                       placeholder="Search assignments...">
+                            </div>
+                        </div>
+
+                        {% if project.dataset_assignments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Task</th>
+                                            <th>Dataset</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assignmentTableBody">
+                                        {% for username, tasks in project.dataset_assignments.items %}
+                                            {% for task, info in tasks.items %}
+                                                <tr data-username="{{ username|lower }}" data-task="{{ task|lower }}" data-dataset="{{ info.dataset_name|lower }}">
+                                                    <td>{{ username }}</td>
+                                                    <td>{{ task }}</td>
+                                                    <td>{{ info.dataset_name }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="no-results" id="assignmentsNoResults" style="display: none;">
+                                <p>No assignments found matching your search.</p>
+                                <button class="btn btn-sm btn-outline-secondary" id="clearAssignmentSearch">
+                                    Clear search
+                                </button>
+                            </div>
+
+                            <div class="pagination-container">
+                                <ul class="pagination" id="assignmentPagination"></ul>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No dataset assignments have been made yet.</p>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'prompt:distribute_datasets' project.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-primary distribute-btn">
+                                <i class="bi bi-shuffle"></i> Distribute Datasets
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4">
+            <!-- Team Members Section -->
+                <div class="project-section" id="members-section">
+                    <div class="section-header">
+                        <h3 class="project-section-title mb-0">Team Members ({{ project.prompters.count|add:"1" }})</h3>
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" class="form-control" id="memberSearch"
+                                   placeholder="Search members...">
+                        </div>
+                    </div>
+
+                    <div class="member-list" id="memberList">
+                    <!-- Project Owner -->
+                        <div class="member-item" data-username="{{ project.owner.username|lower }}">
+                            <div class="member-avatar">
+                                {{ project.owner.username|first|upper }}
+                            </div>
+                            <div class="member-info">
+                                <div class="member-name">{{ project.owner.username }}</div>
+                                <div class="member-role">
+                                    <span class="badge bg-primary">Owner</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    <!-- Project Members -->
+                        {% for prompter in project.prompters.all %}
+                            <div class="member-item" data-username="{{ prompter.username|lower }}">
+                                <div class="member-avatar">
+                                    {{ prompter.username|first|upper }}
+                                </div>
+                                <div class="member-info">
+                                    <div class="member-name">{{ prompter.username }}</div>
+                                    <div class="member-role">
+                                        <span class="badge bg-secondary">Prompter</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">No additional team members have been added yet.</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="no-results" id="membersNoResults" style="display: none;">
+                        <p>No members found matching your search.</p>
+                        <button class="btn btn-sm btn-outline-secondary" id="clearMemberSearch">
+                            Clear search
+                        </button>
+                    </div>
+
+                    <div class="pagination-container">
+                        <ul class="pagination" id="memberPagination"></ul>
+                    </div>
+                </div>
+
+            <!-- Project Statistics -->
+                <div class="project-section">
+                    <h3 class="project-section-title">Project Statistics</h3>
+
+                    <div class="list-group">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-database text-primary me-2"></i>
+                                Datasets
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ project.datasets.count }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-people text-primary me-2"></i>
+                                Team Members
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ project.prompters.count|add:"1" }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-text text-primary me-2"></i>
+                                Prompts Created
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                {{ prompt_count|default:"0" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Copy API key to clipboard
+            document.getElementById('copyApiKey')?.addEventListener('click', function() {
+                const apiKey = document.getElementById('apiKey').textContent;
+                navigator.clipboard.writeText(apiKey).then(function() {
+                // Change button text temporarily to show success
+                    const button = document.getElementById('copyApiKey');
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+                    button.classList.remove('btn-outline-secondary');
+                    button.classList.add('btn-success');
+
+                    setTimeout(function() {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline-secondary');
+                    }, 2000);
+                });
+            });
+
+            // Copy API example to clipboard
+            document.getElementById('copyApiExample')?.addEventListener('click', function() {
+                const codeElement = document.getElementById('apiExampleCode');
+                const codeText = codeElement.textContent;
+
+                navigator.clipboard.writeText(codeText).then(function() {
+                    // Change button text temporarily to show success
+                    const button = document.getElementById('copyApiExample');
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+                    button.classList.remove('btn-outline-secondary');
+                    button.classList.add('btn-success');
+
+                    // Highlight the code container briefly
+                    const apiExample = document.querySelector('.api-code-container');
+                    apiExample.style.transition = 'background-color 0.3s ease';
+                    apiExample.style.backgroundColor = '#e8f4ff';
+
+                    setTimeout(function() {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline-secondary');
+                        apiExample.style.backgroundColor = '#f8f9fa';
+                    }, 2000);
+                });
+            });
+
+        // Client-side pagination and search functionality
+
+        // Function to generate pagination links
+            function generatePagination(totalItems, itemsPerPage, currentPage, paginationId, onPageChange) {
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                const pagination = document.getElementById(paginationId);
+                pagination.innerHTML = '';
+
+                if (totalPages <= 1) {
+                    return;
+                }
+
+            // Previous button
+                const prevLi = document.createElement('li');
+                prevLi.classList.add('page-item');
+                if (currentPage === 1) {
+                    prevLi.classList.add('disabled');
+                }
+                const prevLink = document.createElement('a');
+                prevLink.classList.add('page-link');
+                prevLink.innerHTML = '&laquo;';
+                prevLink.addEventListener('click', function() {
+                    if (currentPage > 1) {
+                        onPageChange(currentPage - 1);
+                    }
+                });
+                prevLi.appendChild(prevLink);
+                pagination.appendChild(prevLi);
+
+            // Page numbers
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+
+            // First page
+                if (startPage > 1) {
+                    const firstLi = document.createElement('li');
+                    firstLi.classList.add('page-item');
+                    const firstLink = document.createElement('a');
+                    firstLink.classList.add('page-link');
+                    firstLink.textContent = '1';
+                    firstLink.addEventListener('click', function() {
+                        onPageChange(1);
+                    });
+                    firstLi.appendChild(firstLink);
+                    pagination.appendChild(firstLi);
+
+                    if (startPage > 2) {
+                        const ellipsisLi = document.createElement('li');
+                        ellipsisLi.classList.add('page-item', 'disabled');
+                        const ellipsisSpan = document.createElement('span');
+                        ellipsisSpan.classList.add('page-link');
+                        ellipsisSpan.innerHTML = '&hellip;';
+                        ellipsisLi.appendChild(ellipsisSpan);
+                        pagination.appendChild(ellipsisLi);
+                    }
+                }
+
+            // Page numbers
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.classList.add('page-item');
+                    if (i === currentPage) {
+                        pageLi.classList.add('active');
+                    }
+                    const pageLink = document.createElement('a');
+                    pageLink.classList.add('page-link');
+                    pageLink.textContent = i;
+                    pageLink.addEventListener('click', function() {
+                        onPageChange(i);
+                    });
+                    pageLi.appendChild(pageLink);
+                    pagination.appendChild(pageLi);
+                }
+
+            // Last page
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        const ellipsisLi = document.createElement('li');
+                        ellipsisLi.classList.add('page-item', 'disabled');
+                        const ellipsisSpan = document.createElement('span');
+                        ellipsisSpan.classList.add('page-link');
+                        ellipsisSpan.innerHTML = '&hellip;';
+                        ellipsisLi.appendChild(ellipsisSpan);
+                        pagination.appendChild(ellipsisLi);
+                    }
+
+                    const lastLi = document.createElement('li');
+                    lastLi.classList.add('page-item');
+                    const lastLink = document.createElement('a');
+                    lastLink.classList.add('page-link');
+                    lastLink.textContent = totalPages;
+                    lastLink.addEventListener('click', function() {
+                        onPageChange(totalPages);
+                    });
+                    lastLi.appendChild(lastLink);
+                    pagination.appendChild(lastLi);
+                }
+
+            // Next button
+                const nextLi = document.createElement('li');
+                nextLi.classList.add('page-item');
+                if (currentPage === totalPages) {
+                    nextLi.classList.add('disabled');
+                }
+                const nextLink = document.createElement('a');
+                nextLink.classList.add('page-link');
+                nextLink.innerHTML = '&raquo;';
+                nextLink.addEventListener('click', function() {
+                    if (currentPage < totalPages) {
+                        onPageChange(currentPage + 1);
+                    }
+                });
+                nextLi.appendChild(nextLink);
+                pagination.appendChild(nextLi);
+            }
+
+        // Function to highlight text
+            function highlightText(element, searchTerm) {
+                if (!searchTerm) {
+                // If no search term, restore original text
+                    element.innerHTML = element.textContent;
+                    return;
+                }
+
+                const text = element.textContent;
+                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special characters
+                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+                element.innerHTML = text.replace(regex, '<span class="highlight">$1</span>');
+            }
+
+        // Datasets Pagination and Search
+            const datasetCards = document.querySelectorAll('#datasetGrid .dataset-card');
+            const datasetItemsPerPage = 6;
+            let datasetCurrentPage = 1;
+            let filteredDatasets = Array.from(datasetCards);
+
+            function updateDatasetDisplay() {
+                const startIndex = (datasetCurrentPage - 1) * datasetItemsPerPage;
+                const endIndex = startIndex + datasetItemsPerPage;
+
+            // Hide all datasets first
+                datasetCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+
+            // Show only the current page
+                filteredDatasets.slice(startIndex, endIndex).forEach(card => {
+                    card.style.display = 'block';
+                });
+
+            // Update pagination
+                generatePagination(
+                    filteredDatasets.length,
+                    datasetItemsPerPage,
+                    datasetCurrentPage,
+                    'datasetPagination',
+                    function(page) {
+                        datasetCurrentPage = page;
+                        updateDatasetDisplay();
+                    }
+                );
+
+            // Show/hide no results message
+                const noResultsMsg = document.getElementById('datasetsNoResults');
+                if (filteredDatasets.length === 0) {
+                    noResultsMsg.style.display = 'block';
+                } else {
+                    noResultsMsg.style.display = 'none';
+                }
+            }
+
+        // Initialize dataset pagination
+            updateDatasetDisplay();
+
+        // Dataset search
+            const datasetSearch = document.getElementById('datasetSearch');
+            datasetSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+
+                if (searchTerm === '') {
+                // Reset to show all datasets
+                    filteredDatasets = Array.from(datasetCards);
+                    datasetCards.forEach(card => {
+                    // Reset highlighting
+                        card.querySelector('h5').innerHTML = card.querySelector('h5').textContent;
+                        card.querySelector('p').innerHTML = card.querySelector('p').textContent;
+                    });
+                } else {
+                // Filter datasets based on search term
+                    filteredDatasets = Array.from(datasetCards).filter(card => {
+                        const name = card.getAttribute('data-name');
+                        const hfName = card.getAttribute('data-hf-name');
+                        return name.includes(searchTerm) || hfName.includes(searchTerm);
+                    });
+
+                // Highlight matching text
+                    filteredDatasets.forEach(card => {
+                        highlightText(card.querySelector('h5'), searchTerm);
+                        highlightText(card.querySelector('p'), searchTerm);
+                    });
+                }
+
+            // Reset to first page and update display
+                datasetCurrentPage = 1;
+                updateDatasetDisplay();
+            });
+
+        // Clear dataset search
+            document.getElementById('clearDatasetSearch')?.addEventListener('click', function() {
+                datasetSearch.value = '';
+                filteredDatasets = Array.from(datasetCards);
+                datasetCards.forEach(card => {
+                // Reset highlighting
+                    card.querySelector('h5').innerHTML = card.querySelector('h5').textContent;
+                    card.querySelector('p').innerHTML = card.querySelector('p').textContent;
+                });
+                datasetCurrentPage = 1;
+                updateDatasetDisplay();
+            });
+
+        // Team Members Pagination and Search
+            const memberItems = document.querySelectorAll('#memberList .member-item');
+            const memberItemsPerPage = 5;
+            let memberCurrentPage = 1;
+            let filteredMembers = Array.from(memberItems);
+
+            function updateMemberDisplay() {
+                const startIndex = (memberCurrentPage - 1) * memberItemsPerPage;
+                const endIndex = startIndex + memberItemsPerPage;
+
+            // Hide all members first
+                memberItems.forEach(item => {
+                    item.style.display = 'none';
+                });
+
+            // Show only the current page
+                filteredMembers.slice(startIndex, endIndex).forEach(item => {
+                    item.style.display = 'flex';
+                });
+
+            // Update pagination
+                generatePagination(
+                    filteredMembers.length,
+                    memberItemsPerPage,
+                    memberCurrentPage,
+                    'memberPagination',
+                    function(page) {
+                        memberCurrentPage = page;
+                        updateMemberDisplay();
+                    }
+                );
+
+            // Show/hide no results message
+                const noResultsMsg = document.getElementById('membersNoResults');
+                if (filteredMembers.length === 0) {
+                    noResultsMsg.style.display = 'block';
+                } else {
+                    noResultsMsg.style.display = 'none';
+                }
+            }
+
+        // Initialize member pagination
+            updateMemberDisplay();
+
+        // Member search
+            const memberSearch = document.getElementById('memberSearch');
+            memberSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+
+                if (searchTerm === '') {
+                // Reset to show all members
+                    filteredMembers = Array.from(memberItems);
+                    memberItems.forEach(item => {
+                    // Reset highlighting
+                        item.querySelector('.member-name').innerHTML = item.querySelector('.member-name').textContent;
+                    });
+                } else {
+                // Filter members based on search term
+                    filteredMembers = Array.from(memberItems).filter(item => {
+                        const username = item.getAttribute('data-username');
+                        return username.includes(searchTerm);
+                    });
+
+                // Highlight matching text
+                    filteredMembers.forEach(item => {
+                        highlightText(item.querySelector('.member-name'), searchTerm);
+                    });
+                }
+
+            // Reset to first page and update display
+                memberCurrentPage = 1;
+                updateMemberDisplay();
+            });
+
+        // Clear member search
+            document.getElementById('clearMemberSearch')?.addEventListener('click', function() {
+                memberSearch.value = '';
+                filteredMembers = Array.from(memberItems);
+                memberItems.forEach(item => {
+                // Reset highlighting
+                    item.querySelector('.member-name').innerHTML = item.querySelector('.member-name').textContent;
+                });
+                memberCurrentPage = 1;
+                updateMemberDisplay();
+            });
+
+        // Dataset Assignments Pagination and Search
+            const assignmentRows = document.querySelectorAll('#assignmentTableBody tr');
+            const assignmentItemsPerPage = 10;
+            let assignmentCurrentPage = 1;
+            let filteredAssignments = Array.from(assignmentRows);
+
+        // Continuing the updateAssignmentDisplay function from before
+            function updateAssignmentDisplay() {
+                const startIndex = (assignmentCurrentPage - 1) * assignmentItemsPerPage;
+                const endIndex = startIndex + assignmentItemsPerPage;
+
+        // Hide all assignments first
+                assignmentRows.forEach(row => {
+                    row.style.display = 'none';
+                });
+
+        // Show only the current page
+                filteredAssignments.slice(startIndex, endIndex).forEach(row => {
+                    row.style.display = '';
+                });
+
+        // Update pagination
+                generatePagination(
+                    filteredAssignments.length,
+                    assignmentItemsPerPage,
+                    assignmentCurrentPage,
+                    'assignmentPagination',
+                    function(page) {
+                        assignmentCurrentPage = page;
+                        updateAssignmentDisplay();
+                    }
+                );
+
+        // Show/hide no results message
+                const noResultsMsg = document.getElementById('assignmentsNoResults');
+                if (filteredAssignments.length === 0) {
+                    noResultsMsg.style.display = 'block';
+                } else {
+                    noResultsMsg.style.display = 'none';
+                }
+            }
+
+        // Initialize assignment pagination
+            if (assignmentRows.length > 0) {
+                updateAssignmentDisplay();
+            }
+
+        // Assignment search
+            const assignmentSearch = document.getElementById('assignmentSearch');
+            if (assignmentSearch) {
+                assignmentSearch.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+
+                    if (searchTerm === '') {
+            // Reset to show all assignments
+                        filteredAssignments = Array.from(assignmentRows);
+                        assignmentRows.forEach(row => {
+                // Reset highlighting
+                            Array.from(row.querySelectorAll('td')).forEach(cell => {
+                                cell.innerHTML = cell.textContent;
+                            });
+                        });
+                    } else {
+            // Filter assignments based on search term
+                        filteredAssignments = Array.from(assignmentRows).filter(row => {
+                            const username = row.getAttribute('data-username');
+                            const task = row.getAttribute('data-task');
+                            const dataset = row.getAttribute('data-dataset');
+                            return username.includes(searchTerm) ||
+                            task.includes(searchTerm) ||
+                            dataset.includes(searchTerm);
+                        });
+
+            // Highlight matching text
+                        filteredAssignments.forEach(row => {
+                            Array.from(row.querySelectorAll('td')).forEach(cell => {
+                                highlightText(cell, searchTerm);
+                            });
+                        });
+                    }
+
+        // Reset to first page and update display
+                    assignmentCurrentPage = 1;
+                    updateAssignmentDisplay();
+                });
+            }
+
+        // Clear assignment search
+            document.getElementById('clearAssignmentSearch')?.addEventListener('click', function() {
+                assignmentSearch.value = '';
+                filteredAssignments = Array.from(assignmentRows);
+                assignmentRows.forEach(row => {
+        // Reset highlighting
+                    Array.from(row.querySelectorAll('td')).forEach(cell => {
+                        cell.innerHTML = cell.textContent;
+                    });
+                });
+                assignmentCurrentPage = 1;
+                updateAssignmentDisplay();
+            });
+        });
+    </script>
+
+{% endblock main_content %}

@@ -253,3 +253,5 @@ INTERNAL_IPS = [
     "127.0.0.1",
     # ...
 ]
+
+from .local_settings import *  # noqa: E402 F403

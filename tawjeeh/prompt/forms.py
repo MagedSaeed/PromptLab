@@ -1,7 +1,12 @@
 import json
+import secrets
+import string
 
 from django import forms
-from prompt.models import Prompt, PromptReviewAction, Task
+from django.contrib.auth import get_user_model
+from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
+
+User = get_user_model()
 
 
 class PromptCreateUpdateForm(forms.ModelForm):
@@ -277,3 +282,97 @@ class HFSyncForm(forms.Form):
     #     initial="answer_choices",
     #     required=False,
     # )
+
+
+class ProjectForm(forms.ModelForm):
+    """Form for creating and updating PromptingProject."""
+
+    # Regular prompters can only create prompts
+    prompters = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-select"}),
+        help_text="Users who can create prompts for this project",
+    )
+
+    # Reviewer prompters can both create and review prompts
+    reviewer_prompters = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-select"}),
+        help_text="Users who can create and review prompts for this project",
+    )
+
+    datasets = forms.ModelMultipleChoiceField(
+        queryset=Dataset.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-select"}),
+        help_text="Datasets available for this project",
+    )
+
+    class Meta:
+        model = PromptingProject
+        fields = [
+            "name",
+            "description",
+            "datasets",
+            "minimum_prompts_per_prompter",
+            "secret_key",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "minimum_prompts_per_prompter": forms.NumberInput(
+                attrs={"class": "form-control"}
+            ),
+            "secret_key": forms.TextInput(
+                attrs={"class": "form-control", "readonly": True}
+            ),
+        }
+        help_texts = {
+            "name": "Give your project a descriptive name",
+            "description": "Provide details about the project (optional)",
+            "minimum_prompts_per_prompter": "Minimum number of prompts each prompter should contribute (optional)",
+            "secret_key": "Used for API access - automatically generated but can be changed",
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        # Make description optional
+        self.fields["description"].required = False
+
+        # Make minimum_prompts_per_prompter optional
+        self.fields["minimum_prompts_per_prompter"].required = False
+
+        # Generate a random 5-character secret key by default if this is a new project
+        if not self.instance.pk and not self.initial.get("secret_key"):
+            alphabet = string.ascii_letters + string.digits
+            random_key = "".join(secrets.choice(alphabet) for _ in range(5))
+            self.initial["secret_key"] = random_key
+
+        # If this is an existing project, populate the prompters and reviewer_prompters fields
+        if self.instance.pk:
+            # We'll need to implement the logic to separate regular prompters from reviewers
+            # This is just a placeholder as there's no direct field in the model for this distinction
+            self.fields["prompters"].initial = self.instance.prompters.all()
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Set the owner to the current user if this is a new project
+        if not instance.pk and self.user:
+            instance.owner = self.user
+
+        if commit:
+            instance.save()
+
+            # Handle the datasets
+            self.save_m2m()
+
+            # Handle prompters - this is just a placeholder
+            # We would need to implement the logic to distinguish between regular and reviewer prompters
+            # in the actual model or modify the model to have this distinction
+
+        return instance

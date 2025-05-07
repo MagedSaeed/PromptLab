@@ -1,8 +1,9 @@
 import datasets
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.management import call_command
 from django.core.paginator import Paginator
+from django.db import models
 from django.db.models import OuterRef, Subquery
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,6 +11,7 @@ from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
     DeleteView,
+    DetailView,
     FormView,
     ListView,
     UpdateView,
@@ -18,7 +20,12 @@ from django.views.generic import (
 from django_filters.views import FilterView
 from jinja2 import Environment, StrictUndefined
 from prompt.filters import DatasetFilter, TaskFilter
-from prompt.forms import HFSyncForm, PromptCreateUpdateForm, PromptReviewForm
+from prompt.forms import (
+    HFSyncForm,
+    ProjectForm,
+    PromptCreateUpdateForm,
+    PromptReviewForm,
+)
 from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
 from prompt.utils import generate_ai_prompts, translate_prompt_with_ai
 
@@ -854,3 +861,145 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
         assignments = paginator.get_page(page)
         context["assignments"] = assignments
         return context
+
+
+class ProjectCreateView(LoginRequiredMixin, CreateView):
+    model = PromptingProject
+    form_class = ProjectForm
+    template_name = "prompt/project_create.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy("prompt:project_detail", kwargs={"pk": self.object.pk})
+
+    def form_valid(self, form):
+        messages.success(
+            self.request, f"Project '{form.instance.name}' created successfully!"
+        )
+        return super().form_valid(form)
+
+
+class ProjectListView(LoginRequiredMixin, ListView):
+    model = PromptingProject
+    template_name = "prompt/project_list.html"
+    context_object_name = "projects"
+    paginate_by = 9  # Show 9 projects per page (3 columns x 3 rows)
+
+    def get_queryset(self):
+        # Show projects where user is owner or prompter
+        user = self.request.user
+        queryset = PromptingProject.objects.filter(
+            models.Q(owner=user) | models.Q(prompters=user)
+        ).distinct()
+
+        # Handle search
+        search_query = self.request.GET.get("search", "")
+        if search_query:
+            queryset = queryset.filter(
+                models.Q(name__icontains=search_query)
+                | models.Q(description__icontains=search_query)
+            ).distinct()
+
+        # Sort options
+        sort_by = self.request.GET.get("sort", "name")
+        if sort_by == "name":
+            queryset = queryset.order_by("name")
+        elif sort_by == "newest":
+            queryset = queryset.order_by(
+                "-id"
+            )  # Assuming id increases with newer projects
+        elif sort_by == "datasets":
+            # Using annotation to count related datasets
+            from django.db.models import Count
+
+            queryset = queryset.annotate(dataset_count=Count("datasets")).order_by(
+                "-dataset_count"
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Pass search and sort parameters to maintain state
+        context["search_query"] = self.request.GET.get("search", "")
+        context["current_sort"] = self.request.GET.get("sort", "name")
+        return context
+
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = PromptingProject
+    template_name = "prompt/project_detail.html"
+    context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_object()
+
+        # Calculate prompt count for statistics
+        prompt_count = (
+            Prompt.objects.filter(dataset__in=project.datasets.all()).distinct().count()
+        )
+        context["prompt_count"] = prompt_count
+
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        # Check if user has access to this project
+        project = self.get_object()
+        user = request.user
+
+        if (
+            user == project.owner
+            or user in project.prompters.all()
+            or user.is_superuser
+        ):
+            return super().dispatch(request, *args, **kwargs)
+
+        messages.error(request, "You don't have access to this project.")
+        return redirect("prompt:project_list")
+
+
+class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = PromptingProject
+    form_class = ProjectForm
+    template_name = "prompt/project_update.html"
+
+    def test_func(self):
+        project = self.get_object()
+        return self.request.user == project.owner or self.request.user.is_superuser
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy("prompt:project_detail", kwargs={"pk": self.object.pk})
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            f"Project '{form.instance.name}' updated successfully!",
+        )
+        return super().form_valid(form)
+
+
+class ProjectDistributeView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        project = get_object_or_404(PromptingProject, pk=self.kwargs["pk"])
+        return self.request.user == project.owner or self.request.user.is_superuser
+
+    def post(self, request, *args, **kwargs):
+        project = get_object_or_404(PromptingProject, pk=self.kwargs["pk"])
+
+        try:
+            result = project.distribute_datasets()
+            messages.success(request, result)
+        except Exception as e:
+            messages.error(request, f"Error distributing datasets: {str(e)}")
+
+        return redirect("prompt:project_detail", pk=project.pk)

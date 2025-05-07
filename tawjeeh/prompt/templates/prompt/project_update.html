@@ -1,0 +1,149 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block style %}
+    <style>
+        .project-form-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section-title {
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .secret-key-container {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .secret-key-input-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .regenerate-btn {
+            margin-left: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block main_content %}
+    <div class="container project-form-container">
+        <h2 class="form-title">Edit Project: {{ project.name }}</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+        <!-- Project Details Section -->
+            <div class="form-section">
+                <h4 class="form-section-title">Project Details</h4>
+                {{ form.name|as_crispy_field }}
+                {{ form.description|as_crispy_field }}
+            </div>
+
+        <!-- Project Settings Section -->
+            <div class="form-section">
+                <h4 class="form-section-title">Project Settings</h4>
+                {{ form.minimum_prompts_per_prompter|as_crispy_field }}
+
+                <div class="secret-key-container">
+                    <label for="{{ form.secret_key.id_for_label }}">API Secret Key</label>
+                    <div class="secret-key-input-group">
+                        {{ form.secret_key }}
+                        <button type="button" class="btn btn-sm btn-outline-secondary regenerate-btn" id="regenerateKey">
+                            <i class="bi bi-arrow-repeat"></i> Regenerate
+                        </button>
+                    </div>
+                    <small class="form-text text-muted">
+                        This key will be used for API access to this project. Keep it secure.
+                    </small>
+                </div>
+            </div>
+
+        <!-- Datasets Section -->
+            <div class="form-section">
+                <h4 class="form-section-title">Datasets</h4>
+                <p class="text-muted">Select datasets that will be used in this project.</p>
+                {{ form.datasets|as_crispy_field }}
+            </div>
+
+        <!-- Team Members Section -->
+            <div class="form-section">
+                <h4 class="form-section-title">Team Members</h4>
+                <p class="text-muted">Add team members who will work on this project.</p>
+
+                <div class="mb-3">
+                    <label for="id_prompters">Regular Prompters</label>
+                    {{ form.prompters }}
+                    <small class="form-text text-muted">
+                        These users can create prompts but cannot review them.
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_reviewer_prompters">Reviewer Prompters</label>
+                    {{ form.reviewer_prompters }}
+                    <small class="form-text text-muted">
+                        These users can both create and review prompts.
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-group text-end">
+                <a href="{% url 'prompt:project_detail' object.pk %}" class="btn btn-outline-secondary me-2">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    Update Project
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Function to generate a random string for the secret key
+            function generateRandomKey(length = 5) {
+                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let result = '';
+                for (let i = 0; i < length; i++) {
+                    result += characters.charAt(Math.floor(Math.random() * characters.length));
+                }
+                return result;
+            }
+
+        // Set up event listener for regenerate button
+            document.getElementById('regenerateKey').addEventListener('click', function() {
+                const secretKeyInput = document.getElementById('{{ form.secret_key.id_for_label }}');
+                secretKeyInput.value = generateRandomKey();
+                secretKeyInput.classList.add('bg-light');
+            // Briefly highlight the field to show it changed
+                setTimeout(() => {
+                    secretKeyInput.classList.remove('bg-light');
+                }, 300);
+            });
+        });
+    </script>
+{% endblock %}
