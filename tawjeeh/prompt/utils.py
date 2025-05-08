@@ -3,6 +3,7 @@ import json
 import tempfile
 
 import datasets
+import openai
 from core.utils import redis_cache
 from prompt import constants
 from sklearn.model_selection import train_test_split
@@ -234,8 +235,65 @@ def translate_prompt_with_ai(prompt_dict):
         dataset=Dataset.objects.get(pk=prompt_dict["dataset_pk"]),
         text_direction="ltr",
         answer_choices=json.dumps(
-            [{"value": f"answer_choice {j+1}"} for j in range(5)]
+            [{"value": f"answer_choice {j + 1}"} for j in range(5)]
         ),  # answer choices need to be in this format
         dataset_subset=prompt_dict["dataset_subset"],
     )
     return new_prompt
+
+
+# Add this to your existing utils.py file
+# Inside prompt/utils.py
+
+
+def send_to_openrouter(prompt_text, model_id, api_key, max_tokens=1000):
+    """
+    Send a prompt to OpenRouter API and get the response.
+
+    Args:
+        prompt_text (str): The processed prompt template text
+        model_id (str): The ID of the model to use
+        api_key (str): OpenRouter API key
+        max_tokens (int): Maximum tokens to generate
+
+    Returns:
+        dict: Response from OpenRouter API
+    """
+    try:
+        # Configure OpenAI client for OpenRouter
+        client = openai.OpenAI(
+            api_key=api_key,
+            base_url="https://openrouter.ai/api/v1",
+        )
+
+        # Make the API call using extra_headers instead of headers
+        response = client.chat.completions.create(
+            model=model_id,
+            messages=[{"role": "user", "content": prompt_text}],
+            max_tokens=max_tokens,
+            extra_headers={
+                "HTTP-Referer": "https://tawjeeh.up.railway.app",  # Required by OpenRouter
+                "X-Title": "Tawjeeh Prompt Testing",
+            },
+        )
+
+        # Extract the text from the response
+        if response.choices and len(response.choices) > 0:
+            result = {
+                "content": response.choices[0].message.content,
+                "model": model_id,
+                "usage": {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                },
+                "finish_reason": response.choices[0].finish_reason,
+            }
+            return {"success": True, "result": result}
+        else:
+            return {"success": False, "error": "No response generated"}
+
+    except Exception as e:
+        import traceback
+
+        return {"success": False, "error": str(e), "traceback": traceback.format_exc()}

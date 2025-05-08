@@ -22,12 +22,17 @@ from jinja2 import Environment, StrictUndefined
 from prompt.filters import DatasetFilter, TaskFilter
 from prompt.forms import (
     HFSyncForm,
+    LLMTestForm,
     ProjectForm,
     PromptCreateUpdateForm,
     PromptReviewForm,
 )
 from prompt.models import Dataset, Prompt, PromptingProject, PromptReviewAction, Task
-from prompt.utils import generate_ai_prompts, translate_prompt_with_ai
+from prompt.utils import (
+    generate_ai_prompts,
+    send_to_openrouter,
+    translate_prompt_with_ai,
+)
 
 
 class TaskListView(LoginRequiredMixin, FilterView, ListView):
@@ -709,72 +714,227 @@ class DatasetDetailsView(LoginRequiredMixin, View):
 
 
 class ApplyTemplateView(LoginRequiredMixin, View):
-    def validate_template(self, original_template, html_template, sample):
-        env = Environment(undefined=StrictUndefined)
-        # Load your template
-        if "|||" not in original_template:
-            return '<span class = "text-danger"> no ||| dividor </span>'
-        else:
-            original_template = env.from_string(original_template)
-            html_template = env.from_string(html_template)
-
-            # Render the template with the variables
-
-            rendered_template = html_template.render(**sample)
-            answer_choices = sample["answer_choices"]
-            if len(answer_choices):
-                rendered_original_template = original_template.render(**sample)
-                answers = rendered_original_template.split("|||")[-1].strip()
-                for answer in answers.split(","):
-                    if answer.strip() not in answer_choices:
-                        return f'<span class = "text-danger"> The output: {answer} is not a subset of {answer_choices}</span>'
-            return rendered_template
-
-    def apply_template(self, template_content, sample):
-        html_template = template_content.replace("<br>", "\n")
-        html_template = html_template.replace("{{", '<span class = "text-success"> {{')
-        html_template = html_template.replace("}}", "}} </span>")
-        answer_choices = self.request.POST.get("answer_choices", [])
-        if answer_choices:
-            answer_choices = answer_choices.split("||")
-        sample["answer_choices"] = answer_choices
-        rendered_sample = self.validate_template(
-            template_content, html_template, sample
-        )
-        return rendered_sample
-
     def post(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
-        split = request.GET.get("split")
-        subset = request.GET.get("subset")
-        text_direction = request.GET.get("text_direction", "ltr")
-        sample_index = int(request.POST.get("sample_index", 0))
-        config_details = self.dataset.get_configs_details()[subset]
-        sampels = config_details[split]["samples"]
-        samples = datasets.Dataset.from_dict(sampels)
-        sample = samples[sample_index]
-        template_content = request.POST.get("template", "")
-        merge_error = ""
-        rendered_sample = {}
-        try:
-            rendered_sample = self.apply_template(template_content, sample)
-        except Exception as e:
-            merge_error = str(e)
 
-        return render(
+        context = {"dataset": self.dataset}
+
+        subset, split, context = self._get_dataset_config(request, context)
+        if "merge_error" in context:
+            return self._render_response(request, context)
+
+        template_content = request.POST.get("template", "")
+        if not template_content:
+            context["merge_error"] = "No template content provided."
+            return self._render_response(request, context)
+
+        sample_index = int(request.POST.get("sample_index", 0))
+        text_direction = request.GET.get("text_direction", "ltr")
+        is_llm_test = request.POST.get("test_with_llm") == "true"
+
+        answer_choices = self._parse_answer_choices(
+            request.POST.get("answer_choices", "")
+        )
+
+        sample, context = self._get_dataset_sample(subset, split, sample_index, context)
+        if "merge_error" in context:
+            return self._render_response(request, context)
+
+        context = self._process_template(
+            template_content,
+            sample,
+            answer_choices,
+            is_llm_test,
             request,
-            "prompt/partials/template_merge.html",
+            context,
+        )
+
+        context.update(
             {
-                "merge_error": merge_error,
-                "dataset": self.dataset,
                 "sample_index": sample_index,
-                "rendered_template": rendered_sample,
                 "template_content": template_content,
-                "max_samples": len(samples),
                 "subset": subset,
                 "split": split,
                 "text_direction": text_direction,
-            },
+                "processed_answer_choices": answer_choices,
+                "request": request,
+                "llm_form": LLMTestForm(user=request.user),
+            }
+        )
+
+        return self._render_response(request, context)
+
+    def _get_dataset_config(self, request, context):
+        # Get subset with fallbacks
+        subset = request.GET.get("subset")
+        if not subset:
+            if self.dataset.default_subset:
+                subset = self.dataset.default_subset
+            else:
+                configs = self.dataset.get_configs_details()
+                if configs:
+                    subset = next(iter(configs.keys()))
+                else:
+                    context["merge_error"] = "No dataset subsets available."
+                    return None, None, context
+
+        # Get split with fallbacks
+        split = request.GET.get("split")
+        if not split and subset:
+            configs = self.dataset.get_configs_details()
+            if configs and subset in configs and configs[subset]:
+                split = next(iter(configs[subset].keys()))
+
+        if not split:
+            context["merge_error"] = "No split specified."
+
+        return subset, split, context
+
+    def _parse_answer_choices(self, raw_answer_choices):
+        """Parse answer choices from various formats."""
+        if not raw_answer_choices:
+            return []
+
+        if "||" in raw_answer_choices:
+            return raw_answer_choices.split("||")
+        elif "," in raw_answer_choices:
+            return raw_answer_choices.split(",")
+        else:
+            return [raw_answer_choices]
+
+    def _get_dataset_sample(self, subset, split, sample_index, context):
+        """Get the specified dataset sample."""
+        try:
+            config_details = self.dataset.get_configs_details()[subset]
+            samples = config_details[split]["samples"]
+            samples_dataset = datasets.Dataset.from_dict(samples)
+            sample = samples_dataset[sample_index]
+            context["max_samples"] = len(samples_dataset)
+            return sample, context
+        except (KeyError, IndexError) as e:
+            context["merge_error"] = f"Error accessing dataset sample: {str(e)}."
+            return None, context
+
+    def _process_template(
+        self,
+        template_content,
+        sample,
+        answer_choices,
+        is_llm_test,
+        request,
+        context,
+    ):
+        try:
+            # Apply template to sample
+            rendered_sample = self._apply_template(
+                template_content,
+                sample,
+                answer_choices,
+            )
+            context["rendered_template"] = rendered_sample
+
+            # Check if rendering was successful
+            if not isinstance(rendered_sample, str) or not rendered_sample.startswith(
+                '<span class = "text-danger">'
+            ):
+                # Create plain version for LLM if needed
+                plain_template = self._create_plain_template(
+                    template_content,
+                    sample,
+                    answer_choices,
+                )
+                context["plain_template"] = plain_template
+
+                # Process LLM test if requested
+                if is_llm_test and plain_template:
+                    context = self._process_llm_test(request, plain_template, context)
+        except Exception as e:
+            context["merge_error"] = f"Error rendering template: {str(e)}"
+
+        return context
+
+    def _apply_template(self, template_content, sample, answer_choices):
+        """Apply HTML formatting to template and validate it."""
+        # Format the template for HTML display
+        html_template = template_content.replace("<br>", "\n")
+        html_template = html_template.replace("{{", '<span class = "text-success"> {{')
+        html_template = html_template.replace("}}", "}} </span>")
+
+        # Create a copy of the sample with answer choices
+        sample_with_choices = sample.copy()
+        sample_with_choices["answer_choices"] = answer_choices
+
+        # Validate and render the template
+        return self._validate_template(
+            template_content, html_template, sample_with_choices
+        )
+
+    def _validate_template(self, original_template, html_template, sample):
+        if "|||" not in original_template:
+            return '<span class = "text-danger"> no ||| dividor </span>'
+
+        try:
+            env = Environment(undefined=StrictUndefined)
+
+            # Create template objects
+            original_template_obj = env.from_string(original_template)
+            html_template_obj = env.from_string(html_template)
+
+            # Render the HTML template
+            rendered_template = html_template_obj.render(**sample)
+            answer_choices = sample.get("answer_choices", [])
+
+            # Validate answer choices if provided
+            if answer_choices:
+                rendered_original = original_template_obj.render(**sample)
+                answers = rendered_original.split("|||")[-1].strip()
+
+                for answer in answers.split(","):
+                    if answer.strip() not in answer_choices:
+                        return f'<span class = "text-danger"> The output: {answer} is not a subset of {answer_choices}</span>'
+
+            return rendered_template
+        except Exception as e:
+            return f'<span class = "text-danger"> Error in template: {str(e)}</span>'
+
+    def _create_plain_template(self, template_content, sample, answer_choices):
+        """Create a plain (non-HTML) version of the rendered template."""
+        try:
+            env = Environment(undefined=StrictUndefined)
+            template = env.from_string(template_content)
+
+            # Prepare sample with answer choices
+            sample_for_rendering = sample.copy()
+            sample_for_rendering["answer_choices"] = answer_choices
+
+            # Render the plain template
+            return template.render(**sample_for_rendering)
+        except Exception:
+            return None
+
+    def _process_llm_test(self, request, plain_template, context):
+        """Process LLM testing if requested."""
+        model_id = request.POST.get("model")
+        if model_id and request.user.openrouter_api_key:
+            try:
+                # Send to LLM service
+                llm_result = send_to_openrouter(
+                    plain_template,
+                    model_id,
+                    request.user.openrouter_api_key,
+                )
+                context["llm_result"] = llm_result
+            except Exception as e:
+                context["merge_error"] = f"Error processing LLM request: {str(e)}"
+
+        return context
+
+    def _render_response(self, request, context):
+        """Render the response template with context."""
+        return render(
+            request,
+            "prompt/partials/template_merge.html",
+            context,
         )
 
 

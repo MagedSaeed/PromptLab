@@ -376,3 +376,93 @@ class ProjectForm(forms.ModelForm):
             # in the actual model or modify the model to have this distinction
 
         return instance
+
+
+class LLMTestForm(forms.Form):
+    """Form for testing prompts with OpenRouter LLMs."""
+
+    model = forms.ChoiceField(
+        label="Select LLM Model",
+        choices=[],
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        # Initialize model choices
+        if user and user.openrouter_api_key:
+            try:
+                self.fields["model"].choices = self.get_openrouter_models(
+                    user.openrouter_api_key
+                )
+                self.fields["model"].help_text = (
+                    "Select a model to test your prompt with"
+                )
+            except Exception as e:
+                self.fields["model"].choices = [
+                    ("", f"Error fetching models: {str(e)}")
+                ]
+                self.fields["model"].disabled = True
+        else:
+            self.fields["model"].choices = [("", "Please add OpenRouter API key first")]
+            self.fields["model"].help_text = (
+                "Add your OpenRouter API key in user settings to enable testing"
+            )
+            self.fields["model"].disabled = True
+
+    def get_openrouter_models(self, api_key):
+        """Get available models from OpenRouter API or cache."""
+        import requests
+        from django.core.cache import cache
+
+        # Check cache first
+        cache_key = (
+            f"openrouter_models_{api_key[:8]}"  # Use part of API key as cache key
+        )
+        cached_models = cache.get(cache_key)
+
+        if cached_models:
+            return cached_models
+
+        # If not in cache, fetch from API
+        try:
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "HTTP-Referer": "https://tawjeeh.up.railway.app",  # Required by OpenRouter
+                "X-Title": "Tawjeeh Prompt Testing",
+            }
+            response = requests.get(
+                "https://openrouter.ai/api/v1/models", headers=headers
+            )
+            response.raise_for_status()
+
+            models_data = response.json().get("data", [])
+
+            # Format choices for form field (id, display_name)
+            choices = []
+            for model in models_data:
+                model_id = model.get("id")
+                name = model.get("name") or model_id
+
+                # Format pricing info if available
+                pricing = model.get("pricing", {}).get("prompt")
+                price_info = f" (${pricing}/1M tokens)" if pricing else ""
+
+                display_name = f"{name}{price_info}"
+                choices.append((model_id, display_name))
+
+            # Sort by name
+            choices.sort(key=lambda x: x[1])
+
+            # Add empty choice
+            final_choices = [("", "Select a model...")] + choices
+
+            # Cache for 1 hour
+            cache.set(cache_key, final_choices, 60 * 60)
+
+            return final_choices
+        except Exception as e:
+            # Return empty list with error message
+            return [("", f"Error fetching models: {str(e)}")]
