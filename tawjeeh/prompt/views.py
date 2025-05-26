@@ -1257,6 +1257,12 @@ class DatasetValidationAPIView(LoginRequiredMixin, View):
             size_info = self._extract_size_info(data)
             if size_info:
                 dataset_info["size_info"] = size_info
+
+                # Check if dataset exceeds 1GB limit
+                size_error = self._check_size_limit(size_info)
+                if size_error:
+                    return {"valid": False, "error": size_error}
+
                 dataset_info["size_warning"] = self._generate_size_warning(size_info)
 
             # Try to get config information
@@ -1275,6 +1281,36 @@ class DatasetValidationAPIView(LoginRequiredMixin, View):
             return None  # Network error, fall back to other method
         except Exception:
             return None  # Any other error, fall back
+
+    def _check_size_limit(self, size_info):
+        """Check if dataset exceeds 1GB limit and return error message if it does"""
+        if not size_info:
+            return None
+
+        size_limit_bytes = 1024**3  # 1GB in bytes
+
+        # Check dataset size
+        if "dataset_size" in size_info:
+            size_bytes = size_info["dataset_size"]
+            if size_bytes > size_limit_bytes:
+                size_gb = size_bytes / (1024**3)
+                return f"Dataset too large: {size_gb:.1f} GB (maximum allowed: 1.0 GB)"
+
+        # Check download size
+        if "download_size" in size_info:
+            download_bytes = size_info["download_size"]
+            if download_bytes > size_limit_bytes:
+                download_gb = download_bytes / (1024**3)
+                return f"Download size too large: {download_gb:.1f} GB (maximum allowed: 1.0 GB)"
+
+        # Check total file size
+        if "total_file_size" in size_info:
+            total_bytes = size_info["total_file_size"]
+            if total_bytes > size_limit_bytes:
+                total_gb = total_bytes / (1024**3)
+                return f"Repository size too large: {total_gb:.1f} GB (maximum allowed: 1.0 GB)"
+
+        return None
 
     def _extract_size_info(self, hub_data):
         """Extract size information from HuggingFace Hub API response"""

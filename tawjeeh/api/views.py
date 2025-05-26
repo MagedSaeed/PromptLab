@@ -77,8 +77,9 @@ class PromptListView(ListAPIView):
 class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
     """API endpoint for creating datasets from HuggingFace"""
 
+    MAX_DATASET_SIZE_GB = 1.0
+
     def test_func(self):
-        # Only superusers can add new datasets (you can adjust this logic as needed)
         return self.request.user.is_superuser
 
     def post(self, request, *args, **kwargs):
@@ -93,16 +94,27 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                     {"success": False, "error": "Dataset path and name are required"}
                 )
 
-            # Check if dataset already exists
             if Dataset.objects.filter(huggingface_name=dataset_path).exists():
                 return JsonResponse(
                     {"success": False, "error": "Dataset already exists in the system"}
                 )
 
-            # Validate dataset exists on HuggingFace
+            # Get dataset info and check size
             try:
                 dataset_info = datasets.get_dataset_infos(dataset_path)
                 first_config = next(iter(dataset_info.values()))
+
+                # Check size from dataset_info
+                if hasattr(first_config, "dataset_size") and first_config.dataset_size:
+                    size_gb = first_config.dataset_size / (1024**3)
+                    if size_gb > self.MAX_DATASET_SIZE_GB:
+                        return JsonResponse(
+                            {
+                                "success": False,
+                                "error": f"Dataset size {size_gb:.2f}GB exceeds {self.MAX_DATASET_SIZE_GB}GB limit",
+                            }
+                        )
+
             except Exception:
                 return JsonResponse(
                     {
@@ -111,20 +123,20 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                     }
                 )
 
-            # Create the dataset
+            # Create dataset
             dataset = Dataset.objects.create(
                 name=name,
                 huggingface_name=dataset_path,
                 description=description or first_config.description or "",
             )
 
-            # Add tasks if provided
+            # Add tasks
             if task_names:
-                task_list = [t.strip() for t in task_names.split(",") if t.strip()]
-                tasks = []
-                for task_name in task_list:
-                    task, created = Task.objects.get_or_create(name=task_name)
-                    tasks.append(task)
+                tasks = [
+                    Task.objects.get_or_create(name=t.strip())[0]
+                    for t in task_names.split(",")
+                    if t.strip()
+                ]
                 dataset.tasks.set(tasks)
 
             return JsonResponse(
