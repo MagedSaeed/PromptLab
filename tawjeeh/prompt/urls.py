@@ -1,7 +1,6 @@
 from django.urls import path
 from prompt.views import (
     ApplyTemplateView,
-    DatasetCreateAPIView,
     DatasetDetailsView,
     DatasetListView,
     DatasetResetCacheView,
@@ -129,11 +128,6 @@ urlpatterns = [
         "api/dataset/validate/",
         DatasetValidationAPIView.as_view(),
         name="dataset_validation_api",
-    ),
-    path(
-        "api/dataset/create/",
-        DatasetCreateAPIView.as_view(),
-        name="dataset_create_api",
     ),
     path(
         "api/task/search/",

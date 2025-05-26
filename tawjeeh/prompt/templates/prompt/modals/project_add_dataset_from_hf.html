@@ -600,7 +600,7 @@
 
             setSubmitButtonState(true);
 
-            fetch('{% url "prompt:dataset_create_api" %}', {
+            fetch('{% url "api:dataset_create" %}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -643,7 +643,6 @@
             resetModal();
         });
 
-        // Helper functions
         function showValidationStatus(type, message, showInline) {
             if (showInline) {
                 validationStatusInline.innerHTML = `<span class="validation-${type}-inline">${message}</span>`;

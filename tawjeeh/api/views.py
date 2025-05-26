@@ -1,6 +1,10 @@
+import datasets
 from api.permissions import HasProjectSecretKey
 from api.serializers import PromptCreateSerializer, PromptListSerializer
-from prompt.models import Prompt, PromptingProject
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import JsonResponse
+from django.views.generic import View
+from prompt.models import Dataset, Prompt, PromptingProject, Task
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import CreateAPIView, ListAPIView
@@ -68,3 +72,74 @@ class PromptListView(ListAPIView):
                 "created_by__username",
             )
         )
+
+
+class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """API endpoint for creating datasets from HuggingFace"""
+
+    def test_func(self):
+        # Only superusers can add new datasets (you can adjust this logic as needed)
+        return self.request.user.is_superuser
+
+    def post(self, request, *args, **kwargs):
+        try:
+            dataset_path = request.POST.get("dataset_path", "").strip()
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            task_names = request.POST.get("tasks", "").strip()
+
+            if not all([dataset_path, name]):
+                return JsonResponse(
+                    {"success": False, "error": "Dataset path and name are required"}
+                )
+
+            # Check if dataset already exists
+            if Dataset.objects.filter(huggingface_name=dataset_path).exists():
+                return JsonResponse(
+                    {"success": False, "error": "Dataset already exists in the system"}
+                )
+
+            # Validate dataset exists on HuggingFace
+            try:
+                dataset_info = datasets.get_dataset_infos(dataset_path)
+                first_config = next(iter(dataset_info.values()))
+            except Exception:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Could not access dataset on HuggingFace Hub",
+                    }
+                )
+
+            # Create the dataset
+            dataset = Dataset.objects.create(
+                name=name,
+                huggingface_name=dataset_path,
+                description=description or first_config.description or "",
+            )
+
+            # Add tasks if provided
+            if task_names:
+                task_list = [t.strip() for t in task_names.split(",") if t.strip()]
+                tasks = []
+                for task_name in task_list:
+                    task, created = Task.objects.get_or_create(name=task_name)
+                    tasks.append(task)
+                dataset.tasks.set(tasks)
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "dataset": {
+                        "id": dataset.id,
+                        "name": dataset.name,
+                        "huggingface_name": dataset.huggingface_name,
+                        "description": dataset.description,
+                    },
+                }
+            )
+
+        except Exception as e:
+            return JsonResponse(
+                {"success": False, "error": f"Error creating dataset: {str(e)}"}
+            )
