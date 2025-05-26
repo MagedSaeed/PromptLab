@@ -1,9 +1,12 @@
 from django.urls import path
 from prompt.views import (
     ApplyTemplateView,
+    DatasetCreateAPIView,
     DatasetDetailsView,
     DatasetListView,
     DatasetResetCacheView,
+    DatasetSearchAPIView,
+    DatasetValidationAPIView,
     HFSynchView,
     MultiplePromptsCreateView,
     ProjectCreateView,
@@ -17,6 +20,7 @@ from prompt.views import (
     PromptReviewView,
     PromptUpdateView,
     TaskListView,
+    TaskSearchAPIView,
     UserDistributedDatasetsView,
     UserPromptsListView,
 )
@@ -115,5 +119,25 @@ urlpatterns = [
         "project/<int:pk>/distribute-datasets/",
         ProjectDistributeView.as_view(),
         name="distribute_datasets",
+    ),
+    path(
+        "api/dataset/search/",
+        DatasetSearchAPIView.as_view(),
+        name="dataset_search_api",
+    ),
+    path(
+        "api/dataset/validate/",
+        DatasetValidationAPIView.as_view(),
+        name="dataset_validation_api",
+    ),
+    path(
+        "api/dataset/create/",
+        DatasetCreateAPIView.as_view(),
+        name="dataset_create_api",
+    ),
+    path(
+        "api/task/search/",
+        TaskSearchAPIView.as_view(),
+        name="task_search_api",
     ),
 ]

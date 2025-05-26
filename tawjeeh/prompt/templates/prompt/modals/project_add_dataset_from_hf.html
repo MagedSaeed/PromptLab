@@ -1,0 +1,769 @@
+<style>
+    /* Modal-specific styles */
+    .modal-xl {
+        max-width: 90%;
+    }
+
+    @media (min-width: 1200px) {
+        .modal-xl {
+            max-width: 1000px;
+        }
+    }
+
+    /* Simplified Modal Header */
+    .modal-header {
+        background-color: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        color: #333;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    /* Form Sections */
+    .form-section {
+        position: relative;
+    }
+
+    .section-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 0.75rem;
+    }
+
+    .section-title {
+        font-size: 0.95rem;
+        letter-spacing: 0.3px;
+    }
+
+    /* Input Styling */
+    .input-group-lg .form-control {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .input-group-text {
+        border: 1px solid #ced4da;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    /* Validation Status */
+    .validation-status-inline {
+        display: flex;
+        align-items: center;
+        min-height: 31px;
+    }
+
+    .validation-panel {
+        margin: 1rem -1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .dataset-validation-status {
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    .validation-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .validation-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .validation-loading {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+        position: relative;
+    }
+
+    .validation-loading::after {
+        content: '';
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #0c5460;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: translateY(-50%) rotate(0deg); }
+        100% { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Right Panel */
+    .info-panel {
+        background: #f8f9fa;
+        border-left: 1px solid #e9ecef;
+        padding: 1.5rem;
+    }
+
+    /* Size Warning */
+    .alert-warning {
+        background-color: #fff3cd;
+        border: 1px solid #f1c40f;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    #sizeWarningText {
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.5rem;
+        border-radius: 4px;
+        border: 1px solid rgba(241, 196, 15, 0.3);
+    }
+
+    /* Tips Panel */
+    .tips-panel {
+        background: white;
+        border-radius: 8px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .tips-panel h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .tips-panel ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .tips-panel li {
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .tips-panel li:last-child {
+        margin-bottom: 0;
+    }
+
+    .tips-panel .bi {
+        margin-right: 0.75rem;
+        margin-top: 0.125rem;
+        color: #28a745;
+        font-size: 0.875rem;
+    }
+
+    /* Larger description textarea */
+    #datasetDescriptionInput {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    /* Button Styling */
+    .btn-group .btn {
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Select2 Styling for Tasks */
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #667eea;
+        border: 1px solid #667eea;
+        color: white;
+        border-radius: 15px;
+        padding: 2px 10px;
+        font-size: 0.85rem;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 5px;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 991.98px) {
+        .info-panel {
+            border-left: none;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .modal-xl {
+            max-width: 95%;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .modal-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .modal-header .btn-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+    }
+
+    .validation-success-inline {
+        color: #155724;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .validation-error-inline {
+        color: #721c24;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .validation-loading-inline {
+        color: #0c5460;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .validation-success-inline::before {
+        content: "✓ ";
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .validation-error-inline::before {
+        content: "✗ ";
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .validation-loading-inline::before {
+        content: "⏳ ";
+        color: #17a2b8;
+    }
+</style>
+
+<!-- Add Dataset Modal -->
+<div class="modal fade" id="addDatasetModal" tabindex="-1" aria-labelledby="addDatasetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Simplified Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title" id="addDatasetModalLabel">Add Dataset from HuggingFace</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-0">
+                <div class="container-fluid">
+                    <div class="row g-0">
+                        <!-- Left Column - Main Form -->
+                        <div class="col-lg-8">
+                            <div class="p-4 pe-lg-3">
+                                <form id="addDatasetForm">
+                                    {% csrf_token %}
+
+                                    <!-- Dataset Path Section -->
+                                    <div class="form-section mb-4">
+                                        <div class="section-header mb-3">
+                                            <h6 class="section-title text-primary fw-bold mb-1">
+                                                <i class="bi bi-link-45deg me-2"></i>Dataset Location
+                                            </h6>
+                                            <small class="text-muted">Enter the HuggingFace dataset identifier</small>
+                                        </div>
+
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-globe text-primary"></i>
+                                            </span>
+                                            <input type="text"
+                                                   class="form-control border-start-0 ps-0"
+                                                   id="datasetPathInput"
+                                                   name="dataset_path"
+                                                   placeholder="e.g., arbml/watan_2004, microsoft/DialoGPT-medium"
+                                                   required>
+                                        </div>
+
+                                        <div class="mt-3 d-flex gap-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="validateDatasetBtn">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                <span class="btn-text">Validate Dataset</span>
+                                                <span class="spinner-border spinner-border-sm ms-2 d-none" id="validateSpinner"></span>
+                                            </button>
+                                            <div class="validation-status-inline" id="validationStatusInline"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Validation Status Panel -->
+                                    <div class="validation-panel d-none" id="validationPanel">
+                                        <div class="dataset-validation-status" id="validationStatus"></div>
+                                    </div>
+
+                                    <!-- Size Warning Panel (moved to left) -->
+                                    <div class="alert alert-warning border-0 d-none" id="sizeWarningAlert">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-exclamation-triangle-fill me-3 mt-1 text-warning fs-5"></i>
+                                            <div>
+                                                <h6 class="alert-heading fw-bold mb-2">Dataset Size Notice</h6>
+                                                <div id="sizeWarningText" class="mb-2"></div>
+                                                <small class="text-muted">
+                                                    Large datasets may impact system performance during processing.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dataset Details Section -->
+                                    <div class="form-section mb-4" id="datasetDetailsSection" style="display: none;">
+                                        <div class="section-header mb-3">
+                                            <h6 class="section-title text-primary fw-bold mb-1">
+                                                <i class="bi bi-info-circle me-2"></i>Dataset Details
+                                            </h6>
+                                            <small class="text-muted">Customize how this dataset appears in your project</small>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="datasetNameInput" class="form-label fw-semibold">
+                                                    Display Name <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="text"
+                                                       class="form-control"
+                                                       id="datasetNameInput"
+                                                       name="name"
+                                                       placeholder="A readable name for the dataset"
+                                                       required>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="datasetTasksInput" class="form-label fw-semibold">Tasks</label>
+                                                <select class="form-select"
+                                                        id="datasetTasksInput"
+                                                        name="tasks"
+                                                        multiple>
+                                                </select>
+                                                <small class="form-text text-muted mt-1">
+                                                    Select or type tasks this dataset is used for
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <label for="datasetDescriptionInput" class="form-label fw-semibold">Description</label>
+                                            <textarea class="form-control"
+                                                      id="datasetDescriptionInput"
+                                                      name="description"
+                                                      rows="5"
+                                                      placeholder="Brief description of the dataset (optional)"></textarea>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Simplified Info Panel -->
+                        <div class="col-lg-4">
+                            <div class="info-panel h-100">
+                                <!-- Tips Panel -->
+                                <div class="tips-panel">
+                                    <h6>
+                                        <i class="bi bi-lightbulb me-2 text-warning"></i>Tips
+                                    </h6>
+                                    <ul>
+                                        <li>
+                                            <i class="bi bi-check2"></i>
+                                            Only metadata is fetched during validation
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-check2"></i>
+                                            Dataset files are not downloaded
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-check2"></i>
+                                            Safe for datasets of any size
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-check2"></i>
+                                            Validation ensures dataset accessibility
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-check2"></i>
+                                            You can add custom tasks and descriptions
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer border-0 bg-light py-3">
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Secure validation • No data download
+                    </small>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="submitDatasetBtn" disabled>
+                            <span class="btn-text">Add Dataset</span>
+                            <span class="spinner-border spinner-border-sm ms-2 d-none" id="submitSpinner"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Dataset Modal JavaScript
+    function initializeAddDatasetModal() {
+        // Modal elements
+        const addDatasetModal = new bootstrap.Modal(document.getElementById('addDatasetModal'));
+        const validateDatasetBtn = document.getElementById('validateDatasetBtn');
+        const submitDatasetBtn = document.getElementById('submitDatasetBtn');
+        const validationStatus = document.getElementById('validationStatus');
+        const validationStatusInline = document.getElementById('validationStatusInline');
+        const validationPanel = document.getElementById('validationPanel');
+        const datasetDetailsSection = document.getElementById('datasetDetailsSection');
+
+        let isDatasetValid = false;
+
+        // Initialize Task Select2 (modal)
+        $('#datasetTasksInput').select2({
+            tags: true,
+            tokenSeparators: [','],
+            placeholder: 'Select or type tasks...',
+            allowClear: true,
+            dropdownParent: $('#addDatasetModal'),
+            ajax: {
+                url: '{% url "prompt:task_search_api" %}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term,
+                        page: params.page
+                    };
+                },
+                processResults: function(data, params) {
+                    return {
+                        results: data.results || []
+                    };
+                },
+                cache: true
+            },
+            createTag: function(params) {
+                const term = $.trim(params.term);
+                if (term === '') {
+                    return null;
+                }
+                return {
+                    id: term,
+                    text: term,
+                    newTag: true
+                };
+            },
+            templateResult: function(item) {
+                if (item.newTag) {
+                    return $('<span><i class="bi bi-plus-circle me-2 text-success"></i>Add "' + item.text + '"</span>');
+                }
+                return item.text;
+            }
+        });
+
+        // Validate dataset functionality
+        validateDatasetBtn.addEventListener('click', function() {
+            const datasetPath = document.getElementById('datasetPathInput').value.trim();
+
+            if (!datasetPath) {
+                showValidationStatus('error', 'Please enter a dataset path', true);
+                return;
+            }
+
+            // Show loading state
+            showValidationStatus('loading', 'Validating dataset...', true);
+            setValidateButtonState(true);
+
+            fetch('{% url "prompt:dataset_validation_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: `dataset_path=${encodeURIComponent(datasetPath)}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        showValidationStatus('success', `✓ Dataset found with ${data.configs.length} configuration(s)`, false);
+
+                        // Auto-fill fields
+                        document.getElementById('datasetNameInput').value = data.name;
+                        document.getElementById('datasetDescriptionInput').value = data.description;
+
+                        // Show warning and details section
+                        showSizeWarning(data.size_warning);
+                        showDatasetDetailsSection();
+
+                        isDatasetValid = true;
+                        submitDatasetBtn.disabled = false;
+                    } else {
+                        showValidationStatus('error', `✗ ${data.error}`, true);
+                        hideSizeWarning();
+                        hideDatasetDetailsSection();
+                        isDatasetValid = false;
+                        submitDatasetBtn.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    showValidationStatus('error', `✗ Error validating dataset: ${error.message}`, true);
+                    hideSizeWarning();
+                    hideDatasetDetailsSection();
+                    isDatasetValid = false;
+                    submitDatasetBtn.disabled = true;
+                })
+                .finally(() => {
+                    setValidateButtonState(false);
+                });
+        });
+
+        // Submit dataset functionality
+        submitDatasetBtn.addEventListener('click', function() {
+            if (!isDatasetValid) {
+                showNotification('Please validate the dataset first', 'warning');
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('addDatasetForm'));
+
+            // Get selected tasks from Select2
+            const selectedTasks = $('#datasetTasksInput').val();
+            if (selectedTasks && selectedTasks.length > 0) {
+                formData.set('tasks', selectedTasks.join(','));
+            }
+
+            setSubmitButtonState(true);
+
+            fetch('{% url "prompt:dataset_create_api" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Add the new dataset to the main select2 dropdown
+                        const newOption = new Option(
+                            data.dataset.huggingface_name || data.dataset.name,
+                            data.dataset.id,
+                            true,
+                            true
+                        );
+                        newOption.dataset = data.dataset; // Store full dataset data
+                        $('#datasetSearchSelect, #id_datasets').append(newOption).trigger('change');
+
+                        // Close modal and reset
+                        addDatasetModal.hide();
+                        resetModal();
+
+                        // Show success notification
+                        showNotification('Dataset added successfully!', 'success');
+                    } else {
+                        showNotification(`Error: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification(`Error adding dataset: ${error.message}`, 'error');
+                })
+                .finally(() => {
+                    setSubmitButtonState(false);
+                });
+        });
+
+        // Reset modal when closed
+        document.getElementById('addDatasetModal').addEventListener('hidden.bs.modal', function() {
+            resetModal();
+        });
+
+        // Helper functions
+        function showValidationStatus(type, message, showInline) {
+            if (showInline) {
+                validationStatusInline.innerHTML = `<span class="validation-${type}-inline">${message}</span>`;
+                validationPanel.classList.add('d-none');
+            } else {
+                validationStatusInline.innerHTML = '';
+                validationStatus.className = `dataset-validation-status validation-${type}`;
+                validationStatus.textContent = message;
+                validationPanel.classList.remove('d-none');
+            }
+        }
+
+        function showSizeWarning(sizeWarning) {
+            const warningAlert = document.getElementById('sizeWarningAlert');
+            const warningText = document.getElementById('sizeWarningText');
+
+            if (sizeWarning) {
+                warningText.innerHTML = sizeWarning;
+                warningAlert.classList.remove('d-none');
+            } else {
+                hideSizeWarning();
+            }
+        }
+
+        function hideSizeWarning() {
+            document.getElementById('sizeWarningAlert').classList.add('d-none');
+        }
+
+        function showDatasetDetailsSection() {
+            datasetDetailsSection.style.display = 'block';
+            datasetDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideDatasetDetailsSection() {
+            datasetDetailsSection.style.display = 'none';
+        }
+
+        function setValidateButtonState(loading) {
+            const spinner = document.getElementById('validateSpinner');
+            const btnText = validateDatasetBtn.querySelector('.btn-text');
+
+            validateDatasetBtn.disabled = loading;
+            if (loading) {
+                spinner.classList.remove('d-none');
+                btnText.textContent = 'Validating...';
+            } else {
+                spinner.classList.add('d-none');
+                btnText.textContent = 'Validate Dataset';
+            }
+        }
+
+        function setSubmitButtonState(loading) {
+            const spinner = document.getElementById('submitSpinner');
+            const btnText = submitDatasetBtn.querySelector('.btn-text');
+
+            submitDatasetBtn.disabled = loading;
+            if (loading) {
+                spinner.classList.remove('d-none');
+                btnText.textContent = 'Adding...';
+            } else {
+                spinner.classList.add('d-none');
+                btnText.textContent = 'Add Dataset';
+            }
+        }
+
+        function resetModal() {
+            document.getElementById('addDatasetForm').reset();
+            $('#datasetTasksInput').val(null).trigger('change');
+            validationStatusInline.innerHTML = '';
+            validationPanel.classList.add('d-none');
+            hideSizeWarning();
+            hideDatasetDetailsSection();
+            isDatasetValid = false;
+            submitDatasetBtn.disabled = true;
+        }
+
+        function showNotification(message, type) {
+            // Create a toast notification
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'x-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            // Add to page and show
+            const toastContainer = document.createElement('div');
+            toastContainer.className = 'position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '1056';
+            toastContainer.innerHTML = toastHtml;
+            document.body.appendChild(toastContainer);
+
+            const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
+            toast.show();
+
+            // Remove container after toast is hidden
+            toastContainer.querySelector('.toast').addEventListener('hidden.bs.toast', function() {
+                document.body.removeChild(toastContainer);
+            });
+        }
+
+        // Return the modal instance for external use
+        return {
+            modal: addDatasetModal,
+            show: () => addDatasetModal.show(),
+            hide: () => addDatasetModal.hide()
+        };
+    }
+
+    // Initialize when DOM is ready (will be called from parent template)
+    function initializeModalOnReady() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAddDatasetModal);
+        } else {
+            initializeAddDatasetModal();
+        }
+    }
+</script>

@@ -1,4 +1,5 @@
 import datasets
+import requests
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.management import call_command
@@ -1163,3 +1164,295 @@ class ProjectDistributeView(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.error(request, f"Error distributing datasets: {str(e)}")
 
         return redirect("prompt:project_detail", pk=project.pk)
+
+
+class DatasetSearchAPIView(LoginRequiredMixin, View):
+    """API endpoint for searching datasets"""
+
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get("q", "").strip()
+
+        if not query or len(query) < 2:
+            return JsonResponse({"results": []})
+
+        # Search in existing datasets
+        existing_datasets = Dataset.objects.filter(
+            models.Q(name__icontains=query)
+            | models.Q(huggingface_name__icontains=query)
+            | models.Q(description__icontains=query)
+        )[:10]
+
+        results = []
+        for dataset in existing_datasets:
+            results.append(
+                {
+                    "id": dataset.id,
+                    "text": f"{dataset.huggingface_name}",
+                    "description": (
+                        dataset.description[:100] if dataset.description else ""
+                    ),
+                    "exists": True,
+                }
+            )
+
+        return JsonResponse({"results": results})
+
+
+class DatasetValidationAPIView(LoginRequiredMixin, View):
+    """API endpoint for validating HuggingFace dataset paths"""
+
+    def post(self, request, *args, **kwargs):
+        dataset_path = request.POST.get("dataset_path", "").strip()
+
+        if not dataset_path:
+            return JsonResponse({"valid": False, "error": "Dataset path is required"})
+
+        try:
+            result = self._validate_with_hub_api(dataset_path)
+            if result:
+                return JsonResponse(result)
+
+        except Exception as e:
+            return JsonResponse(
+                {"valid": False, "error": f"Error validating dataset: {str(e)}"}
+            )
+
+    def _validate_with_hub_api(self, dataset_path):
+        """
+        Validate dataset using HuggingFace Hub API (safest method)
+        This only fetches metadata without downloading any data
+        """
+        try:
+            # HuggingFace Hub API endpoint
+            api_url = f"https://huggingface.co/api/datasets/{dataset_path}"
+
+            headers = {"User-Agent": "Tawjeeh-Dataset-Validator/1.0"}
+
+            response = requests.get(api_url, headers=headers, timeout=10)
+
+            if response.status_code == 404:
+                return {"valid": False, "error": "Dataset not found on HuggingFace Hub"}
+            elif response.status_code != 200:
+                return None  # Fall back to other method
+
+            data = response.json()
+
+            # Extract basic information
+            dataset_info = {
+                "valid": True,
+                "name": dataset_path.split("/")[-1],
+                "huggingface_name": dataset_path,
+                "description": data.get("description", ""),
+                "tags": data.get("tags", []),
+                "downloads": data.get("downloads", 0),
+                "likes": data.get("likes", 0),
+                "created_at": data.get("createdAt", ""),
+                "updated_at": data.get("lastModified", ""),
+                "configs": [],
+                "size_warning": None,
+                "size_info": None,
+            }
+
+            # Try to get dataset size information from the API
+            size_info = self._extract_size_info(data)
+            if size_info:
+                dataset_info["size_info"] = size_info
+                dataset_info["size_warning"] = self._generate_size_warning(size_info)
+
+            # Try to get config information
+            try:
+                configs = datasets.get_dataset_config_names(
+                    dataset_path, trust_remote_code=True
+                )
+                dataset_info["configs"] = configs
+            except Exception:
+                # If we can't get configs, that's okay - we still have basic info
+                dataset_info["configs"] = ["default"]
+
+            return dataset_info
+
+        except requests.RequestException:
+            return None  # Network error, fall back to other method
+        except Exception:
+            return None  # Any other error, fall back
+
+    def _extract_size_info(self, hub_data):
+        """Extract size information from HuggingFace Hub API response"""
+        try:
+            # Look for size information in various places
+            size_info = {}
+
+            # Check if there's size information in the dataset card
+            if "cardData" in hub_data:
+                card_data = hub_data["cardData"]
+                if "dataset_info" in card_data:
+                    dataset_info = card_data["dataset_info"]
+                    if isinstance(dataset_info, list) and len(dataset_info) > 0:
+                        dataset_info = dataset_info[0]
+
+                    if "dataset_size" in dataset_info:
+                        size_info["dataset_size"] = dataset_info["dataset_size"]
+                    if "download_size" in dataset_info:
+                        size_info["download_size"] = dataset_info["download_size"]
+                    if "num_examples" in dataset_info:
+                        size_info["num_examples"] = dataset_info["num_examples"]
+
+            # Check siblings for file sizes
+            if "siblings" in hub_data:
+                total_size = 0
+                for sibling in hub_data["siblings"]:
+                    if "size" in sibling:
+                        total_size += sibling["size"]
+
+                if total_size > 0:
+                    size_info["total_file_size"] = total_size
+
+            return size_info if size_info else None
+
+        except Exception:
+            return None
+
+    def _generate_size_warning(self, size_info):
+        """Generate appropriate warning based on dataset size"""
+        if not size_info:
+            return None
+
+        warnings = []
+
+        # Check dataset size (in bytes)
+        if "dataset_size" in size_info:
+            size_bytes = size_info["dataset_size"]
+            size_gb = size_bytes / (1024**3)
+
+            if size_gb > 10:
+                warnings.append(f"⚠️ Large dataset: {size_gb:.1f} GB")
+            elif size_gb > 1:
+                warnings.append(f"📊 Dataset size: {size_gb:.1f} GB")
+
+        # Check download size
+        if "download_size" in size_info:
+            download_bytes = size_info["download_size"]
+            download_gb = download_bytes / (1024**3)
+
+            if download_gb > 5:
+                warnings.append(f"⚠️ Large download: {download_gb:.1f} GB")
+
+        # Check total file size
+        if "total_file_size" in size_info:
+            total_bytes = size_info["total_file_size"]
+            total_gb = total_bytes / (1024**3)
+
+            if total_gb > 5:
+                warnings.append(f"⚠️ Repository size: {total_gb:.1f} GB")
+
+        # Check number of examples
+        if "num_examples" in size_info:
+            num_examples = size_info["num_examples"]
+            if isinstance(num_examples, dict):
+                total_examples = sum(num_examples.values())
+            else:
+                total_examples = num_examples
+
+            if total_examples > 10_000_000:  # 10M examples
+                warnings.append(f"⚠️ Large dataset: {total_examples:,} examples")
+            elif total_examples > 1_000_000:  # 1M examples
+                warnings.append(f"📊 Dataset: {total_examples:,} examples")
+
+        return " | ".join(warnings) if warnings else None
+
+
+class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """API endpoint for creating datasets from HuggingFace"""
+
+    def test_func(self):
+        # Only superusers or project owners can add new datasets
+        return self.request.user.is_superuser
+
+    def post(self, request, *args, **kwargs):
+        try:
+            dataset_path = request.POST.get("dataset_path", "").strip()
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            task_names = request.POST.get("tasks", "").strip()
+
+            if not all([dataset_path, name]):
+                return JsonResponse(
+                    {"success": False, "error": "Dataset path and name are required"}
+                )
+
+            # Check if dataset already exists
+            if Dataset.objects.filter(huggingface_name=dataset_path).exists():
+                return JsonResponse(
+                    {"success": False, "error": "Dataset already exists in the system"}
+                )
+
+            # Validate dataset exists on HuggingFace
+            try:
+                dataset_info = datasets.get_dataset_infos(dataset_path)
+                first_config = next(iter(dataset_info.values()))
+            except Exception:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Could not access dataset on HuggingFace Hub",
+                    }
+                )
+
+            # Create the dataset
+            dataset = Dataset.objects.create(
+                name=name,
+                huggingface_name=dataset_path,
+                description=description or first_config.description or "",
+            )
+
+            # Add tasks if provided
+            if task_names:
+                task_list = [t.strip() for t in task_names.split(",") if t.strip()]
+                tasks = []
+                for task_name in task_list:
+                    task, created = Task.objects.get_or_create(name=task_name)
+                    tasks.append(task)
+                dataset.tasks.set(tasks)
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "dataset": {
+                        "id": dataset.id,
+                        "name": dataset.name,
+                        "huggingface_name": dataset.huggingface_name,
+                        "description": dataset.description,
+                    },
+                }
+            )
+
+        except Exception as e:
+            return JsonResponse(
+                {"success": False, "error": f"Error creating dataset: {str(e)}"}
+            )
+
+
+class TaskSearchAPIView(LoginRequiredMixin, View):
+    """API endpoint for searching tasks for Select2 dropdown"""
+
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get("q", "").strip()
+
+        if not query or len(query) < 1:
+            # Return all tasks if no query
+            tasks = Task.objects.all()[:20]
+        else:
+            # Search tasks by name
+            tasks = Task.objects.filter(name__icontains=query)[:20]
+
+        results = []
+        for task in tasks:
+            results.append(
+                {
+                    "id": task.id,
+                    "name": task.name,
+                    "text": task.name,  # For Select2 compatibility
+                }
+            )
+
+        return JsonResponse({"results": results})

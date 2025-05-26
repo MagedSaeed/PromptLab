@@ -46,6 +46,83 @@
         .regenerate-btn {
             margin-left: 10px;
         }
+
+        .dataset-search-container {
+            position: relative;
+        }
+
+        .add-dataset-btn {
+            margin-top: 0.5rem;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .btn-group-custom {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            min-height: 38px;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            color: white;
+            border-radius: 4px;
+            padding: 2px 8px;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white;
+            margin-right: 5px;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #dc3545;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+
+        .select2-result-dataset {
+            padding: 8px 12px;
+        }
+
+        .select2-result-dataset__title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .select2-result-dataset__description {
+            color: #666;
+            font-size: 0.875rem;
+            line-height: 1.2;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #007bff;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
     </style>
 {% endblock %}
 
@@ -56,14 +133,14 @@
         <form method="post">
             {% csrf_token %}
 
-        <!-- Project Details Section -->
+            <!-- Project Details Section -->
             <div class="form-section">
                 <h4 class="form-section-title">Project Details</h4>
                 {{ form.name|as_crispy_field }}
                 {{ form.description|as_crispy_field }}
             </div>
 
-        <!-- Project Settings Section -->
+            <!-- Project Settings Section -->
             <div class="form-section">
                 <h4 class="form-section-title">Project Settings</h4>
                 {{ form.minimum_prompts_per_prompter|as_crispy_field }}
@@ -82,14 +159,27 @@
                 </div>
             </div>
 
-        <!-- Datasets Section -->
+            <!-- Datasets Section -->
             <div class="form-section">
                 <h4 class="form-section-title">Datasets</h4>
                 <p class="text-muted">Select datasets that will be used in this project.</p>
-                {{ form.datasets|as_crispy_field }}
+
+                <div class="dataset-search-container">
+                    <label for="datasetSearchSelect" class="form-label">Search and Select Datasets</label>
+                    <small class="form-text text-muted mb-2 d-block">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Search from datasets already added to your hub. To add a new dataset from HuggingFace, use the button below.
+                    </small>
+                    <div class="btn-group-custom mb-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addDatasetBtn">
+                            <i class="bi bi-plus-lg"></i> Add New Dataset from HuggingFace
+                        </button>
+                    </div>
+                    {{ form.datasets }}
+                </div>
             </div>
 
-        <!-- Team Members Section -->
+            <!-- Team Members Section -->
             <div class="form-section">
                 <h4 class="form-section-title">Team Members</h4>
                 <p class="text-muted">Add team members who will work on this project.</p>
@@ -122,27 +212,74 @@
         </form>
     </div>
 
+    <!-- Include the Add Dataset Modal -->
+    {% include 'prompt/modals/project_add_dataset_from_hf.html' %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        // Function to generate a random string for the secret key
-            function generateRandomKey(length = 5) {
-                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let result = '';
-                for (let i = 0; i < length; i++) {
-                    result += characters.charAt(Math.floor(Math.random() * characters.length));
-                }
-                return result;
-            }
+            // Initialize Dataset Select2 (main form)
+            $('#datasetSearchSelect, #id_datasets').select2({
+                placeholder: 'Search and select datasets...',
+                allowClear: true,
+                ajax: {
+                    url: '{% url "prompt:dataset_search_api" %}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            page: params.page
+                        };
+                    },
+                    processResults: function(data, params) {
+                        return {
+                            results: data.results || []
+                        };
+                    },
+                    cache: true
+                },
+                templateResult: function(dataset) {
+                    if (dataset.loading) {
+                        return dataset.text;
+                    }
 
-        // Set up event listener for regenerate button
+                    // Custom template for dataset results
+                    var $result = $(
+                        '<div class="select2-result-dataset">' +
+                        '<div class="select2-result-dataset__header">' +
+                        '<span class="select2-result-dataset__path">' + (dataset.huggingface_name || dataset.text || 'Unknown Path') + '</span>' +
+                        '</div>' +
+                        (dataset.description ? '<div class="select2-result-dataset__description">' + dataset.description + '</div>' : '') +
+                        '<div class="select2-result-dataset__meta">' +
+                        (dataset.task_count ? '<div class="select2-result-dataset__meta-item"><i class="bi bi-tags"></i> ' + dataset.task_count + ' tasks</div>' : '') +
+                        (dataset.created_date ? '<div class="select2-result-dataset__meta-item"><i class="bi bi-calendar"></i> Added ' + dataset.created_date + '</div>' : '') +
+                        '</div>' +
+                        '</div>'
+                    );
+
+                    return $result;
+                },
+                templateSelection: function(dataset) {
+                    // Display the HuggingFace path in selection, but use the name as fallback
+                    return dataset.huggingface_name || dataset.name || dataset.text;
+                }
+            });
+
+            // Initialize the Add Dataset Modal
+            const addDatasetModalInstance = initializeAddDatasetModal();
+
+            // Add Dataset Modal functionality
+            document.getElementById('addDatasetBtn').addEventListener('click', function() {
+                addDatasetModalInstance.show();
+            });
+
+            // Regenerate Key functionality
             document.getElementById('regenerateKey').addEventListener('click', function() {
-                const secretKeyInput = document.getElementById('{{ form.secret_key.id_for_label }}');
-                secretKeyInput.value = generateRandomKey();
-                secretKeyInput.classList.add('bg-light');
-            // Briefly highlight the field to show it changed
-                setTimeout(() => {
-                    secretKeyInput.classList.remove('bg-light');
-                }, 300);
+                // Add your regenerate key logic here
+                const secretKeyInput = document.querySelector('input[name="secret_key"]');
+                // Generate a new random key or make API call to regenerate
+                // secretKeyInput.value = generateNewKey();
+                console.log('Regenerate key clicked');
             });
         });
     </script>

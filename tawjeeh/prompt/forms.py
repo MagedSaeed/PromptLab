@@ -303,10 +303,16 @@ class ProjectForm(forms.ModelForm):
         help_text="Users who can create and review prompts for this project",
     )
 
+    # Updated datasets field with custom widget
     datasets = forms.ModelMultipleChoiceField(
         queryset=Dataset.objects.all(),
         required=False,
-        widget=forms.SelectMultiple(attrs={"class": "form-select"}),
+        widget=forms.SelectMultiple(
+            attrs={
+                "class": "form-select dataset-search-select",
+                "id": "datasetSearchSelect",
+            }
+        ),
         help_text="Datasets available for this project",
     )
 
@@ -466,3 +472,73 @@ class LLMTestForm(forms.Form):
         except Exception as e:
             # Return empty list with error message
             return [("", f"Error fetching models: {str(e)}")]
+
+
+class HuggingFaceDatasetForm(forms.Form):
+    """Form for adding datasets from HuggingFace Hub"""
+
+    dataset_path = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "e.g., arbml/watan_2004 or microsoft/DialoGPT-medium",
+                "id": "datasetPathInput",
+            }
+        ),
+        help_text="Enter the HuggingFace dataset path (author/dataset-name)",
+    )
+
+    name = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Display name for the dataset",
+                "id": "datasetNameInput",
+            }
+        ),
+        help_text="A readable name for the dataset",
+    )
+
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Brief description of the dataset (optional)",
+                "id": "datasetDescriptionInput",
+            }
+        ),
+        help_text="Optional description of the dataset",
+    )
+
+    tasks = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "sentiment analysis, question answering, etc.",
+                "id": "datasetTasksInput",
+            }
+        ),
+        help_text="Comma-separated list of tasks this dataset is used for (optional)",
+    )
+
+    def clean_dataset_path(self):
+        dataset_path = self.cleaned_data["dataset_path"].strip()
+
+        # Basic validation of the path format
+        if "/" not in dataset_path:
+            raise forms.ValidationError(
+                'Dataset path should be in format "author/dataset-name"'
+            )
+
+        parts = dataset_path.split("/")
+        if len(parts) != 2 or not all(part.strip() for part in parts):
+            raise forms.ValidationError(
+                'Invalid dataset path format. Should be "author/dataset-name"'
+            )
+
+        return dataset_path
