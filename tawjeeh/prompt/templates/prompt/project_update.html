@@ -123,6 +123,127 @@
             width: 1rem;
             height: 1rem;
         }
+
+        /* Dataset management specific styles */
+        .datasets-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .dataset-search-box {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .dataset-item {
+            transition: all 0.3s ease;
+            margin-bottom: 0.75rem;
+        }
+
+        .dataset-item.marked-for-removal {
+            opacity: 0.6;
+            background-color: #f8f9fa !important;
+            border: 1px dashed #dc3545 !important;
+            filter: grayscale(50%);
+            position: relative;
+        }
+
+        .dataset-item.marked-for-removal::before {
+            content: "MARKED FOR REMOVAL";
+            position: absolute;
+            top: -8px;
+            right: 10px;
+            background-color: #dc3545;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .dataset-item.marked-for-removal .dataset-info {
+            text-decoration: line-through;
+            color: #6c757d !important;
+        }
+
+        .dataset-item.marked-for-removal .dataset-info strong {
+            color: #6c757d !important;
+        }
+
+        .dataset-item.hidden {
+            display: none !important;
+        }
+
+        .dataset-item:not(.marked-for-removal):hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .remove-dataset-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .restore-dataset-btn {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .restore-dataset-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+            transform: scale(1.05);
+        }
+
+        .dataset-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .dataset-info strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #333;
+        }
+
+        .dataset-info small {
+            display: block;
+            color: #6c757d;
+            word-break: break-word;
+        }
+
+        .no-datasets-message {
+            text-align: center;
+            color: #6c757d;
+            padding: 2rem 1rem;
+        }
+
+        .dataset-counter {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        .search-input {
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ced4da;
+            font-size: 0.875rem;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
     </style>
 {% endblock %}
 
@@ -162,21 +283,70 @@
             <!-- Datasets Section -->
             <div class="form-section">
                 <h4 class="form-section-title">Datasets</h4>
-                <p class="text-muted">Select datasets that will be used in this project.</p>
+                <p class="text-muted">Manage datasets that will be used in this project.</p>
 
-                <div class="dataset-search-container">
-                    <label for="datasetSearchSelect" class="form-label">Search and Select Datasets</label>
-                    <small class="form-text text-muted mb-2 d-block">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Search from datasets already added to your hub. To add a new dataset from HuggingFace, use the button below.
-                    </small>
-                    <div class="btn-group-custom mb-2">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="addDatasetBtn">
-                            <i class="bi bi-plus-lg"></i> Add New Dataset from HuggingFace
-                        </button>
-                    </div>
-                    {{ form.datasets }}
+                <!-- Add Dataset Button -->
+                <div class="btn-group-custom mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addDatasetBtn">
+                        <i class="bi bi-plus-lg"></i> Add New Dataset from HuggingFace
+                    </button>
                 </div>
+
+                <!-- Current Datasets List -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Current Datasets</label>
+                    <!-- Search Box - Sticky at top -->
+                    <div class="dataset-search-box">
+                        <input type="text"
+                               class="form-control search-input"
+                               id="datasetSearchInput"
+                               placeholder="🔍 Search datasets..."
+                               autocomplete="off">
+                    </div>
+                    <div class="datasets-container" id="datasetsContainer">
+
+                        <!-- Datasets List -->
+                        <div id="currentDatasetsList">
+                            {% if object.datasets.exists %}
+                                {% for dataset in object.datasets.all %}
+                                    <div class="dataset-item d-flex justify-content-between align-items-start p-3 bg-white rounded border"
+                                         data-dataset-id="{{ dataset.id }}"
+                                         data-search-text="{{ dataset.name|lower }} {{ dataset.huggingface_name|lower }} {{ dataset.description|lower }}">
+                                        <div class="dataset-info">
+                                            <strong>{{ dataset.name }}</strong>
+                                            <small class="text-muted">{{ dataset.huggingface_name }}</small>
+                                            {% if dataset.description %}
+                                                <small class="text-muted">{{ dataset.description|truncatechars:120 }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-sm remove-dataset-btn ms-2"
+                                                data-dataset-id="{{ dataset.id }}"
+                                                title="Mark for removal">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-datasets-message" id="noDatasetsMessage">
+                                    <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
+                                    <div>No datasets added to this project yet.</div>
+                                    <small>Click "Add New Dataset" to get started.</small>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Dataset Counter -->
+                        <div class="dataset-counter" id="datasetCounter">
+                            <span id="visibleCount">{{ object.datasets.count }}</span> of
+                            <span id="totalCount">{{ object.datasets.count }}</span> datasets
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden fields for form submission -->
+                {{ form.datasets }}
+                {{ form.remove_datasets }}
             </div>
 
             <!-- Team Members Section -->
@@ -217,70 +387,212 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Dataset Select2 (main form)
-            /*
-            $('#datasetSearchSelect, #id_datasets').select2({
-                placeholder: 'Search and select datasets...',
-                allowClear: true,
-                ajax: {
-                    url: '{% url "prompt:project_dataset_search" project_pk=object.pk %}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term,
-                            page: params.page
-                        };
-                    },
-                    processResults: function(data, params) {
-                        return {
-                            results: data.results || []
-                        };
-                    },
-                    cache: true
-                },
-                templateResult: function(dataset) {
-                    if (dataset.loading) {
-                        return dataset.text;
+            let datasetsToRemove = [];
+            let totalDatasetCount = parseInt(document.getElementById('totalCount').textContent);
+
+            // Initialize dataset search functionality
+            const searchInput = document.getElementById('datasetSearchInput');
+            const datasetItems = document.querySelectorAll('.dataset-item');
+
+            // Real-time search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                datasetItems.forEach(item => {
+                    if (item.classList.contains('removing')) return;
+
+                    const searchText = item.getAttribute('data-search-text') || '';
+                    const isVisible = searchTerm === '' || searchText.includes(searchTerm);
+
+                    if (isVisible) {
+                        item.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        item.classList.add('hidden');
                     }
+                });
 
-                    // Custom template for dataset results
-                    var $result = $(
-                        '<div class="select2-result-dataset">' +
-                        '<div class="select2-result-dataset__header">' +
-                        '<span class="select2-result-dataset__path">' + (dataset.huggingface_name || dataset.text || 'Unknown Path') + '</span>' +
-                        '</div>' +
-                        (dataset.description ? '<div class="select2-result-dataset__description">' + dataset.description + '</div>' : '') +
-                        '<div class="select2-result-dataset__meta">' +
-                        (dataset.task_count ? '<div class="select2-result-dataset__meta-item"><i class="bi bi-tags"></i> ' + dataset.task_count + ' tasks</div>' : '') +
-                        (dataset.created_date ? '<div class="select2-result-dataset__meta-item"><i class="bi bi-calendar"></i> Added ' + dataset.created_date + '</div>' : '') +
-                        '</div>' +
-                        '</div>'
-                    );
+                // Update counter
+                updateDatasetCounter(visibleCount, totalDatasetCount - datasetsToRemove.length);
 
-                    return $result;
-                },
-                templateSelection: function(dataset) {
-                    // Display the HuggingFace path in selection, but use the name as fallback
-                    return dataset.huggingface_name || dataset.name || dataset.text;
+                // Show/hide no results message
+                toggleNoResultsMessage(visibleCount === 0 && totalDatasetCount > datasetsToRemove.length);
+            });
+
+            // Handle remove dataset buttons (soft delete)
+            $(document).on('click', '.remove-dataset-btn', function() {
+                const datasetId = $(this).data('dataset-id');
+                const datasetItem = $(this).closest('.dataset-item');
+                const datasetName = datasetItem.find('strong').text();
+
+                if (confirm(`Mark "${datasetName}" for removal? You can undo this action before saving.`)) {
+                    // Add to removal list
+                    datasetsToRemove.push(datasetId);
+                    updateRemoveField();
+
+                    // Visual feedback - soft delete
+                    datasetItem.addClass('marked-for-removal');
+
+                    // Change button to restore
+                    const button = $(this);
+                    button.removeClass('btn-outline-danger remove-dataset-btn')
+                        .addClass('btn-outline-success restore-dataset-btn')
+                        .attr('title', 'Restore dataset')
+                        .html('<i class="bi bi-arrow-counterclockwise"></i> Restore');
+
+                    // Update counters
+                    updateDatasetCounts();
                 }
-            }); */
+            });
+
+            // Handle restore dataset buttons
+            $(document).on('click', '.restore-dataset-btn', function() {
+                const datasetId = $(this).data('dataset-id');
+                const datasetItem = $(this).closest('.dataset-item');
+                const datasetName = datasetItem.find('strong').text();
+
+                // Remove from removal list
+                const index = datasetsToRemove.indexOf(datasetId);
+                if (index > -1) {
+                    datasetsToRemove.splice(index, 1);
+                    updateRemoveField();
+                }
+
+                // Visual feedback - restore
+                datasetItem.removeClass('marked-for-removal');
+
+                // Change button back to remove
+                const button = $(this);
+                button.removeClass('btn-outline-success restore-dataset-btn')
+                    .addClass('btn-outline-danger remove-dataset-btn')
+                    .attr('title', 'Mark for removal')
+                    .html('<i class="bi bi-trash"></i> Remove');
+
+                // Update counters
+                updateDatasetCounts();
+            });
+
+            // Update the hidden remove field
+            function updateRemoveField() {
+                $('#id_remove_datasets').val(datasetsToRemove.join(','));
+            }
+
+            // Update dataset counter
+            function updateDatasetCounter(visible, total) {
+                document.getElementById('visibleCount').textContent = visible;
+                document.getElementById('totalCount').textContent = total;
+            }
+
+            // Toggle no results message
+            function toggleNoResultsMessage(show) {
+                const searchTerm = searchInput.value.trim();
+                if (show && searchTerm) {
+                    if (!document.getElementById('noResultsMessage')) {
+                        const message = document.createElement('div');
+                        message.id = 'noResultsMessage';
+                        message.className = 'no-datasets-message';
+                        message.innerHTML = `
+                            <i class="bi bi-search fs-1 mb-2 d-block"></i>
+                            <div>No datasets found for "${searchTerm}"</div>
+                            <small>Try adjusting your search terms.</small>
+                        `;
+                        document.getElementById('currentDatasetsList').appendChild(message);
+                    }
+                } else {
+                    const noResultsMessage = document.getElementById('noResultsMessage');
+                    if (noResultsMessage) {
+                        noResultsMessage.remove();
+                    }
+                }
+            }
+
+            // Check if no datasets are left
+            function checkIfNoDatasetsLeft() {
+                const visibleItems = $('.dataset-item:visible').length;
+                if (visibleItems === 0) {
+                    if (!document.getElementById('noDatasetsMessage')) {
+                        $('#currentDatasetsList').append(`
+                            <div class="no-datasets-message" id="noDatasetsMessage">
+                                <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
+                                <div>No datasets added to this project yet.</div>
+                                <small>Click "Add New Dataset" to get started.</small>
+                            </div>
+                        `);
+                    }
+                    $('#datasetCounter').hide();
+                } else {
+                    $('#datasetCounter').show();
+                }
+            }
 
             // Initialize the Add Dataset Modal
-            const addDatasetModalInstance = initializeAddDatasetModal();
+            let addDatasetModalInstance;
+
+            // Initialize modal when called
+            function initializeModalOnReady() {
+                if (typeof initializeAddDatasetModal === 'function') {
+                    addDatasetModalInstance = initializeAddDatasetModal();
+
+                    // Override the success callback to refresh page
+                    const originalShowNotification = window.showNotification || function() {};
+                    window.showNotification = function(message, type) {
+                        if (type === 'success' && message.includes('Dataset added successfully')) {
+                            // Show success message briefly then refresh
+                            originalShowNotification(message, type);
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            originalShowNotification(message, type);
+                        }
+                    };
+                }
+            }
+
+            // Initialize modal
+            initializeModalOnReady();
 
             // Add Dataset Modal functionality
             document.getElementById('addDatasetBtn').addEventListener('click', function() {
-                addDatasetModalInstance.show();
+                if (addDatasetModalInstance && addDatasetModalInstance.show) {
+                    addDatasetModalInstance.show();
+                } else {
+                    // Fallback if modal isn't initialized
+                    const modal = new bootstrap.Modal(document.getElementById('addDatasetModal'));
+                    modal.show();
+                }
             });
 
             // Regenerate Key functionality
             document.getElementById('regenerateKey').addEventListener('click', function() {
-                // Add your regenerate key logic here
                 const secretKeyInput = document.querySelector('input[name="secret_key"]');
-                // Generate a new random key or make API call to regenerate
-                // secretKeyInput.value = generateNewKey();
-                console.log('Regenerate key clicked');
+
+                // Generate a new random key
+                function generateRandomKey(length = 5) {
+                    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    let result = '';
+                    for (let i = 0; i < length; i++) {
+                        result += characters.charAt(Math.floor(Math.random() * characters.length));
+                    }
+                    return result;
+                }
+
+                secretKeyInput.value = generateRandomKey();
+                secretKeyInput.classList.add('bg-light');
+
+                // Briefly highlight the field to show it changed
+                setTimeout(() => {
+                    secretKeyInput.classList.remove('bg-light');
+                }, 300);
+            });
+
+            // Clear search on Escape key
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    this.dispatchEvent(new Event('input'));
+                }
             });
         });
     </script>

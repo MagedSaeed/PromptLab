@@ -102,7 +102,10 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                     {"success": False, "error": "Dataset path and name are required"}
                 )
 
-            if Dataset.objects.filter(huggingface_name=dataset_path).exists():
+            if Dataset.objects.filter(
+                huggingface_name=dataset_path,
+                project=self.project,
+            ).exists():
                 return JsonResponse(
                     {"success": False, "error": "Dataset already exists in the system"}
                 )
@@ -134,6 +137,7 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
             # Create dataset
             dataset = Dataset.objects.create(
                 name=name,
+                project=self.project,
                 huggingface_name=dataset_path,
                 description=description or first_config.description or "",
             )

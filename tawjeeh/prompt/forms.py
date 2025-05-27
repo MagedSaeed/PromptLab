@@ -316,6 +316,12 @@ class ProjectForm(forms.ModelForm):
         help_text="Users who can create and review prompts for this project",
     )
 
+    remove_datasets = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+        help_text="Comma-separated list of dataset IDs to remove",
+    )
+
     class Meta:
         model = PromptingProject
         fields = [
@@ -349,8 +355,6 @@ class ProjectForm(forms.ModelForm):
 
         # Make description optional
         self.fields["description"].required = False
-
-        # Make minimum_prompts_per_prompter optional
         self.fields["minimum_prompts_per_prompter"].required = False
 
         # Generate a random 5-character secret key by default if this is a new project
@@ -358,24 +362,6 @@ class ProjectForm(forms.ModelForm):
             alphabet = string.ascii_letters + string.digits
             random_key = "".join(secrets.choice(alphabet) for _ in range(5))
             self.initial["secret_key"] = random_key
-
-        # If this is an existing project, populate the prompters and reviewer_prompters fields
-        if self.instance.pk:
-            # We'll need to implement the logic to separate regular prompters from reviewers
-            # This is just a placeholder as there's no direct field in the model for this distinction
-            self.fields["prompters"].initial = self.instance.prompters.all()
-
-        self.fields["datasets"] = forms.ModelMultipleChoiceField(
-            queryset=Dataset.objects.filter(project=self.project),
-            required=False,
-            widget=forms.SelectMultiple(
-                attrs={
-                    "class": "form-select dataset-search-select",
-                    "id": "datasetSearchSelect",
-                }
-            ),
-            help_text="Datasets available for this project",
-        )
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -386,13 +372,22 @@ class ProjectForm(forms.ModelForm):
 
         if commit:
             instance.save()
-
-            # Handle the datasets
             self.save_m2m()
 
-            # Handle prompters - this is just a placeholder
-            # We would need to implement the logic to distinguish between regular and reviewer prompters
-            # in the actual model or modify the model to have this distinction
+            # Handle dataset removal
+            remove_datasets_str = self.cleaned_data.get("remove_datasets", "")
+            if remove_datasets_str:
+                dataset_ids_to_remove = [
+                    int(id.strip())
+                    for id in remove_datasets_str.split(",")
+                    if id.strip().isdigit()
+                ]
+                datasets_to_remove = Dataset.objects.filter(
+                    id__in=dataset_ids_to_remove, project=instance
+                )
+                for dataset in datasets_to_remove:
+                    dataset.project = None
+                    dataset.save()
 
         return instance
 

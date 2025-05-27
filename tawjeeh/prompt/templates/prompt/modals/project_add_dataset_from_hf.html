@@ -645,6 +645,9 @@
 
                         // Show success notification
                         showNotification('Dataset added successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         // Handle size constraint errors specially
                         if (data.error && data.error.includes('size') && data.error.includes('GB')) {

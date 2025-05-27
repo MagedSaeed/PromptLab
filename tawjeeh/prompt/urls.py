@@ -4,7 +4,6 @@ from prompt.views import (
     DatasetDetailsView,
     DatasetListView,
     DatasetResetCacheView,
-    DatasetSearchAPIView,
     DatasetValidationAPIView,
     HFSynchView,
     MultiplePromptsCreateView,
@@ -126,11 +125,6 @@ urlpatterns = [
         "project/<int:pk>/distribute-datasets/",
         ProjectDistributeView.as_view(),
         name="distribute_datasets",
-    ),
-    path(
-        "project/<int:project_pk>/dataset/search/",
-        DatasetSearchAPIView.as_view(),
-        name="project_dataset_search",
     ),
     path(
         "task/search/",

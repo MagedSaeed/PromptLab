@@ -1275,42 +1275,6 @@ class ProjectDistributeView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect("prompt:project_detail", pk=project.pk)
 
 
-class DatasetSearchAPIView(LoginRequiredMixin, View):
-    """API endpoint for searching datasets"""
-
-    def get(self, request, *args, **kwargs):
-        query = request.GET.get("q", "").strip()
-        project = get_object_or_404(
-            PromptingProject,
-            pk=kwargs.get("project_pk"),
-            owner=request.user,
-        )
-        if not query or len(query) < 2:
-            return JsonResponse({"results": []})
-
-        # Search in existing datasets
-        existing_datasets = Dataset.objects.filter(project=project).filter(
-            models.Q(name__icontains=query)
-            | models.Q(huggingface_name__icontains=query)
-            | models.Q(description__icontains=query)
-        )[:10]
-
-        results = []
-        for dataset in existing_datasets:
-            results.append(
-                {
-                    "id": dataset.id,
-                    "text": f"{dataset.huggingface_name}",
-                    "description": (
-                        dataset.description[:100] if dataset.description else ""
-                    ),
-                    "exists": True,
-                }
-            )
-
-        return JsonResponse({"results": results})
-
-
 class DatasetValidationAPIView(LoginRequiredMixin, View):
     """API endpoint for validating HuggingFace dataset paths"""
 
