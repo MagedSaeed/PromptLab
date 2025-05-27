@@ -619,7 +619,7 @@
 
             setSubmitButtonState(true);
 
-            fetch('{% url "api:dataset_create" %}', {
+            fetch('{% url "api:dataset_create" project_pk=object.pk %}', {
                 method: 'POST',
                 body: formData,
                 headers: {

@@ -13,10 +13,12 @@ logger = get_task_logger(__name__)
 def process_single_dataset(dataset_id):
     try:
         dataset = Dataset.objects.get(id=dataset_id)
+        # Verify dataset has a project assigned
+        if not dataset.project:
+            logger.warning(f"Dataset {dataset.name} has no project assigned")
+
         dataset.get_configs_details()
         dataset.get_columns_names()
-        # dataset.get_huggingface_info()
-        # dataset.load_split_samples()
         return {"status": "success", "dataset_id": dataset_id}
     except Exception as e:
         return {"status": "failed", "dataset_id": dataset_id, "error": str(e)}
@@ -89,7 +91,13 @@ def fetch_dataset_data_from_hugginface(author, dataset_name):
     return response.json()
 
 
-def create_or_update_dataset(dataset_name, author, dataset_data, additional_info):
+def create_or_update_dataset(
+    dataset_name,
+    author,
+    dataset_data,
+    additional_info,
+    project,
+):
     huggingface_name = (
         dataset_name if author == "datasets" else f"{author}/{dataset_name}"
     )
@@ -107,6 +115,7 @@ def create_or_update_dataset(dataset_name, author, dataset_data, additional_info
                 if is_single_classification
                 else False
             ),
+            "project": project,
         },
     )
     if default_subset:
@@ -159,26 +168,39 @@ def str2bool(value):
 
 
 @shared_task
-def process_dataset(dataset_url, primary_tasks, additional_info):
+def process_dataset(dataset_url, primary_tasks, additional_info, project_pk):
+    try:
+        from prompt.models import PromptingProject
+
+        project = PromptingProject.objects.get(pk=project_pk)
+    except PromptingProject.DoesNotExist:
+        logger.error(f"Project with pk={project_pk} does not exist")
+        return False
+
     author, dataset_name = None, None
     path_parts = dataset_url.split("/")
     if len(path_parts) >= 2:
         author, dataset_name = path_parts[-2], path_parts[-1]
     if not author or not dataset_name:
         return False
+
     dataset_data = fetch_dataset_data_from_hugginface(author, dataset_name)
     if not dataset_data:
         return False
+
     task_names = [task.strip() for task in primary_tasks.split(",") if task.strip()]
     tasks = [Task.objects.get_or_create(name=task_name)[0] for task_name in task_names]
+
+    # Pass project to create_or_update_dataset
     dataset = create_or_update_dataset(
         dataset_name,
         author,
         dataset_data,
         additional_info,
+        project,  # Add project parameter
     )
     dataset.tasks.set(tasks)
-    # manage_example_prompt(dataset, additional_info)
+
     # fetch dataset's details
     dataset.get_columns_names()
     dataset.get_configs_details()

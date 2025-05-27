@@ -52,17 +52,22 @@ def get_split_samples(
 @redis_cache()
 def collect_dataset_configs_details(dataset_object):
     configs_and_splits = {}
-
     # Check if we should only download the default subset
+    default_subset = getattr(dataset_object, "default_subset", None)
+    if default_subset.lower().strip() == "nan":
+        default_subset = "default"
     if getattr(dataset_object, "download_only_the_default_subset", False):
         if not dataset_object.default_subset:
             raise ValueError(
                 "default_subset must be specified when download_only_the_default_subset is True"
             )
-        config_names = [dataset_object.default_subset]
+        config_names = [default_subset]
     else:
         # Original logic for getting all configs
-        if not dataset_object.subsets:
+        if (
+            not dataset_object.subsets
+            or dataset_object.subsets.lower().strip() == "nan"
+        ):
             config_names = datasets.get_dataset_config_names(
                 dataset_object.huggingface_name,
                 trust_remote_code=True,
@@ -70,7 +75,7 @@ def collect_dataset_configs_details(dataset_object):
         else:
             config_names = dataset_object.subsets.split(",")
 
-        if dataset_object.default_subset:
+        if default_subset:
             if dataset_object.default_subset not in config_names:
                 config_names.append(dataset_object.default_subset)
 
@@ -128,10 +133,12 @@ def collect_dataset_configs_details(dataset_object):
     else:
         # Process configs sequentially if there are 10 or fewer
         for config_name in config_names:
+            if config_name.lower().strip() == "nan":
+                continue
             fetch_results = fetch_splits_details(config_name)
             if not fetch_results:
                 continue
-            config_name, splits_details = fetch_splits_details(config_name)
+            config_name, splits_details = fetch_results
             configs_and_splits[config_name] = splits_details
 
     try:

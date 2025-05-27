@@ -15,7 +15,7 @@ urlpatterns = [
         name="prompt_list",
     ),
     path(
-        "dataset/create",  # Add this endpoint for dataset creation
+        "proejct/<int:project_pk>/dataset/create",  # Add this endpoint for dataset creation
         views.DatasetCreateAPIView.as_view(),
         name="dataset_create",
     ),

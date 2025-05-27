@@ -140,7 +140,7 @@
                                         class="form-control"
                                         placeholder="Search tasks..."
                                         value="{{ request.GET.name }}"
-                                        hx-get="{% url 'prompt:task_list' %}"
+                                        hx-get="{% url 'prompt:project_task_list' project_pk=project.pk %}"
                                         hx-trigger="keyup changed delay:500ms"
                                         hx-target="#tasks-list"
                                         hx-push-url="true"
@@ -149,7 +149,7 @@
                                 </div>
                             </form>
                         </div>
-                        <a href="{% url 'prompt:dataset_list' %}" class="btn btn-outline-primary">
+                        <a href="{% url 'prompt:project_dataset_list' project_pk=project.pk %}" class="btn btn-outline-primary">
                             <i class="bi bi-grid-3x3-gap-fill"></i> View All Datasets
                         </a>
                     </div>

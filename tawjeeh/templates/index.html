@@ -74,8 +74,9 @@
                     <h1 class="display-4 mb-4 main-heading">Welcome to Tawjeeh</h1>
                     <p class="lead mb-5 sub-heading">Elevate Arabic NLP research with collaborative prompt creation and dataset curation. Join our community of linguists, researchers, and developers in advancing natural language processing for Arabic.</p>
                     {% if user.is_authenticated %}
-                        <a class="btn btn-primary btn-custom me-3" href="{% url 'prompt:task_list' %}">Explore NLP Tasks</a>
-                        <a class="btn btn-outline-primary btn-custom me-3" href="{% url 'prompt:user_prompts_list' %}">My Prompts</a>
+                        {% comment %} <a class="btn btn-primary btn-custom me-3" href="{% url 'prompt:project_task_list' %}">Explore NLP Tasks</a> {% endcomment %}
+                        {% comment %} <a class="btn btn-outline-primary btn-custom me-3" href="{% url 'prompt:user_prompts_list' %}">My Prompts</a> {% endcomment %}
+                        <a class="btn btn-outline-primary btn-custom me-3" href="{% url 'prompt:project_list' %}">My Projects</a>
                         {% comment %} <a class="btn btn-outline-primary btn-custom" href="{% url 'prompt:my_datasets' %}">My Datasets</a> {% endcomment %}
                     {% else %}
                         <a class="btn btn-primary btn-custom me-3" href="{% url 'account_signup' %}">Get Started</a>

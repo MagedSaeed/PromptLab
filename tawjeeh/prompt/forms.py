@@ -266,6 +266,13 @@ class HFSyncForm(forms.Form):
         required=True,
     )
     clear_datasets = forms.BooleanField(required=False)
+    target_project = forms.ModelChoiceField(
+        queryset=PromptingProject.objects.none(),
+        label="Target Project",
+        help_text="Select the project where datasets will be added",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
     # example_template_column = forms.CharField(
     #     initial="example_template",
     #     required=False,
@@ -282,6 +289,12 @@ class HFSyncForm(forms.Form):
     #     initial="answer_choices",
     #     required=False,
     # )
+    def __init__(self, *args, **kwargs):
+        user = kwargs["user"]
+        super().__init__(*args, **kwargs)
+        self.fields["target_project"].queryset = PromptingProject.objects.filter(
+            owner=user
+        ).distinct()
 
 
 class ProjectForm(forms.ModelForm):
@@ -303,25 +316,12 @@ class ProjectForm(forms.ModelForm):
         help_text="Users who can create and review prompts for this project",
     )
 
-    # Updated datasets field with custom widget
-    datasets = forms.ModelMultipleChoiceField(
-        queryset=Dataset.objects.all(),
-        required=False,
-        widget=forms.SelectMultiple(
-            attrs={
-                "class": "form-select dataset-search-select",
-                "id": "datasetSearchSelect",
-            }
-        ),
-        help_text="Datasets available for this project",
-    )
-
     class Meta:
         model = PromptingProject
         fields = [
             "name",
             "description",
-            "datasets",
+            # "datasets",
             "minimum_prompts_per_prompter",
             "secret_key",
         ]
@@ -344,6 +344,7 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
+        self.project = kwargs.pop("project", None)
         super().__init__(*args, **kwargs)
 
         # Make description optional
@@ -363,6 +364,18 @@ class ProjectForm(forms.ModelForm):
             # We'll need to implement the logic to separate regular prompters from reviewers
             # This is just a placeholder as there's no direct field in the model for this distinction
             self.fields["prompters"].initial = self.instance.prompters.all()
+
+        self.fields["datasets"] = forms.ModelMultipleChoiceField(
+            queryset=Dataset.objects.filter(project=self.project),
+            required=False,
+            widget=forms.SelectMultiple(
+                attrs={
+                    "class": "form-select dataset-search-select",
+                    "id": "datasetSearchSelect",
+                }
+            ),
+            help_text="Datasets available for this project",
+        )
 
     def save(self, commit=True):
         instance = super().save(commit=False)

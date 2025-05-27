@@ -15,7 +15,7 @@
         <h6 class="mb-2">Associated Tasks:</h6>
         <div class="d-flex flex-wrap gap-2">
             {% for task in dataset.tasks.all %}
-                <a href="{% url 'prompt:dataset_list' %}?task_pk={{task.pk}}" class="btn btn-outline-info btn-sm">
+                <a href="{% url 'prompt:project_dataset_list' project_pk=dataset.project.pk %}?task_pk={{task.pk}}" class="btn btn-outline-info btn-sm">
                     {{ task.name }}
                 </a>
             {% empty %}

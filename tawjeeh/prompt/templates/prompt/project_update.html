@@ -218,11 +218,12 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Dataset Select2 (main form)
+            /*
             $('#datasetSearchSelect, #id_datasets').select2({
                 placeholder: 'Search and select datasets...',
                 allowClear: true,
                 ajax: {
-                    url: '{% url "prompt:dataset_search_api" %}',
+                    url: '{% url "prompt:project_dataset_search" project_pk=object.pk %}',
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
@@ -263,7 +264,7 @@
                     // Display the HuggingFace path in selection, but use the name as fallback
                     return dataset.huggingface_name || dataset.name || dataset.text;
                 }
-            });
+            }); */
 
             // Initialize the Add Dataset Modal
             const addDatasetModalInstance = initializeAddDatasetModal();

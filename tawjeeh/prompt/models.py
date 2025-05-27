@@ -24,7 +24,7 @@ class PromptingProject(models.Model):
         related_name="owned_prompting_projects",
     )
     prompters = models.ManyToManyField(User, related_name="prompting_projects")
-    datasets = models.ManyToManyField("Dataset", related_name="prompting_projects")
+    # datasets = models.ManyToManyField("Dataset", related_name="prompting_projects")
     dataset_assignments = models.JSONField(default=dict, null=True, blank=True)
     minimum_prompts_per_prompter = models.PositiveIntegerField(
         default=5,
@@ -42,15 +42,20 @@ class PromptingProject(models.Model):
         with transaction.atomic():
             prompters = list(self.prompters.all())
             if self.owner not in prompters:
-                prompters += [self.onwer]
-            tasks = self.datasets.values_list("tasks__name", flat=True).distinct()
+                prompters += [self.owner]
+
+            # Get datasets that belong to this project
+            project_datasets = (
+                self.datasets.all()
+            )  # Now uses related_name from ForeignKey
+            tasks = project_datasets.values_list("tasks__name", flat=True).distinct()
+
             assignments = self.dataset_assignments or {}
 
             for task_name in tasks:
+                # Get datasets for this task that belong to this project
                 task_datasets = list(
-                    self.datasets.filter(tasks__name=task_name).values(
-                        "name",
-                    )
+                    project_datasets.filter(tasks__name=task_name).values("name")
                 )
                 random.shuffle(task_datasets)
 
@@ -60,6 +65,7 @@ class PromptingProject(models.Model):
                     if prompter.username not in assignments
                     or task_name not in assignments[prompter.username]
                 ]
+
                 for i, prompter in enumerate(unassigned_prompters):
                     dataset = task_datasets[i % len(task_datasets)]
 
@@ -79,6 +85,28 @@ class PromptingProject(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def members(self):
+        return self.prompters.all() | User.objects.filter(pk=self.owner.pk)
+
+    def is_member(self, user):
+        return user in self.members
+
+    def add_dataset(self, dataset):
+        """Add a dataset to this project"""
+        dataset.project = self
+        dataset.save()
+
+    def remove_dataset(self, dataset):
+        """Remove a dataset from this project (sets project to None)"""
+        dataset.project = None
+        dataset.save()
+
+    @property
+    def datasets_count(self):
+        """Get count of datasets in this project"""
+        return self.datasets.count()
+
 
 class Task(models.Model):
     name = models.CharField(max_length=255)
@@ -95,6 +123,12 @@ class Task(models.Model):
 
 class Dataset(models.Model):
     name = models.CharField(max_length=255)
+    project = models.ForeignKey(
+        "PromptingProject",
+        on_delete=models.RESTRICT,
+        related_name="datasets",
+        null=True,
+    )
     tasks = models.ManyToManyField(Task, related_name="datasets")
     huggingface_name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
@@ -132,7 +166,7 @@ class Dataset(models.Model):
     @cached_property
     def default_config(self):
         # Assuming the default configuration
-        if self.default_subset:
+        if self.default_subset and self.default_subset != "nan":
             default_config_name = self.default_subset
         else:
             default_config_name = list(self.get_configs_details().keys())[0]

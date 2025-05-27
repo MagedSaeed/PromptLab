@@ -3,6 +3,7 @@ from api.permissions import HasProjectSecretKey
 from api.serializers import PromptCreateSerializer, PromptListSerializer
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.generic import View
 from prompt.models import Dataset, Prompt, PromptingProject, Task
 from rest_framework import status
@@ -80,7 +81,14 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
     MAX_DATASET_SIZE_GB = 1.0
 
     def test_func(self):
-        return self.request.user.is_superuser
+        return self.request.user == self.project.owner
+
+    def setup(self, request, *args, **kwargs):
+        self.project = get_object_or_404(
+            PromptingProject,
+            pk=kwargs.get("project_pk"),
+        )
+        return super().setup(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         try:

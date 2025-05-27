@@ -47,9 +47,20 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 class DatasetAdmin(admin.ModelAdmin):
-    search_fields = ["name", "description", "tasks__name"]
-    list_filter = ["tasks"]
-    filter_horizontal = ["tasks"]
+    search_fields = [
+        "name",
+        "description",
+        "tasks__name",
+        "project__name",
+    ]  # Add project name
+    list_filter = ["tasks", "project"]  # Add project filter
+    ist_display = (
+        "name",
+        "project",
+        "get_tasks_count",
+        "get_prompts_count",
+    )  # Add project, customize display
+    # filter_horizontal = ["tasks"]
     list_select_related = True
     readonly_fields = [
         "configs_details_prettified",
@@ -57,12 +68,13 @@ class DatasetAdmin(admin.ModelAdmin):
         "columns_names_prettified",
         "huggingface_raw_prettified",
     ]
-    raw_id_fields = ["tasks"]
+    raw_id_fields = ["tasks", "project"]
 
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
+            .select_related("project")  # Add project to select_related
             .prefetch_related(
                 "tasks",
                 Prefetch(
@@ -149,6 +161,16 @@ class DatasetAdmin(admin.ModelAdmin):
         return self._prettify_json(instance.huggingface_raw)
 
     huggingface_raw_prettified.short_description = "Huggingface Raw"
+
+    def get_tasks_count(self, obj):
+        return obj.tasks.count()
+
+    get_tasks_count.short_description = "Tasks"
+
+    def get_prompts_count(self, obj):
+        return obj.prompts.count()
+
+    get_prompts_count.short_description = "Prompts"
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
@@ -312,8 +334,13 @@ class PromptReviewActionAdmin(admin.ModelAdmin):
 class PromptingProjectAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "get_prompters_count", "get_datasets_count")
     search_fields = ("name", "owner__username", "prompters__username")
-    filter_horizontal = ("prompters", "datasets")
+    filter_horizontal = ("prompters",)
     list_select_related = ["owner"]
+
+    def get_datasets_count(self, obj):
+        return obj.datasets.count()  # This now uses the ForeignKey relationship
+
+    get_datasets_count.short_description = "Datasets Count"
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("prompters", "datasets")
@@ -333,6 +360,13 @@ class PromptingProjectAdmin(admin.ModelAdmin):
     @admin.action(description="Distribute datasets to prompters")
     def distribute_datasets_action(self, request, queryset):
         for project in queryset:
+            if not project.datasets.exists():  # Check if project has datasets
+                self.message_user(
+                    request,
+                    f"Project {project.name} has no datasets to distribute.",
+                    messages.WARNING,
+                )
+                continue
             try:
                 result = project.distribute_datasets()
                 self.message_user(request, result, messages.SUCCESS)

@@ -118,7 +118,7 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{% url 'prompt:task_list' %}">
+                        <a href="{% url 'prompt:project_task_list' project_pk=project.pk %}">
                             <i class="bi bi-list-check breadcrumb-icon"></i>Tasks
                         </a>
                     </li>
@@ -160,7 +160,7 @@
                                         class="form-control"
                                         placeholder="Search datasets..."
                                         value="{{ request.GET.name }}"
-                                        hx-get="{% url 'prompt:dataset_list' %}{% if task %}?task_pk={{ task.pk }}{% endif %}"
+                                        hx-get="{% url 'prompt:project_dataset_list' project_pk=project.pk %}{% if task %}?task_pk={{ task.pk }}{% endif %}"
                                         hx-trigger="keyup changed delay:500ms"
                                         hx-target="#datasets-list"
                                         hx-push-url="true"
@@ -169,9 +169,6 @@
                                 </div>
                             </form>
                         </div>
-                        {% comment %} <a href="{% url 'prompt:task_list' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-list-ul"></i> View All Tasks
-                        </a> {% endcomment %}
                     </div>
                 </div>
             </div>

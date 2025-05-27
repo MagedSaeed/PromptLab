@@ -214,19 +214,19 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{% url 'prompt:task_list' %}">
+                        <a href="{% url 'prompt:project_task_list' project_pk=dataset.project.pk %}">
                             <i class="fas fa-tasks breadcrumb-icon"></i>Tasks
                         </a>
                     </li>
                     {% if task %}
                         <li class="breadcrumb-item" aria-current="page">
-                            <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
+                            <a href="{% url 'prompt:project_dataset_list' project_pk=dataset.project.pk %}?task_pk={{ task.pk }}">
                                 <i class="fas fa-list breadcrumb-icon"></i>{{ task.name }} Datasets
                             </a>
                         </li>
                     {% else %}
                         <li class="breadcrumb-item">
-                            <a href="{% url 'prompt:dataset_list' %}">
+                            <a href="{% url 'prompt:project_dataset_list' project_pk=dataset.project.pk %}">
                                 <i class="fas fa-database breadcrumb-icon"></i>Datasets
                             </a>
                         </li>
@@ -244,9 +244,6 @@
     <div id="prompts-list" class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">Prompts for Dataset: <a href="{{dataset.huggingface_link}}" target="_blank" class="text-primary">{{dataset}}</a></h1>
-            {% comment %} <a href="{% url 'prompt:task_list' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Tasks
-            </a> {% endcomment %}
         </div>
 
         {% if dataset.tasks.count > 1 %}

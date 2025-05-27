@@ -31,13 +31,13 @@ python manage.py import_superusers admins.yml
 python manage.py setup_allauth
 
 # sync with hf from gsheets
-python manage.py sync_with_hf \
-    --sheet_id 1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k \
-    --sheet_name final-list \
-    --example_template_column example_template \
-    --example_template_created_by_column example_template_created_by \
-    --example_template_subset_column subset \
-    --answer_choices_column answer_choices \
-    --is_single_classification_column is_single_classification \
-    --target_column target_column \
-    --clear_datasets False
+# python manage.py sync_with_hf \
+#     --sheet_id 1kIDS-fwO5l6sH2ZBDCepOJeNyOh2j7Wb-w3W0JChi2k \
+#     --sheet_name final-list \
+#     --example_template_column example_template \
+#     --example_template_created_by_column example_template_created_by \
+#     --example_template_subset_column subset \
+#     --answer_choices_column answer_choices \
+#     --is_single_classification_column is_single_classification \
+#     --target_column target_column \
+#     --clear_datasets False

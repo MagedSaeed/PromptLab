@@ -274,13 +274,13 @@
                             </a>
                         </li>
                         <li class="breadcrumb-item">
-                            <a href="{% url 'prompt:task_list' %}">
+                            <a href="{% url 'prompt:project_task_list' project_pk=dataset.project.pk %}">
                                 <i class="bi bi-list-check breadcrumb-icon"></i>Tasks
                             </a>
                         </li>
                         {% if task %}
                             <li class="breadcrumb-item">
-                                <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}">
+                                <a href="{% url 'prompt:project_dataset_list' project_pk=dataset.project.pk %}?task_pk={{ task.pk }}">
                                     <i class="bi bi-grid-3x3-gap-fill breadcrumb-icon"></i>{{ task.name.title }} Datasets
                                 </a>
                             </li>
@@ -290,11 +290,11 @@
                                 <i class="bi bi-grid-3x3-gap-fill breadcrumb-icon"></i>Datasets
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'prompt:dataset_list' %}">All Datasets</a></li>
+                                <li><a class="dropdown-item" href="{% url 'prompt:project_dataset_list' project_pk=dataset.project.pk %}">All Datasets</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><h6 class="dropdown-header">By this dataset associated tasks:</h6></li>
                                 {% for dataset_task in dataset.tasks.all %}
-                                    <li><a class="dropdown-item" href="{% url 'prompt:dataset_list' %}?task_pk={{ dataset_task.pk }}">{{ dataset_task.name }} Datasets {% if task and task.pk == dataset_task.pk %}(current task){% endif %}</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'prompt:project_dataset_list' project_pk=dataset.project.pk %}?task_pk={{ dataset_task.pk }}">{{ dataset_task.name }} Datasets {% if task and task.pk == dataset_task.pk %}(current task){% endif %}</a></li>
                                 {% empty %}
                                     <li><a class="dropdown-item disabled" href="#">No associated tasks</a></li>
                                 {% endfor %}

@@ -14,7 +14,7 @@
                 <tr>
                     <th scope="row">{{ forloop.counter }}</th>
                     <td>
-                        <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}" class="task-name">
+                        <a href="{% url 'prompt:project_dataset_list' project_pk=project.pk %}?task_pk={{ task.pk }}" class="task-name">
                             {{ task.name }}
                         </a>
                     </td>
@@ -25,7 +25,7 @@
                         <span class="task-count">{{ task.prompts.count }}</span>
                     </td>
                     <td>
-                        <a href="{% url 'prompt:dataset_list' %}?task_pk={{ task.pk }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{% url 'prompt:project_dataset_list' project_pk=project.pk %}?task_pk={{ task.pk }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-list-ul"></i> View Datasets
                         </a>
                     </td>

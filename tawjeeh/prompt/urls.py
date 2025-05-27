@@ -27,8 +27,16 @@ from prompt.views import (
 app_name = "prompt"
 
 urlpatterns = [
-    path("task/list", TaskListView.as_view(), name="task_list"),
-    path("dataset/list", DatasetListView.as_view(), name="dataset_list"),
+    path(
+        "project/<int:project_pk>/task/list",
+        TaskListView.as_view(),
+        name="project_task_list",
+    ),
+    path(
+        "project/<int:project_pk>/dataset/list",
+        DatasetListView.as_view(),
+        name="project_dataset_list",
+    ),
     path(
         "dataset/<int:dataset_pk>/prompt/create",
         PromptCreateView.as_view(),
@@ -120,18 +128,18 @@ urlpatterns = [
         name="distribute_datasets",
     ),
     path(
-        "api/dataset/search/",
+        "project/<int:project_pk>/dataset/search/",
         DatasetSearchAPIView.as_view(),
-        name="dataset_search_api",
+        name="project_dataset_search",
+    ),
+    path(
+        "task/search/",
+        TaskSearchAPIView.as_view(),
+        name="task_search_api",
     ),
     path(
         "api/dataset/validate/",
         DatasetValidationAPIView.as_view(),
         name="dataset_validation_api",
-    ),
-    path(
-        "api/task/search/",
-        TaskSearchAPIView.as_view(),
-        name="task_search_api",
     ),
 ]

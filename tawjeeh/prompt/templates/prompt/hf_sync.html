@@ -50,6 +50,12 @@
             <form method="POST">
                 {% csrf_token %}
                 <div class="row g-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <strong>Project Selection:</strong> Choose the project where the synchronized datasets will be added.
+                        </div>
+                        {{ form.target_project|as_crispy_field }}
+                    </div>
                     <div class="col-md-6">
                         {{ form.sheet_id|as_crispy_field }}
                     </div>

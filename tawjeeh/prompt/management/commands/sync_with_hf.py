@@ -82,6 +82,13 @@ class Command(BaseCommand):
             default="",
             help='Subsets to download, empty for all. Split subsets by comma","',
         )
+
+        parser.add_argument(
+            "--project_pk",
+            type=int,
+            required=True,
+            help="Primary key of the project to assign datasets to.",
+        )
         # parser.add_argument(
         #     "--example_template_column",
         #     type=str,
@@ -114,6 +121,19 @@ class Command(BaseCommand):
         # )
 
     def handle(self, *args, **options):
+        # Extract project_pk and validate it exists
+        project_pk = options["project_pk"]
+        try:
+            from prompt.models import PromptingProject
+
+            project = PromptingProject.objects.get(pk=project_pk)
+            self.stdout.write(f"Assigning datasets to project: {project.name}")
+        except PromptingProject.DoesNotExist:
+            self.stdout.write(
+                self.style.ERROR(f"Project with pk={project_pk} does not exist.")
+            )
+            return
+
         dataset_info_list = self.get_dataset_info(options)
         if not dataset_info_list:
             return
@@ -121,7 +141,8 @@ class Command(BaseCommand):
         if options["clear_datasets"]:
             self.clear_existing_data()
 
-        self.process_datasets(dataset_info_list, options)
+        # Pass project_pk to process_datasets
+        self.process_datasets(dataset_info_list, options, project_pk)
 
     def get_dataset_info(self, options) -> Optional[List[Tuple]]:
         if options["sheet_id"]:
@@ -222,7 +243,7 @@ class Command(BaseCommand):
         Prompt.objects.all().delete()
         self.stdout.write("All datasets, prompts, and tasks cleared.")
 
-    def process_datasets(self, dataset_info_list, options):
+    def process_datasets(self, dataset_info_list, options, project_pk):
         datasets_queued = 0
 
         with Progress(
@@ -238,8 +259,10 @@ class Command(BaseCommand):
 
             for dataset_info in dataset_info_list:
                 dataset_url, primary_tasks, *additional_info = dataset_info
-                # Queue the Celery task
-                process_dataset.delay(dataset_url, primary_tasks, additional_info)
+                # Pass project_pk to the Celery task
+                process_dataset.delay(
+                    dataset_url, primary_tasks, additional_info, project_pk
+                )
                 datasets_queued += 1
                 progress.advance(progress_task)
 
