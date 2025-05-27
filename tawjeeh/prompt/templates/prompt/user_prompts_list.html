@@ -11,30 +11,6 @@
             {% endif %}
         </div>
 
-        {% if request.user.is_moderator %}
-            <div class="card mb-4">
-                <div class="card-body text-center">
-                    {% if not request.GET.show_all_prompts %}
-                        <p class="mb-0">
-                            Showing prompts you created.
-                            <a href="{% url 'prompt:user_prompts_list' %}?show_all_prompts=true"
-                               class="btn btn-sm btn-outline-primary ms-2">
-                                Show all prompts
-                            </a>
-                        </p>
-                    {% else %}
-                        <p class="mb-0">
-                            Showing all prompts.
-                            <a href="{% url 'prompt:user_prompts_list' %}"
-                               class="btn btn-sm btn-outline-primary ms-2">
-                                Show only my prompts
-                            </a>
-                        </p>
-                    {% endif %}
-                </div>
-            </div>
-        {% endif %}
-
         <div id="user-prompts-list-table">
             {% include 'prompt/partials/user_prompts_list_table.html' %}
         </div>

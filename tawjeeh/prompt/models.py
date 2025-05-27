@@ -24,6 +24,11 @@ class PromptingProject(models.Model):
         related_name="owned_prompting_projects",
     )
     prompters = models.ManyToManyField(User, related_name="prompting_projects")
+    reviewers = models.ManyToManyField(
+        User,
+        related_name="reviewing_prompting_projects",
+        blank=True,
+    )
     # datasets = models.ManyToManyField("Dataset", related_name="prompting_projects")
     dataset_assignments = models.JSONField(default=dict, null=True, blank=True)
     minimum_prompts_per_prompter = models.PositiveIntegerField(

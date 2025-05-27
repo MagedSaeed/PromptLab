@@ -563,7 +563,10 @@ class PromptReviewView(LoginRequiredMixin, CreateView):
         return super().setup(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if not self.prompt.is_approved and not request.user.is_moderator:
+        if (
+            not self.prompt.is_approved
+            and request.user not in self.dataset.project.reviewers.all()
+        ):
             messages.error(
                 request,
                 "Only reviewers can review prompts.",
@@ -646,7 +649,7 @@ class PromptListView(LoginRequiredMixin, ListView):
         queryset = queryset.filter(review_actions__isnull=False).distinct()
         if self.task:
             queryset = queryset.filter(task=self.task)
-        if not self.request.user.is_moderator:
+        if self.request.user not in self.dataset.project.reviewers.all():
             queryset = list(filter(lambda prompt: prompt.is_approved, queryset))
             queryset = queryset[:5]
         return queryset
@@ -698,6 +701,9 @@ class PromptListView(LoginRequiredMixin, ListView):
         if self.task:
             prompts_ready_for_review = prompts_ready_for_review.filter(task=self.task)
         context["prompts_to_review"] = prompts_ready_for_review
+        context["user_is_reviewer"] = (
+            self.request.user in self.dataset.project.reviewers.all()
+        )
         return context
 
 
@@ -709,9 +715,9 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.request.user.is_moderator:
-            if self.request.GET.get("show_all_prompts"):
-                return queryset
+        # if self.request.user.is_moderator:
+        #     if self.request.GET.get("show_all_prompts"):
+        #         return queryset
         queryset = queryset.filter(created_by=self.request.user)
         status_order_map = {
             "RETURNED_FOR_MODIFICATION": 0,

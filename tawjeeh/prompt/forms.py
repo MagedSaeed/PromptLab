@@ -290,7 +290,7 @@ class HFSyncForm(forms.Form):
     #     required=False,
     # )
     def __init__(self, *args, **kwargs):
-        user = kwargs["user"]
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.fields["target_project"].queryset = PromptingProject.objects.filter(
             owner=user
@@ -309,7 +309,7 @@ class ProjectForm(forms.ModelForm):
     )
 
     # Reviewer prompters can both create and review prompts
-    reviewer_prompters = forms.ModelMultipleChoiceField(
+    reviewers = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
         required=False,
         widget=forms.SelectMultiple(attrs={"class": "form-select"}),
