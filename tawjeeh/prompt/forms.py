@@ -387,9 +387,7 @@ class ProjectForm(forms.ModelForm):
                 datasets_to_remove = Dataset.objects.filter(
                     id__in=dataset_ids_to_remove, project=instance
                 )
-                for dataset in datasets_to_remove:
-                    dataset.project = None
-                    dataset.save()
+                datasets_to_remove.delete()
 
         return instance
 

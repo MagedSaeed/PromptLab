@@ -120,7 +120,7 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                 project=self.project,
             ).exists():
                 return JsonResponse(
-                    {"success": False, "error": "Dataset already exists in the system"}
+                    {"success": False, "error": "Dataset already there in the project"}
                 )
 
             # Get dataset info and check size
