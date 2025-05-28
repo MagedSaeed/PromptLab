@@ -1141,7 +1141,7 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
 class ProjectCreateView(LoginRequiredMixin, CreateView):
     model = PromptingProject
     form_class = ProjectForm
-    template_name = "prompt/project_create.html"
+    template_name = "prompt/project_create_update.html"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1154,6 +1154,32 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         messages.success(
             self.request, f"Project '{form.instance.name}' created successfully!"
+        )
+        return super().form_valid(form)
+
+
+class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = PromptingProject
+    form_class = ProjectForm
+    template_name = "prompt/project_create_update.html"
+
+    def test_func(self):
+        project = self.get_object()
+        return self.request.user == project.owner
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        kwargs["project"] = self.get_object()
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy("prompt:project_detail", kwargs={"pk": self.object.pk})
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            f"Project '{form.instance.name}' updated successfully!",
         )
         return super().form_valid(form)
 
@@ -1236,32 +1262,6 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
 
         messages.error(request, "You don't have access to this project.")
         return redirect("prompt:project_list")
-
-
-class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = PromptingProject
-    form_class = ProjectForm
-    template_name = "prompt/project_update.html"
-
-    def test_func(self):
-        project = self.get_object()
-        return self.request.user == project.owner or self.request.user.is_superuser
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        kwargs["project"] = self.get_object()
-        return kwargs
-
-    def get_success_url(self):
-        return reverse_lazy("prompt:project_detail", kwargs={"pk": self.object.pk})
-
-    def form_valid(self, form):
-        messages.success(
-            self.request,
-            f"Project '{form.instance.name}' updated successfully!",
-        )
-        return super().form_valid(form)
 
 
 class ProjectDistributeView(LoginRequiredMixin, UserPassesTestMixin, View):
