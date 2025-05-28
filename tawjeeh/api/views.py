@@ -115,6 +115,14 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                     {"success": False, "error": "Dataset path and name are required"}
                 )
 
+            if not (download_only_default and default_subset):
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "If download_only_the_default_subset is true, default_subset must also be provided",
+                    }
+                )
+
             if Dataset.objects.filter(
                 huggingface_name=dataset_path,
                 project=self.project,

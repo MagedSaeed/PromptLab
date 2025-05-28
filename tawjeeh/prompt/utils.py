@@ -54,7 +54,7 @@ def collect_dataset_configs_details(dataset_object):
     configs_and_splits = {}
     # Check if we should only download the default subset
     default_subset = getattr(dataset_object, "default_subset", None)
-    if default_subset.lower().strip() == "nan":
+    if default_subset and default_subset.lower().strip() == "nan":
         default_subset = "default"
     if getattr(dataset_object, "download_only_the_default_subset", False):
         if not dataset_object.default_subset:

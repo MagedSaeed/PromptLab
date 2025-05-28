@@ -291,6 +291,16 @@
         content: "⏳ ";
         color: #17a2b8;
     }
+
+    /* Required field styling */
+    .form-control.required {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .required-asterisk {
+        color: #dc3545;
+    }
 </style>
 
 <!-- Add Dataset Modal -->
@@ -435,12 +445,13 @@
                                                 <div class="col-md-6">
                                                     <label for="defaultSubsetInput" class="form-label fw-semibold">
                                                         Default Subset
+                                                        <span class="required-asterisk d-none" id="subsetRequiredAsterisk">*</span>
                                                         <i class="bi bi-info-circle ms-1" title="The subset to show by default when accessing the dataset"></i>
                                                     </label>
                                                     <select class="form-select" id="defaultSubsetInput" name="default_subset">
-                                                        <option value="">Auto-detect first subset</option>
+                                                        <option value="">Select a subset</option>
                                                     </select>
-                                                    <small class="form-text text-muted">
+                                                    <small class="form-text text-muted" id="subsetHelpText">
                                                         Subset to show by default (will be populated after validation)
                                                     </small>
                                                 </div>
@@ -555,7 +566,7 @@
 </div>
 
 <script>
-// Enhanced Add Dataset Modal JavaScript with new attributes
+// Enhanced Add Dataset Modal JavaScript with required subset validation
     function initializeAddDatasetModal() {
         const addDatasetModal = new bootstrap.Modal(document.getElementById('addDatasetModal'));
         const validateDatasetBtn = document.getElementById('validateDatasetBtn');
@@ -564,11 +575,15 @@
         const validationStatusInline = document.getElementById('validationStatusInline');
         const validationPanel = document.getElementById('validationPanel');
         const datasetDetailsSection = document.getElementById('datasetDetailsSection');
+        const downloadOnlyDefaultInput = document.getElementById('downloadOnlyDefaultInput');
+        const defaultSubsetInput = document.getElementById('defaultSubsetInput');
+        const subsetRequiredAsterisk = document.getElementById('subsetRequiredAsterisk');
+        const subsetHelpText = document.getElementById('subsetHelpText');
 
         let isDatasetValid = false;
         let datasetConfigs = [];
 
-    // Initialize Task Select2
+        // Initialize Task Select2
         $('#datasetTasksInput').select2({
             tags: true,
             tokenSeparators: [','],
@@ -611,7 +626,54 @@
             }
         });
 
-    // Validate dataset functionality
+        // Handle download only default subset change
+        downloadOnlyDefaultInput.addEventListener('change', function() {
+            toggleSubsetRequirement();
+            validateForm();
+        });
+
+        // Handle default subset change
+        defaultSubsetInput.addEventListener('change', function() {
+            validateForm();
+        });
+
+        function toggleSubsetRequirement() {
+            const isDownloadOnlyChecked = downloadOnlyDefaultInput.checked;
+
+            if (isDownloadOnlyChecked) {
+                // Make subset required
+                subsetRequiredAsterisk.classList.remove('d-none');
+                subsetHelpText.innerHTML = '<strong>Required when downloading only default subset</strong>';
+                subsetHelpText.className = 'form-text text-danger';
+                defaultSubsetInput.setAttribute('required', 'required');
+            } else {
+                // Make subset optional
+                subsetRequiredAsterisk.classList.add('d-none');
+                subsetHelpText.innerHTML = 'Subset to show by default (optional)';
+                subsetHelpText.className = 'form-text text-muted';
+                defaultSubsetInput.removeAttribute('required');
+                defaultSubsetInput.classList.remove('required');
+            }
+        }
+
+        function validateForm() {
+            const isDownloadOnlyChecked = downloadOnlyDefaultInput.checked;
+            const hasSelectedSubset = defaultSubsetInput.value.trim() !== '';
+
+            // If download only is checked and no subset is selected, mark as invalid
+            if (isDownloadOnlyChecked && !hasSelectedSubset) {
+                defaultSubsetInput.classList.add('required');
+                submitDatasetBtn.disabled = true;
+                return false;
+            } else {
+                defaultSubsetInput.classList.remove('required');
+                // Only enable submit if dataset is valid
+                submitDatasetBtn.disabled = !isDatasetValid;
+                return true;
+            }
+        }
+
+        // Validate dataset functionality
         validateDatasetBtn.addEventListener('click', function() {
             const datasetPath = document.getElementById('datasetPathInput').value.trim();
 
@@ -620,7 +682,7 @@
                 return;
             }
 
-        // Show loading state
+            // Show loading state
             showValidationStatus('loading', 'Validating dataset and checking configuration...', true);
             setValidateButtonState(true);
 
@@ -644,17 +706,17 @@
                         } else {
                             showValidationStatus('success', `✓ Dataset found with ${data.configs.length} configuration(s)`, false);
 
-                        // Store configs for subset dropdown
+                            // Store configs for subset dropdown
                             datasetConfigs = data.configs;
 
-                        // Auto-fill fields
+                            // Auto-fill fields
                             document.getElementById('datasetNameInput').value = data.name;
                             document.getElementById('datasetDescriptionInput').value = data.description;
 
-                        // Populate subset dropdown
+                            // Populate subset dropdown
                             populateSubsetDropdown(data.configs);
 
-                        // Show size info and details section
+                            // Show size info and details section
                             if (data.size_warning) {
                                 showSizeWarning(data.size_warning);
                             } else {
@@ -663,7 +725,7 @@
                             showDatasetDetailsSection();
 
                             isDatasetValid = true;
-                            submitDatasetBtn.disabled = false;
+                            validateForm(); // Check if form is valid after loading
                         }
                     } else {
                         showValidationStatus('error', `✗ ${data.error}`, true);
@@ -685,26 +747,34 @@
                 });
         });
 
-    // Submit dataset functionality
+        // Submit dataset functionality
         submitDatasetBtn.addEventListener('click', function() {
             if (!isDatasetValid) {
                 showNotification('Please validate the dataset first', 'warning');
                 return;
             }
 
+            // Additional validation for download only default subset
+            if (downloadOnlyDefaultInput.checked && !defaultSubsetInput.value.trim()) {
+                showNotification('Please select a default subset when "Download Only Default Subset" is enabled', 'warning');
+                defaultSubsetInput.classList.add('required');
+                defaultSubsetInput.focus();
+                return;
+            }
+
             const formData = new FormData(document.getElementById('addDatasetForm'));
 
-        // Get selected tasks from Select2
+            // Get selected tasks from Select2
             const selectedTasks = $('#datasetTasksInput').val();
             if (selectedTasks && selectedTasks.length > 0) {
                 formData.set('tasks', selectedTasks.join(','));
             }
 
-        // Convert checkbox values to proper format
+            // Convert checkbox values to proper format
             formData.set('is_single_classification',
                 document.getElementById('isSingleClassificationInput').checked ? 'true' : 'false');
             formData.set('download_only_the_default_subset',
-                document.getElementById('downloadOnlyDefaultInput').checked ? 'true' : 'false');
+                downloadOnlyDefaultInput.checked ? 'true' : 'false');
 
             setSubmitButtonState(true);
 
@@ -718,11 +788,11 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                    // Close modal and reset
+                        // Close modal and reset
                         addDatasetModal.hide();
                         resetModal();
 
-                    // Show success notification
+                        // Show success notification
                         showNotification('Dataset added successfully!', 'success');
                         setTimeout(() => {
                             window.location.reload();
@@ -743,14 +813,14 @@
                 });
         });
 
-    // Reset modal when closed
+        // Reset modal when closed
         document.getElementById('addDatasetModal').addEventListener('hidden.bs.modal', function() {
             resetModal();
         });
 
         function populateSubsetDropdown(configs) {
             const dropdown = document.getElementById('defaultSubsetInput');
-            dropdown.innerHTML = '<option value="">Auto-detect first subset</option>';
+            dropdown.innerHTML = '<option value="">Select a subset</option>';
 
             configs.forEach(config => {
                 const option = document.createElement('option');
@@ -853,6 +923,13 @@
             isDatasetValid = false;
             submitDatasetBtn.disabled = true;
             datasetConfigs = [];
+
+            // Reset subset requirement styling
+            defaultSubsetInput.classList.remove('required');
+            subsetRequiredAsterisk.classList.add('d-none');
+            subsetHelpText.innerHTML = 'Subset to show by default (will be populated after validation)';
+            subsetHelpText.className = 'form-text text-muted';
+            defaultSubsetInput.removeAttribute('required');
         }
 
         function showNotification(message, type) {
