@@ -92,10 +92,23 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         try:
+            # Extract form data
             dataset_path = request.POST.get("dataset_path", "").strip()
             name = request.POST.get("name", "").strip()
             description = request.POST.get("description", "").strip()
             task_names = request.POST.get("tasks", "").strip()
+
+            # Extract new dataset attributes
+            target_column = request.POST.get("target_column", "").strip()
+            default_subset = request.POST.get("default_subset", "").strip()
+            subsets = request.POST.get("subsets", "").strip()
+            is_single_classification = (
+                request.POST.get("is_single_classification", "").lower() == "true"
+            )
+            download_only_default = (
+                request.POST.get("download_only_the_default_subset", "").lower()
+                == "true"
+            )
 
             if not all([dataset_path, name]):
                 return JsonResponse(
@@ -134,13 +147,27 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                     }
                 )
 
-            # Create dataset
-            dataset = Dataset.objects.create(
-                name=name,
-                project=self.project,
-                huggingface_name=dataset_path,
-                description=description or first_config.description or "",
-            )
+            # Create dataset with new attributes
+            dataset_data = {
+                "name": name,
+                "project": self.project,
+                "huggingface_name": dataset_path,
+                "description": description or first_config.description or "",
+                "is_single_classification": is_single_classification,
+                "download_only_the_default_subset": download_only_default,
+            }
+
+            # Add optional fields only if they have values
+            if target_column:
+                dataset_data["target_column"] = target_column
+
+            if default_subset:
+                dataset_data["default_subset"] = default_subset
+
+            if subsets:
+                dataset_data["subsets"] = subsets
+
+            dataset = Dataset.objects.create(**dataset_data)
 
             # Add tasks
             if task_names:
@@ -159,6 +186,11 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                         "name": dataset.name,
                         "huggingface_name": dataset.huggingface_name,
                         "description": dataset.description,
+                        "target_column": dataset.target_column,
+                        "default_subset": dataset.default_subset,
+                        "subsets": dataset.subsets,
+                        "is_single_classification": dataset.is_single_classification,
+                        "download_only_the_default_subset": dataset.download_only_the_default_subset,
                     },
                 }
             )

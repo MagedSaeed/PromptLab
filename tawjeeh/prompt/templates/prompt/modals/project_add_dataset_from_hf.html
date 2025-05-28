@@ -297,7 +297,7 @@
 <div class="modal fade" id="addDatasetModal" tabindex="-1" aria-labelledby="addDatasetModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <!-- Simplified Modal Header -->
+            <!-- Modal Header -->
             <div class="modal-header">
                 <h4 class="modal-title" id="addDatasetModalLabel">Add Dataset from HuggingFace</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -349,7 +349,7 @@
                                         <div class="dataset-validation-status" id="validationStatus"></div>
                                     </div>
 
-                                    <!-- Size Warning Panel (moved to left) -->
+                                    <!-- Size Warning Panel -->
                                     <div class="alert border-0 d-none" id="sizeWarningAlert">
                                         <div class="d-flex align-items-start">
                                             <i class="me-3 mt-1 fs-5" id="sizeWarningIcon"></i>
@@ -401,50 +401,128 @@
                                             <textarea class="form-control"
                                                       id="datasetDescriptionInput"
                                                       name="description"
-                                                      rows="5"
+                                                      rows="3"
                                                       placeholder="Brief description of the dataset (optional)"></textarea>
+                                        </div>
+
+                                        <!-- NEW: Dataset Configuration Section -->
+                                        <div class="form-section mt-4">
+                                            <div class="section-header mb-3">
+                                                <h6 class="section-title text-secondary fw-bold mb-1">
+                                                    <i class="bi bi-gear me-2"></i>Dataset Configuration
+                                                </h6>
+                                                <small class="text-muted">Configure dataset-specific settings</small>
+                                            </div>
+
+                                            <div class="row g-3">
+                                                <!-- Target Column -->
+                                                <div class="col-md-6">
+                                                    <label for="targetColumnInput" class="form-label fw-semibold">
+                                                        Target Column
+                                                        <i class="bi bi-info-circle ms-1" title="The column containing the target labels/outputs"></i>
+                                                    </label>
+                                                    <input type="text"
+                                                           class="form-control"
+                                                           id="targetColumnInput"
+                                                           name="target_column"
+                                                           placeholder="e.g., label, sentiment, class">
+                                                    <small class="form-text text-muted">
+                                                        Column name containing the target labels (optional)
+                                                    </small>
+                                                </div>
+
+                                                <!-- Default Subset -->
+                                                <div class="col-md-6">
+                                                    <label for="defaultSubsetInput" class="form-label fw-semibold">
+                                                        Default Subset
+                                                        <i class="bi bi-info-circle ms-1" title="The subset to show by default when accessing the dataset"></i>
+                                                    </label>
+                                                    <select class="form-select" id="defaultSubsetInput" name="default_subset">
+                                                        <option value="">Auto-detect first subset</option>
+                                                    </select>
+                                                    <small class="form-text text-muted">
+                                                        Subset to show by default (will be populated after validation)
+                                                    </small>
+                                                </div>
+
+                                                <!-- Classification Type -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">
+                                                        Classification Type
+                                                        <i class="bi bi-info-circle ms-1" title="Whether this is a single-label classification task"></i>
+                                                    </label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input"
+                                                               type="checkbox"
+                                                               id="isSingleClassificationInput"
+                                                               name="is_single_classification">
+                                                        <label class="form-check-label" for="isSingleClassificationInput">
+                                                            Single Classification Dataset
+                                                        </label>
+                                                    </div>
+                                                    <small class="form-text text-muted">
+                                                        Check if this dataset is for single-label classification tasks
+                                                    </small>
+                                                </div>
+
+                                                <!-- Download Only Default Subset -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">
+                                                        What to download?
+                                                        <i class="bi bi-info-circle ms-1" title="Whether to download only the default subset or all subsets"></i>
+                                                    </label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input"
+                                                               type="checkbox"
+                                                               id="downloadOnlyDefaultInput"
+                                                               name="download_only_the_default_subset">
+                                                        <label class="form-check-label" for="downloadOnlyDefaultInput">
+                                                            Download Only Default Subset
+                                                        </label>
+                                                    </div>
+                                                    <small class="form-text text-muted">
+                                                        Check to download only the default subset (saves space and time)
+                                                    </small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
 
-                        <!-- Right Column - Simplified Info Panel -->
+                        <!-- Right Column - Info Panel -->
                         <div class="col-lg-4">
                             <div class="info-panel h-100">
                                 <!-- Tips Panel -->
                                 <div class="tips-panel">
                                     <h6>
-                                        <i class="bi bi-lightbulb me-2 text-warning"></i>Tips & Constraints
+                                        <i class="bi bi-lightbulb me-2 text-warning"></i>Tips & Guidelines
                                     </h6>
                                     <ul>
                                         <li>
                                             <i class="bi bi-check2"></i>
-                                            Only metadata is fetched during validation
+                                            <strong>Target Column:</strong> Usually named 'label', 'class', or 'sentiment'
                                         </li>
                                         <li>
                                             <i class="bi bi-check2"></i>
-                                            Dataset files are not downloaded during validation
+                                            <strong>Single Classification:</strong> Check for tasks like sentiment analysis, topic classification
                                         </li>
                                         <li>
-                                            <i class="bi bi-exclamation-triangle text-danger"></i>
+                                            <i class="bi bi-check2"></i>
+                                            <strong>Default Subset:</strong> Choose 'train' for training data or 'test' for evaluation
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-check2"></i>
+                                            <strong>Download Strategy:</strong> Use "download only default" for large datasets
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-exclamation-triangle text-warning"></i>
                                             <strong>Size limit: Maximum 1 GB dataset size allowed</strong>
                                         </li>
                                         <li>
                                             <i class="bi bi-check2"></i>
-                                            Size validation ensures system performance
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-check2"></i>
-                                            Validation ensures dataset accessibility
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-check2"></i>
-                                            You can add custom tasks and descriptions
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-x-circle text-danger"></i>
-                                            Datasets over 1GB will be automatically rejected
+                                            Validation ensures dataset accessibility and extracts configuration info
                                         </li>
                                     </ul>
                                 </div>
@@ -459,7 +537,7 @@
                 <div class="d-flex justify-content-between w-100 align-items-center">
                     <small class="text-muted">
                         <i class="bi bi-shield-check me-1"></i>
-                        Secure validation • No data download
+                        Secure validation • No data download during validation
                     </small>
                     <div class="btn-group">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
@@ -477,9 +555,8 @@
 </div>
 
 <script>
-    // Add Dataset Modal JavaScript
+// Enhanced Add Dataset Modal JavaScript with new attributes
     function initializeAddDatasetModal() {
-        // Modal elements
         const addDatasetModal = new bootstrap.Modal(document.getElementById('addDatasetModal'));
         const validateDatasetBtn = document.getElementById('validateDatasetBtn');
         const submitDatasetBtn = document.getElementById('submitDatasetBtn');
@@ -489,8 +566,9 @@
         const datasetDetailsSection = document.getElementById('datasetDetailsSection');
 
         let isDatasetValid = false;
+        let datasetConfigs = [];
 
-        // Initialize Task Select2 (modal)
+    // Initialize Task Select2
         $('#datasetTasksInput').select2({
             tags: true,
             tokenSeparators: [','],
@@ -533,7 +611,7 @@
             }
         });
 
-        // Validate dataset functionality
+    // Validate dataset functionality
         validateDatasetBtn.addEventListener('click', function() {
             const datasetPath = document.getElementById('datasetPathInput').value.trim();
 
@@ -542,8 +620,8 @@
                 return;
             }
 
-            // Show loading state
-            showValidationStatus('loading', 'Validating dataset and checking size...', true);
+        // Show loading state
+            showValidationStatus('loading', 'Validating dataset and checking configuration...', true);
             setValidateButtonState(true);
 
             fetch('{% url "prompt:dataset_validation_api" %}', {
@@ -557,7 +635,6 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.valid) {
-                        // Check for size violations
                         if (data.size_violation) {
                             showValidationStatus('error', `✗ Dataset too large: ${data.size_violation}`, false);
                             showSizeError(data.size_violation);
@@ -567,11 +644,17 @@
                         } else {
                             showValidationStatus('success', `✓ Dataset found with ${data.configs.length} configuration(s)`, false);
 
-                            // Auto-fill fields
+                        // Store configs for subset dropdown
+                            datasetConfigs = data.configs;
+
+                        // Auto-fill fields
                             document.getElementById('datasetNameInput').value = data.name;
                             document.getElementById('datasetDescriptionInput').value = data.description;
 
-                            // Show size info and details section
+                        // Populate subset dropdown
+                            populateSubsetDropdown(data.configs);
+
+                        // Show size info and details section
                             if (data.size_warning) {
                                 showSizeWarning(data.size_warning);
                             } else {
@@ -602,7 +685,7 @@
                 });
         });
 
-        // Submit dataset functionality
+    // Submit dataset functionality
         submitDatasetBtn.addEventListener('click', function() {
             if (!isDatasetValid) {
                 showNotification('Please validate the dataset first', 'warning');
@@ -611,11 +694,17 @@
 
             const formData = new FormData(document.getElementById('addDatasetForm'));
 
-            // Get selected tasks from Select2
+        // Get selected tasks from Select2
             const selectedTasks = $('#datasetTasksInput').val();
             if (selectedTasks && selectedTasks.length > 0) {
                 formData.set('tasks', selectedTasks.join(','));
             }
+
+        // Convert checkbox values to proper format
+            formData.set('is_single_classification',
+                document.getElementById('isSingleClassificationInput').checked ? 'true' : 'false');
+            formData.set('download_only_the_default_subset',
+                document.getElementById('downloadOnlyDefaultInput').checked ? 'true' : 'false');
 
             setSubmitButtonState(true);
 
@@ -629,27 +718,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Add the new dataset to the main select2 dropdown
-                        const newOption = new Option(
-                            data.dataset.huggingface_name || data.dataset.name,
-                            data.dataset.id,
-                            true,
-                            true
-                        );
-                        newOption.dataset = data.dataset; // Store full dataset data
-                        $('#datasetSearchSelect, #id_datasets').append(newOption).trigger('change');
-
-                        // Close modal and reset
+                    // Close modal and reset
                         addDatasetModal.hide();
                         resetModal();
 
-                        // Show success notification
+                    // Show success notification
                         showNotification('Dataset added successfully!', 'success');
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
                     } else {
-                        // Handle size constraint errors specially
                         if (data.error && data.error.includes('size') && data.error.includes('GB')) {
                             showNotification(`Dataset too large: ${data.error}`, 'error');
                         } else {
@@ -665,10 +743,22 @@
                 });
         });
 
-        // Reset modal when closed
+    // Reset modal when closed
         document.getElementById('addDatasetModal').addEventListener('hidden.bs.modal', function() {
             resetModal();
         });
+
+        function populateSubsetDropdown(configs) {
+            const dropdown = document.getElementById('defaultSubsetInput');
+            dropdown.innerHTML = '<option value="">Auto-detect first subset</option>';
+
+            configs.forEach(config => {
+                const option = document.createElement('option');
+                option.value = config;
+                option.textContent = config;
+                dropdown.appendChild(option);
+            });
+        }
 
         function showValidationStatus(type, message, showInline) {
             if (showInline) {
@@ -762,23 +852,22 @@
             hideDatasetDetailsSection();
             isDatasetValid = false;
             submitDatasetBtn.disabled = true;
+            datasetConfigs = [];
         }
 
         function showNotification(message, type) {
-            // Create a toast notification
             const toastHtml = `
-                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'x-circle'} me-2"></i>
-                            ${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'x-circle'} me-2"></i>
+                        ${message}
                     </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
-            `;
+            </div>
+        `;
 
-            // Add to page and show
             const toastContainer = document.createElement('div');
             toastContainer.className = 'position-fixed top-0 end-0 p-3';
             toastContainer.style.zIndex = '1056';
@@ -788,13 +877,11 @@
             const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
             toast.show();
 
-            // Remove container after toast is hidden
             toastContainer.querySelector('.toast').addEventListener('hidden.bs.toast', function() {
                 document.body.removeChild(toastContainer);
             });
         }
 
-        // Return the modal instance for external use
         return {
             modal: addDatasetModal,
             show: () => addDatasetModal.show(),
@@ -802,7 +889,7 @@
         };
     }
 
-    // Initialize when DOM is ready (will be called from parent template)
+// Initialize when DOM is ready
     function initializeModalOnReady() {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeAddDatasetModal);
