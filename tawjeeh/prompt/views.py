@@ -45,7 +45,6 @@ class TaskListView(LoginRequiredMixin, FilterView, ListView):
     template_name = "prompt/task_list.html"
 
     def get_queryset(self):
-        queryset = super().get_queryset()
         self.project = get_object_or_404(
             PromptingProject,
             pk=self.kwargs["project_pk"],
@@ -56,7 +55,8 @@ class TaskListView(LoginRequiredMixin, FilterView, ListView):
                 "You are not a member of this project.",
                 extra_tags="danger",
             )
-            return Task.objects.none()
+            return redirect(reverse_lazy("home"))
+        queryset = super().get_queryset()
         queryset = queryset.filter(datasets__project=self.project).distinct()
         filterset = self.filterset_class(self.request.GET, queryset=queryset)
         filtered_qs = filterset.qs
@@ -93,7 +93,6 @@ class DatasetListView(LoginRequiredMixin, FilterView, ListView):
     template_name = "prompt/dataset_list.html"
 
     def get_queryset(self):
-        queryset = super().get_queryset()
         self.project = get_object_or_404(
             PromptingProject,
             pk=self.kwargs["project_pk"],
@@ -104,7 +103,8 @@ class DatasetListView(LoginRequiredMixin, FilterView, ListView):
                 "You are not a member of this project.",
                 extra_tags="danger",
             )
-            return Dataset.objects.none()
+            return redirect(reverse_lazy("home"))
+        queryset = super().get_queryset()
         queryset = queryset.filter(project=self.project).distinct()
         task_pk = self.request.GET.get("task_pk")
         self.task = None
@@ -125,7 +125,7 @@ class DatasetListView(LoginRequiredMixin, FilterView, ListView):
         kwargs["object_list"] = filtered_datasets
         kwargs["project"] = self.project
         context = super().get_context_data(**kwargs)
-        context["task"] = self.task
+        context["task"] = self.task if hasattr(self, "task") else None
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -739,11 +739,6 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
 
 
 class DatasetDetailsView(LoginRequiredMixin, View):
-    def error_redirect(self, request, message):
-        redirect_link = request.META.get("HTTP_REFERER")
-        messages.error(request, message, extra_tags="danger")
-        return redirect(redirect_link)
-
     def remap_labels(self, sample, dataset):
         """
         remap the labels to their class names
@@ -758,10 +753,12 @@ class DatasetDetailsView(LoginRequiredMixin, View):
     def get(self, request, dataset_pk, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=dataset_pk)
         if not dataset.project.is_member(request.user):
-            return self.error_redirect(
+            messages.error(
                 request,
                 "You are not a member of this project.",
+                extra_tags="danger",
             )
+            return redirect("home")
         split = request.GET.get("split")
         subset = request.GET.get("subset")
         sample_index = request.GET.get("sample_index")
@@ -804,18 +801,15 @@ class DatasetDetailsView(LoginRequiredMixin, View):
 
 
 class ApplyTemplateView(LoginRequiredMixin, View):
-    def error_redirect(self, request, message):
-        redirect_link = request.META.get("HTTP_REFERER")
-        messages.error(request, message, extra_tags="danger")
-        return redirect(redirect_link)
-
     def post(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         if not self.dataset.project.is_member(request.user):
-            return self.error_redirect(
+            messages.error(
                 request,
                 "You are not a member of this project.",
+                extra_tags="danger",
             )
+            return redirect("home")
         context = {"dataset": self.dataset}
 
         subset, split, context = self._get_dataset_config(request, context)
@@ -1049,7 +1043,7 @@ class HFSynchView(LoginRequiredMixin, FormView):
                 "You do not have permission to access this page.",
                 extra_tags="danger",
             )
-            return redirect("core:home")
+            return redirect("home")
         return super().get(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -1070,18 +1064,15 @@ class HFSynchView(LoginRequiredMixin, FormView):
 
 
 class DatasetResetCacheView(LoginRequiredMixin, View):
-    def error_redirect(self, request, message):
-        redirect_link = request.META.get("HTTP_REFERER")
-        messages.error(request, message, extra_tags="danger")
-        return redirect(redirect_link)
-
     def get(self, request, *args, **kwargs):
         dataset = get_object_or_404(Dataset, pk=kwargs["dataset_pk"])
         if not dataset.project.is_member(request.user):
-            return self.error_redirect(
+            messages.error(
                 request,
                 "You are not a member of this project.",
+                extra_tags="danger",
             )
+            return redirect("home")
         dataset.reset_cache()
         messages.success(request, "Dataset cache reset successfully")
         return redirect("prompt:prompt_list", dataset_pk=dataset.pk)
@@ -1093,7 +1084,7 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
     paginate_by = 10  # Adjust this number as needed
 
     def get_queryset(self):
-        user_projects = PromptingProject.objects.filter(prompters=self.request.user)
+        user_projects = PromptingProject.objects.filter(prompters__in=self.request.user)
         assignments = []
         for project in user_projects:
             if self.request.user.username in project.dataset_assignments:
