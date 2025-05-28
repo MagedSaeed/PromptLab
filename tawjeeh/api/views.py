@@ -115,7 +115,9 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                     {"success": False, "error": "Dataset path and name are required"}
                 )
 
-            if not (download_only_default and default_subset):
+            if download_only_default and not default_subset:
+                print("download only is:", download_only_default)
+                print("default subset is:", default_subset)
                 return JsonResponse(
                     {
                         "success": False,
