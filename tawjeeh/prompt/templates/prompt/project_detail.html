@@ -454,18 +454,25 @@ print(response.json())</pre>
                         </div>
 
                     <!-- Project Members -->
-                        {% for prompter in project.prompters.all %}
-                            <div class="member-item" data-username="{{ prompter.username|lower }}">
-                                <div class="member-avatar">
-                                    {{ prompter.username|first|upper }}
-                                </div>
-                                <div class="member-info">
-                                    <div class="member-name">{{ prompter.username }}</div>
-                                    <div class="member-role">
-                                        <span class="badge bg-secondary">Prompter</span>
+                        {% for member in project.members %}
+                            {% if member != project.owner %}
+                                <div class="member-item" data-username="{{ member.username|lower }}">
+                                    <div class="member-avatar">
+                                        {{ member.username|first|upper }}
+                                    </div>
+                                    <div class="member-info">
+                                        <div class="member-name">{{ member.username }}</div>
+                                        <div class="member-role">
+                                            {% if member in project.reviewers.all %}
+                                                <span class="badge bg-primary">Reviewer</span>
+                                            {% endif %}
+                                            {% if member in project.prompters.all %}
+                                                <span class="badge bg-secondary">Prompter</span>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            {% endif %}
                         {% empty %}
                             <p class="text-muted">No additional team members have been added yet.</p>
                         {% endfor %}

@@ -330,6 +330,8 @@ class ProjectForm(forms.ModelForm):
             # "datasets",
             "minimum_prompts_per_prompter",
             "secret_key",
+            "reviewers",
+            "prompters",
         ]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),

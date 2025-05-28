@@ -92,7 +92,11 @@ class PromptingProject(models.Model):
 
     @property
     def members(self):
-        return self.prompters.all() | User.objects.filter(pk=self.owner.pk)
+        return (
+            self.prompters.all()
+            | User.objects.filter(pk=self.owner.pk)
+            | self.reviewers.all()
+        )
 
     def is_member(self, user):
         return user in self.members
