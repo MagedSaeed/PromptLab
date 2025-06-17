@@ -55,4 +55,4 @@ celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:Databas
 
 # Start the Gunicorn server in the background
 #gunicorn tawjeeh.wsgi --workers 4 --thread 4 --bind 0.0.0.0:8080 --max-requests 20 --max-requests-jitter 10 --preload --timeout 150
-gunicorn tawjeeh.wsgi --workers 4 --thread 4 --bind 0.0.0.0:8080
+gunicorn tawjeeh.wsgi --workers 4 --thread 4 --bind 0.0.0.0:8080 --timeout 300
