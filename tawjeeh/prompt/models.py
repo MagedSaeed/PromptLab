@@ -230,7 +230,7 @@ class Dataset(models.Model):
 
     def get_configs_details(self):
         if not self.configs_details:
-            collect_dataset_configs_details(dataset_object=self)
+            collect_dataset_configs_details(self)
         if isinstance(self.configs_details, str):
             return json.loads(self.configs_details)
         return self.configs_details
