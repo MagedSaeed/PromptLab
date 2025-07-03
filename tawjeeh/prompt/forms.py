@@ -88,7 +88,7 @@ class PromptReviewForm(forms.ModelForm):
     # names are chosen to match the prompt fields in the prompt_create_update html template
     name = forms.CharField(label=False)
     tags = forms.CharField(required=False, label=False)
-    task = forms.ChoiceField()
+    task = forms.ChoiceField(required=False)
     template = forms.CharField(widget=forms.HiddenInput())
     text_direction = forms.ChoiceField(
         widget=forms.HiddenInput(),
@@ -147,7 +147,7 @@ class PromptReviewForm(forms.ModelForm):
     def clean(self):
         data = self.cleaned_data
         # get the task from its pk
-        if data["task"]:
+        if data.get("task"):
             data["task"] = Task.objects.get(pk=data["task"])
         # transform tags to a string of comma separated tags list
         if data.get("tags"):
