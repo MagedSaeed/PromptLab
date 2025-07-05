@@ -279,8 +279,8 @@ def send_to_openrouter(prompt_text, model_id, api_key, max_tokens=1000):
             messages=[{"role": "user", "content": prompt_text}],
             max_tokens=max_tokens,
             extra_headers={
-                "HTTP-Referer": "https://tawjeeh.up.railway.app",  # Required by OpenRouter
-                "X-Title": "Tawjeeh Prompt Testing",
+                "HTTP-Referer": "https://Promptlab.up.railway.app",  # Required by OpenRouter
+                "X-Title": "PromptLab Prompt Testing",
             },
         )
 

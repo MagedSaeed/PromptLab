@@ -444,8 +444,8 @@ class LLMTestForm(forms.Form):
         try:
             headers = {
                 "Authorization": f"Bearer {api_key}",
-                "HTTP-Referer": "https://tawjeeh.up.railway.app",  # Required by OpenRouter
-                "X-Title": "Tawjeeh Prompt Testing",
+                "HTTP-Referer": "https://promptlab.up.railway.app",  # Required by OpenRouter
+                "X-Title": "PromptLab Prompt Testing",
             }
             response = requests.get(
                 "https://openrouter.ai/api/v1/models", headers=headers
