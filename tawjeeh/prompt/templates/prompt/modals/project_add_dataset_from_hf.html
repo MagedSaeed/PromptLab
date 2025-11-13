@@ -765,9 +765,12 @@
             const formData = new FormData(document.getElementById('addDatasetForm'));
 
             // Get selected tasks from Select2
-            const selectedTasks = $('#datasetTasksInput').val();
-            if (selectedTasks && selectedTasks.length > 0) {
-                formData.set('tasks', selectedTasks.join(','));
+            // Need to get task names, not IDs
+            const selectedTaskElements = $('#datasetTasksInput').select2('data');
+            if (selectedTaskElements && selectedTaskElements.length > 0) {
+                // Extract the text (name) from each selected option
+                const taskNames = selectedTaskElements.map(task => task.text || task.id);
+                formData.set('tasks', taskNames.join(','));
             }
 
             // Convert checkbox values to proper format
