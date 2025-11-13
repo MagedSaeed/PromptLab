@@ -149,11 +149,11 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
                             }
                         )
 
-            except Exception:
+            except Exception as e:
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "Could not access dataset on HuggingFace Hub",
+                        "error": f"Could not access dataset on HuggingFace Hub, error: {str(e)}",
                     }
                 )
 
