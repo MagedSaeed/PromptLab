@@ -135,7 +135,10 @@ class DatasetCreateAPIView(LoginRequiredMixin, UserPassesTestMixin, View):
 
             # Get dataset info and check size
             try:
-                dataset_info = datasets.get_dataset_infos(dataset_path)
+                dataset_info = datasets.get_dataset_infos(
+                    dataset_path,
+                    trust_remote_code=True,
+                )
                 first_config = next(iter(dataset_info.values()))
 
                 # Check size from dataset_info
