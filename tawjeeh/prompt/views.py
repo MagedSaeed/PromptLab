@@ -1012,7 +1012,7 @@ class ApplyTemplateView(LoginRequiredMixin, View):
             try:
                 # Send to LLM service
                 llm_result = send_to_openrouter(
-                    plain_template,
+                    plain_template.split("|||")[0].strip(),
                     model_id,
                     request.user.openrouter_api_key,
                 )
