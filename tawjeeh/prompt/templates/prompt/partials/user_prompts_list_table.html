@@ -42,6 +42,7 @@
                     <tr>
                         <th>#</th>
                         <th>Name</th>
+                        <th>Project</th>
                         <th>Dataset</th>
                         <th>Subset</th>
                         <th>Status</th>
@@ -67,6 +68,15 @@
                                     <span class="text-muted">{{ prompt.name }} (Dataset deleted)</span> {% endcomment %}
                                 {% endif %}
                             </td>
+                            <td>
+                                {% if prompt.dataset and prompt.dataset.project %}
+                                    <a href="{% url 'prompt:project_detail' prompt.dataset.project.pk %}" class="text-decoration-none">
+                                        {{ prompt.dataset.project.name }}
+                                    </a>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
                             <td>{{ prompt.dataset|default:"N/A" }}</td>
                             <td>{{ prompt.subset|default:"N/A" }}</td>
                             <td>
@@ -86,7 +96,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="7" class="text-center py-4">
                                 <p class="text-muted mb-0">No prompts have been entered yet</p>
                             </td>
                         </tr>
