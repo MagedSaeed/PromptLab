@@ -164,3 +164,6 @@ db*.sqlite3
 
 # db dump files:
 db_backup
+
+# custom
+react-migration
