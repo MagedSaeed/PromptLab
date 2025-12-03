@@ -1084,7 +1084,9 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
     paginate_by = 10  # Adjust this number as needed
 
     def get_queryset(self):
-        user_projects = PromptingProject.objects.filter(prompters__in=self.request.user)
+        user_projects = PromptingProject.objects.filter(
+            prompters__in=[self.request.user]
+        )
         assignments = []
         for project in user_projects:
             if self.request.user.username in project.dataset_assignments:
@@ -1095,14 +1097,14 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
                     has_prompts = Prompt.objects.filter(
                         dataset=dataset,
                         created_by=self.request.user,
-                        dataset__prompting_projects__in=[project],
+                        dataset__project=project,
                     ).exists()
                     prompts_count = 0
                     if has_prompts:
                         prompts_query = Prompt.objects.filter(
                             dataset=dataset,
                             created_by=self.request.user,
-                            dataset__prompting_projects__in=[project],
+                            dataset__project=project,
                         )
                         last_prompt = prompts_query.last()
                         prompts_count = prompts_query.count()
