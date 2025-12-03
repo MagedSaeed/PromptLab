@@ -6,7 +6,7 @@
             <h2 class="mb-0">PromptLab Prompts List</h2>
             {% if user.is_superuser %}
                 <a href="{% url 'prompt:hf_sync' %}" class="btn btn-primary">
-                    <i class="fas fa-sync-alt me-2"></i>Sync with Hugging Face
+                    <i class="fas fa-sync-alt me-2"></i>Import datasets from a google sheet
                 </a>
             {% endif %}
         </div>
