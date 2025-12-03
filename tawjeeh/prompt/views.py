@@ -718,7 +718,7 @@ class UserPromptsListView(LoginRequiredMixin, ListView):
         # if self.request.user.is_moderator:
         #     if self.request.GET.get("show_all_prompts"):
         #         return queryset
-        queryset = queryset.filter(created_by=self.request.user)
+        queryset = queryset.filter(created_by=self.request.user, dataset__isnull=False)
         status_order_map = {
             "RETURNED_FOR_MODIFICATION": 0,
             "DRAFT": 1,
@@ -1093,33 +1093,46 @@ class UserDistributedDatasetsView(LoginRequiredMixin, ListView):
                 for task, dataset_info in project.dataset_assignments[
                     self.request.user.username
                 ].items():
-                    dataset = Dataset.objects.get(name=dataset_info["dataset_name"])
-                    has_prompts = Prompt.objects.filter(
-                        dataset=dataset,
-                        created_by=self.request.user,
-                        dataset__project=project,
-                    ).exists()
-                    prompts_count = 0
-                    if has_prompts:
-                        prompts_query = Prompt.objects.filter(
+                    # Get all datasets with this name in the project
+                    datasets = Dataset.objects.filter(
+                        name=dataset_info["dataset_name"],
+                        project=project,
+                    )
+
+                    if not datasets.exists():
+                        # Skip if dataset no longer exists
+                        continue
+
+                    # Create an assignment for each matching dataset
+                    for dataset in datasets:
+                        has_prompts = Prompt.objects.filter(
                             dataset=dataset,
                             created_by=self.request.user,
                             dataset__project=project,
-                        )
-                        last_prompt = prompts_query.last()
-                        prompts_count = prompts_query.count()
+                        ).exists()
+                        prompts_count = 0
+                        if has_prompts:
+                            prompts_query = Prompt.objects.filter(
+                                dataset=dataset,
+                                created_by=self.request.user,
+                                dataset__project=project,
+                            )
+                            last_prompt = prompts_query.last()
+                            prompts_count = prompts_query.count()
 
-                    assignments.append(
-                        {
-                            "project": project,
-                            "task": task,
-                            "dataset_name": dataset_info["dataset_name"],
-                            "dataset_pk": dataset.pk,
-                            "status": last_prompt.status if has_prompts else "Pending",
-                            "last_prompt": last_prompt if has_prompts else None,
-                            "prompts_count": prompts_count,
-                        }
-                    )
+                        assignments.append(
+                            {
+                                "project": project,
+                                "task": task,
+                                "dataset_name": dataset_info["dataset_name"],
+                                "dataset_pk": dataset.pk,
+                                "status": (
+                                    last_prompt.status if has_prompts else "Pending"
+                                ),
+                                "last_prompt": last_prompt if has_prompts else None,
+                                "prompts_count": prompts_count,
+                            }
+                        )
         return assignments
 
     def get_context_data(self, **kwargs):

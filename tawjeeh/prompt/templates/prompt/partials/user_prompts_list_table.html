@@ -53,18 +53,22 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>
-                                {% if prompt.created_by == request.user %}
-                                    <a href="{% url 'prompt:prompt_update' prompt.dataset.pk prompt.pk %}" class="text-decoration-none">
-                                        {{ prompt.name }}
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'prompt:prompt_review' prompt.dataset.pk prompt.pk %}" class="text-decoration-none">
-                                        {{ prompt.name }}
-                                    </a>
+                                {% if prompt.dataset %}
+                                    {% if prompt.created_by == request.user %}
+                                        <a href="{% url 'prompt:prompt_update' prompt.dataset.pk prompt.pk %}" class="text-decoration-none">
+                                            {{ prompt.name }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'prompt:prompt_review' prompt.dataset.pk prompt.pk %}" class="text-decoration-none">
+                                            {{ prompt.name }}
+                                        </a>
+                                    {% endif %}
+                                {% comment %} {% else %}
+                                    <span class="text-muted">{{ prompt.name }} (Dataset deleted)</span> {% endcomment %}
                                 {% endif %}
                             </td>
-                            <td>{{ prompt.dataset }}</td>
-                            <td>{{ prompt.subset }}</td>
+                            <td>{{ prompt.dataset|default:"N/A" }}</td>
+                            <td>{{ prompt.subset|default:"N/A" }}</td>
                             <td>
                                 <span class="badge status-badge status-{{ prompt.status|lower }}">
                                     {{ prompt.status }}
