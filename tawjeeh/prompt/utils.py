@@ -178,41 +178,47 @@ def generate_ai_prompts(prompt_dict):
             "dataset_subset": "train" # or "validation", "test",
             "created_by": "zaid", # mostly not needed
         }
+
+    Raises:
+        ValueError: If there's an error generating prompts from templator API
     """
-    answer_choices = []
-    if prompt_dict["answer_choices"]:
-        answer_choices = json.loads(prompt_dict["answer_choices"])
-        answer_choices = [item["value"] for item in answer_choices]
-    templator = TemplateCreator(
-        prompt_dict["dataset_name"],
-        config=prompt_dict["dataset_subset"],
-        answer_choices=answer_choices,
-        lang="English",
-    )
-
-    templates = templator.prompt_chatgpt(
-        prompt_dict["task_name"],
-        prompt_dict["template"],
-        version="gpt-4-turbo",
-        num_templates=5,
-    )
-
-    # you can implement the code that generates the prompts here
-    # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
-    generated_prompts_objects = []
-    for t in templates:
-        new_prompt = Prompt(
-            name=t.name,
-            template=t.text,
-            dataset=Dataset.objects.get(pk=prompt_dict["dataset_pk"]),
-            text_direction="ltr",
-            answer_choices=json.dumps(
-                [{"value": answer_choice} for answer_choice in t.answer_choices]
-            ),  # answer choices need to be in this format
-            dataset_subset=prompt_dict["dataset_subset"],
+    try:
+        answer_choices = []
+        if prompt_dict["answer_choices"]:
+            answer_choices = json.loads(prompt_dict["answer_choices"])
+            answer_choices = [item["value"] for item in answer_choices]
+        templator = TemplateCreator(
+            prompt_dict["dataset_name"],
+            config=prompt_dict["dataset_subset"],
+            answer_choices=answer_choices,
+            lang="English",
         )
-        generated_prompts_objects.append(new_prompt)
-    return generated_prompts_objects
+
+        templates = templator.prompt_chatgpt(
+            prompt_dict["task_name"],
+            prompt_dict["template"],
+            version="gpt-4-turbo",
+            num_templates=5,
+        )
+
+        # you can implement the code that generates the prompts here
+        # this is just a mocking logic to see how the prompts can be returned as Prompt db objects
+        generated_prompts_objects = []
+        for t in templates:
+            new_prompt = Prompt(
+                name=t.name,
+                template=t.text,
+                dataset=Dataset.objects.get(pk=prompt_dict["dataset_pk"]),
+                text_direction="ltr",
+                answer_choices=json.dumps(
+                    [{"value": answer_choice} for answer_choice in t.answer_choices]
+                ),  # answer choices need to be in this format
+                dataset_subset=prompt_dict["dataset_subset"],
+            )
+            generated_prompts_objects.append(new_prompt)
+        return generated_prompts_objects
+    except Exception as e:
+        raise ValueError(f"Error generating AI prompts: {str(e)}") from e
 
 
 def translate_prompt_with_ai(prompt_dict):
