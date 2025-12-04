@@ -323,6 +323,19 @@ class MultiplePromptsCreateView(PromptCreateView):
         setup_result = self.setup(request, *args, **kwargs)
         if isinstance(setup_result, HttpResponseRedirect):
             return setup_result
+
+        # Handle AI prompt generation errors
+        if request.method == "GET":
+            try:
+                self.get_ai_prompts()
+            except ValueError as e:
+                return self.error_redirect(request, str(e))
+            except Exception as e:
+                return self.error_redirect(
+                    request,
+                    f"An unexpected error occurred while generating AI prompts: {str(e)}",
+                )
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -375,22 +388,11 @@ class MultiplePromptsCreateView(PromptCreateView):
             session_key not in self.request.session
             and self.request.POST.get("submit") != "reject"
         ):
-            try:
-                ai_prompts = generate_ai_prompts(self.base_prompt.as_dict())
-                self.request.session[session_key] = [
-                    prompt.as_dict() for prompt in ai_prompts
-                ]
-            except ValueError as e:
-                # Handle templator API errors gracefully
-                messages.error(self.request, str(e))
-                return []
-            except Exception as e:
-                # Handle any other unexpected errors
-                messages.error(
-                    self.request,
-                    f"An unexpected error occurred while generating AI prompts: {str(e)}",
-                )
-                return []
+            # Generate AI prompts and let exceptions propagate to dispatch
+            ai_prompts = generate_ai_prompts(self.base_prompt.as_dict())
+            self.request.session[session_key] = [
+                prompt.as_dict() for prompt in ai_prompts
+            ]
         else:
             prompt_dicts = self.request.session.get(session_key, [])
             ai_prompts = []
