@@ -25,7 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "<your-django-secret-key>"
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY", "django-insecure-dev-only-key-change-in-production"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -197,14 +199,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "promptlab-app <no-reply@promptlab-app.info>"
 
-
-# EMAIL_HOST = "smtp.sendgrid.net"
-# EMAIL_HOST_USER = "apikey"  # this is exactly the value 'apikey'
-# EMAIL_HOST_PASSWORD = (
-#     "<your-sendgrid-api-key>"
-# )
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
 
 # all-auth settings
 AUTHENTICATION_BACKENDS = [

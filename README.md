@@ -22,7 +22,7 @@ sudo service redis-server restart
 - create a .env file
 
 ```bash
-echo "SUPERUSER_PASSWORD=<change-me>
+echo "SUPERUSER_PASSWORD=<your-superuser-password>
 GOOGLE_CLIENT_ID=<your-google-client-id>
 GOOGLE_CLIENT_SECRET=<your-google-client-secret>" > .env
 ```
@@ -108,7 +108,7 @@ sudo apt-get install -y redis
 sudo service redis-server restart
 
 # setup .env
-echo "SUPERUSER_PASSWORD=<change-me>
+echo "SUPERUSER_PASSWORD=<your-superuser-password>
 GOOGLE_CLIENT_ID=<your-google-client-id>
 GOOGLE_CLIENT_SECRET=<your-google-client-secret>" > .env
 
