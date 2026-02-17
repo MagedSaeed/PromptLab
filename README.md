@@ -7,7 +7,7 @@ It resembles most of the functionalities of [promptsource](https://github.com/bi
 - First, start by cloning the repo:
 
 `
-git clone https://github.com/MagedSaeed/promptlab.git
+git clone https://github.com/MagedSaeed/promptlab
 `
 
 - make sure redis is installed and enabled
