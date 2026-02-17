@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Tawjeeh** (PromptLab) is a Django-based platform for collaborative prompt engineering and dataset curation for NLP tasks. It integrates with HuggingFace Hub to import datasets and provides tools for creating, reviewing, and testing prompt templates with LLM models.
+**PromptLab** is a Django-based platform for collaborative prompt engineering and dataset curation for NLP tasks. It integrates with HuggingFace Hub to import datasets and provides tools for creating, reviewing, and testing prompt templates with LLM models.
 
 ## Architecture
 
@@ -14,8 +14,7 @@ The project follows a standard Django multi-app architecture:
 
 - **prompt/**: Core functionality for prompting projects, datasets, prompt templates, and review workflows
 - **api/**: REST API endpoints for programmatic access
-- **core/**: User management (custom TawjeehUser model) and utilities
-- **promptlab/**: Additional features
+- **core/**: User management (custom PromptLabUser model) and utilities
 
 ### Tech Stack
 
@@ -50,7 +49,7 @@ pip install -r requirements_dev.txt
 pre-commit install
 
 # 4. Run migrations
-cd tawjeeh
+cd promptlab
 python manage.py migrate sites
 python manage.py migrate
 
@@ -64,8 +63,8 @@ python manage.py setup_allauth
 python manage.py runserver
 
 # 8. (Optional) Run Celery for background tasks
-celery -A tawjeeh worker -l info &
-celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
+celery -A promptlab worker -l info &
+celery -A promptlab beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 ```
 
 ## Common Commands
@@ -248,7 +247,7 @@ REST API endpoints require project secret key authentication.
 import requests
 
 response = requests.post(
-    "https://tawjeeh.up.railway.app/api/prompt/create",
+    "https://promptlab.up.railway.app/api/prompt/create",
     headers={"Content-Type": "application/json"},
     json={
         "name": "Test Prompt",
@@ -271,7 +270,7 @@ Find project secret key in Django admin: `/admin/prompt/promptingproject`
 - **Redis caching decorator**: `prompt/utils.py` - `@redis_cache()`
 - **HuggingFace integration**: `prompt/utils.py` - dataset fetching and metadata
 - **API authentication**: `api/permissions.py` - `HasProjectSecretKey`
-- **Custom user model**: `core/models.py` - `TawjeehUser`
+- **Custom user model**: `core/models.py` - `PromptLabUser`
 - **Review workflow**: `prompt/models.py` - `PromptReviewAction`, `ReviewStatus`
 - **Dataset distribution**: `prompt/models.py` - `PromptingProject.distribute_datasets_to_all_members()`
 - **Management commands**: `prompt/management/commands/` and `core/management/commands/`

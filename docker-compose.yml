@@ -6,7 +6,7 @@ services:
             - 8080:80
         volumes:
             - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-            - static_volume:/app/tawjeeh/static/
+            - static_volume:/app/promptlab/static/
     
     redis:
         image: redis:alpine
@@ -29,19 +29,19 @@ services:
             dockerfile: ./docker/django-site/Dockerfile
         entrypoint: /app/docker/django-site/server-entrypoint.sh
         volumes:
-            - static_volume:/app/tawjeeh/static/
+            - static_volume:/app/promptlab/static/
             - server_cache:/cache
             - server_logs:/var/log
         environment:
             DEBUG: "True"
             CELERY_BROKER_URL: redis://redis:6677/0
             CELERY_RESULT_BACKEND: redis://redis:6677/0
-            DJANGO_SETTINGS_MODULE: "tawjeeh.production_settings"
+            DJANGO_SETTINGS_MODULE: "promptlab.production_settings"
             # DJANGO_DB: postgresql
             POSTGRES_HOST: db
             REDIS_HOST: redis
             REDIS_PORT: 6677
-            POSTGRES_NAME: tawjeeh
+            POSTGRES_NAME: promptlab
             POSTGRES_USER: postgres
             POSTGRES_PORT: 5432
             SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
@@ -53,7 +53,7 @@ services:
     #         dockerfile: ./docker/django-site/Dockerfile
     #     entrypoint: /app/docker/django-site/worker-entrypoint.sh
     #     volumes:
-    #         - static_volume:/app/tawjeeh/static
+    #         - static_volume:/app/promptlab/static
     #     environment:
     #         DEBUG: "True"
     #         CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -78,7 +78,7 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data/
         environment:
-            POSTGRES_DB: tawjeeh
+            POSTGRES_DB: promptlab
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         expose:

@@ -10,12 +10,12 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create a new user called tawjeeh with sudo privileges
-RUN useradd -m -s /bin/bash tawjeeh && \
-    echo "tawjeeh ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Create a new user called promptlab with sudo privileges
+RUN useradd -m -s /bin/bash promptlab && \
+    echo "promptlab ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Switch to the tawjeeh user
-USER tawjeeh
+# Switch to the promptlab user
+USER promptlab
 
 # Set the working directory
 WORKDIR /app
@@ -24,7 +24,7 @@ WORKDIR /app
 RUN python -m venv venv
 
 # Copy the current directory contents into the container at /app
-COPY --chown=tawjeeh:tawjeeh . /app
+COPY --chown=promptlab:promptlab . /app
 
 # Activate the virtual environment and install the requirements
 RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"

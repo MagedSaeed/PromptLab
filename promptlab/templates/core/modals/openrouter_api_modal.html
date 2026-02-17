@@ -1,0 +1,94 @@
+<!-- OpenRouter API Key Management Modal -->
+<div class="modal fade" id="openRouterApiModal" tabindex="-1" aria-labelledby="openRouterApiModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="openRouterApiModalLabel">
+          <i class="bi bi-key me-2"></i>OpenRouter API Settings
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-1">
+          <!-- API Key information -->
+        <div class="">
+          {% if user.openrouter_api_key %}
+            <div class="card border-light bg-light mb-1">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="input-group">
+                    <span class="input-group-text bg-dark text-white"><i class="bi bi-shield-lock"></i></span>
+                    <input type="text" class="form-control bg-light" value="{{ user.masked_openrouter_api_key }}" readonly aria-label="Your API key">
+                    <button class="btn btn-outline-danger" id="deleteApiKeyBtn" type="button" title="Delete API key">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                  <!-- Added status badge -->
+                <div class="mt-2 text-center">
+                  <span class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i>API Key Added
+                  </span>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="alert alert-info d-flex align-items-center my-3" id="noAPIKeyAlert">
+              <i class="bi bi-info-circle-fill mx-2"></i>
+              <div>No API key is currently saved.</div>
+            </div>
+          {% endif %}
+        </div>
+
+          <!-- Update API Key form -->
+        <form id="openRouterApiForm" method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+              <input type="text" name="openrouter_api_key" id="id_openrouter_api_key"
+                     class="form-control" placeholder="{% if user.openrouter_api_key %}Update{% else %}Add{% endif %} your OpenRouter API key"
+                     required minlength="10">
+            </div>
+            <div class="form-text">
+              <i class="bi bi-shield-lock me-1"></i> Your API key will be used only for testing prompts with OpenRouter LLMs.
+            </div>
+            <div class="invalid-feedback" id="keyValidationMessage">
+              Please enter a valid OpenRouter API key.
+            </div>
+          </div>
+            <!-- Save alerts -->
+          <div id="saveAlertContainer">
+            <div class="alert alert-success d-none" id="saveSuccessAlert">
+              <i class="bi bi-check-circle-fill me-2"></i> API key saved successfully!
+            </div>
+            <div class="alert alert-danger d-none" id="saveErrorAlert">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              <span id="saveErrorMessage">Error saving API key</span>
+            </div>
+          </div>
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-success" id="saveApiKeyBtn">
+              <i class="bi bi-cloud-upload-fill me-2"></i>Save API Key
+              <span class="spinner-border spinner-border-sm ms-2 d-none" id="saveSpinner" role="status"></span>
+            </button>
+          </div>
+        </form>
+
+          <!-- OpenRouter information -->
+        <div class="mt-4 bg-light p-3 rounded">
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="https://openrouter.ai/settings/keys" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Get an API key
+            </a>
+            <a href="https://openrouter.ai/docs" target="_blank" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-book me-1"></i> Documentation
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

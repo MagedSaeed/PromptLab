@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class TawjeehUser(AbstractUser):
+class PromptLabUser(AbstractUser):
     openrouter_api_key = models.CharField(max_length=255, blank=True, null=True)
 
     # Override any methods from AbstractUser if needed

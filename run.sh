@@ -18,7 +18,7 @@ pip install -r requirements_dev.txt
 pre-commit install
 
 # cd into the application dir
-cd tawjeeh
+cd promptlab
 
 # migraste
 python manage.py migrate sites

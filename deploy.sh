@@ -9,10 +9,10 @@ pip install -r requirements.txt
 pip install git+https://${GH_TOKEN}@github.com/zaidalyafeai/templator.git
 
 # Navigate to the project directory
-cd tawjeeh
+cd promptlab
 
 # set production settings as env variable
-export DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
+export DJANGO_SETTINGS_MODULE=promptlab.production_settings
 
 # migrate django sites first
 python manage.py migrate sites
@@ -48,11 +48,11 @@ python manage.py collectstatic --noinput
 pip install gunicorn
 
 # run celery worker
-# celery -A tawjeeh worker -l info --pool solo &
+# celery -A promptlab worker -l info --pool solo &
 
 # run celery beat
-celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
+celery -A promptlab beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 
 # Start the Gunicorn server in the background
-# gunicorn tawjeeh.wsgi --workers 2 --thread 4 --bind 0.0.0.0:8080 --max-requests 4 --max-requests-jitter 10 --preload --timeout 150
-gunicorn tawjeeh.wsgi --workers 2 --thread 2 --max-requests 4 --bind 0.0.0.0:8080 --timeout 150
+# gunicorn promptlab.wsgi --workers 2 --thread 4 --bind 0.0.0.0:8080 --max-requests 4 --max-requests-jitter 10 --preload --timeout 150
+gunicorn promptlab.wsgi --workers 2 --thread 2 --max-requests 4 --bind 0.0.0.0:8080 --timeout 150

@@ -3,7 +3,7 @@ FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
+ENV DJANGO_SETTINGS_MODULE=promptlab.production_settings
 
 # Install dependencies
 RUN apt-get update && \
@@ -39,8 +39,8 @@ RUN /bin/bash -c "source venv/bin/activate && \
 # Copy the rest of the application code
 COPY --chown=celery:celery . /app
 
-# Set the working directory to the tawjeeh directory
-WORKDIR /app/tawjeeh
+# Set the working directory to the promptlab directory
+WORKDIR /app/promptlab
 
 # Run the Celery worker
-CMD ["/bin/bash", "-c", "source /app/venv/bin/activate && celery -A tawjeeh.celery worker --loglevel=info"]
+CMD ["/bin/bash", "-c", "source /app/venv/bin/activate && celery -A promptlab.celery worker --loglevel=info"]

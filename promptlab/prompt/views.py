@@ -1329,7 +1329,7 @@ class DatasetValidationAPIView(LoginRequiredMixin, View):
             # HuggingFace Hub API endpoint
             api_url = f"https://huggingface.co/api/datasets/{dataset_path}"
 
-            headers = {"User-Agent": "Tawjeeh-Dataset-Validator/1.0"}
+            headers = {"User-Agent": "PromptLab-Dataset-Validator/1.0"}
 
             response = requests.get(api_url, headers=headers, timeout=10)
 

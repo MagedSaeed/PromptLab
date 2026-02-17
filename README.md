@@ -1,5 +1,5 @@
-# tawjeeh
-Tawjeeh is an instructions-tuning platform to create,review, and build prompts datasets.
+# promptlab
+PromptLab is an instructions-tuning platform to create,review, and build prompts datasets.
 It resembles most of the functionalities of [promptsource](https://github.com/bigscience-workshop/promptsource) while adding more features to it.
 
 # how to run
@@ -7,7 +7,7 @@ It resembles most of the functionalities of [promptsource](https://github.com/bi
 - First, start by cloning the repo:
 
 `
-git clone https://github.com/MagedSaeed/tawjeeh.git
+git clone https://github.com/MagedSaeed/promptlab.git
 `
 
 - make sure redis is installed and enabled
@@ -43,7 +43,7 @@ pre-commit install
 - cd into the project dir
 
 ```bash
-cd tawjeeh
+cd promptlab
 ```
 
 - start project setup. First, migrate:
@@ -84,10 +84,10 @@ Optional. Run celery and celery beat. These are used for background tasks
 
 ```bash
 # run celery worker
-celery -A tawjeeh worker -l info &
+celery -A promptlab worker -l info &
 
 # run celery beat
-celery -A tawjeeh beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
+celery -A promptlab beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
 ```
 
 
@@ -120,7 +120,7 @@ pip install -r requirements_dev.txt
 pre-commit install
 
 # cd into the application dir
-cd tawjeeh
+cd promptlab
 
 # migraste
 python manage.py migrate sites
@@ -160,7 +160,7 @@ import requests
 import json
 
 # The URL for the API endpoint
-url = "https://tawjeeh.up.railway.app/api/prompt/create"
+url = "https://promptlab.up.railway.app/api/prompt/create"
 
 # The headers for the request
 headers = {
@@ -173,7 +173,7 @@ data = {
     "template": "Translate {text} to {language}",
     "dataset_huggingface_name": "arbml/watan_2004",
     "dataset_subset": "",  # optional, can be removed
-    "project_secret_key": "6Wirj",  # can be found in: https://tawjeeh.up.railway.app/admin/prompt/promptingproject , then click the name of the project
+    "project_secret_key": "6Wirj",  # can be found in: https://promptlab.up.railway.app/admin/prompt/promptingproject , then click the name of the project
     "created_by": "majed.alshaibani",
     "tags": ["AI generated", "AI translated"],  # optional, these are just examples, can be removed
     "text_direction": "rtl",  # optional, default to rtl, choices are: rtl or ltr, can be removed
@@ -197,7 +197,7 @@ Another example via curl
 
 ```bash
 
-curl -X POST https://tawjeeh.up.railway.app/api/prompt/create \
+curl -X POST https://promptlab.up.railway.app/api/prompt/create \
      -H "Content-Type: application/json" \
      -d '{
          "name": "Test Prompt from api",

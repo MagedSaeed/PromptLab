@@ -24,9 +24,9 @@ ADD ./.env /app/
 RUN pip install -r requirements.txt --break-system-packages
 
 # create static folder
-RUN mkdir -p /app/tawjeeh/tawjeeh/static
+RUN mkdir -p /app/promptlab/promptlab/static
 
-ADD ./tawjeeh /app/tawjeeh
+ADD ./promptlab /app/promptlab
 ADD ./docker /app/docker
 
 RUN chmod +x /app/docker/django-site/server-entrypoint.sh

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-until cd /app/tawjeeh
+until cd /app/promptlab
 do
     echo "Waiting for server volume..."
 done
@@ -42,12 +42,12 @@ done
 python3 manage.py collectstatic --noinput
 
 
-DJANGO_SETTINGS_MODULE=tawjeeh.production_settings
+DJANGO_SETTINGS_MODULE=promptlab.production_settings
 
 # create logs dir
 mkdir -p /var/log/gunicorn
 
-gunicorn tawjeeh.wsgi -c tawjeeh/gunicorn.conf.py
+gunicorn promptlab.wsgi -c promptlab/gunicorn.conf.py
 
 # for debug
 #python3 manage.py runserver 0.0.0.0:8000

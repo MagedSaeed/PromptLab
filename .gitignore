@@ -159,11 +159,11 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 .vscode
-tawjeeh/tawjeeh/staging_settings.py
+promptlab/promptlab/staging_settings.py
 db*.sqlite3
 
 # db dump files:
 db_backup
 
 # custom
-react-migration
+summary

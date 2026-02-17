@@ -1,6 +1,6 @@
 import os
 
-from tawjeeh.settings import *  # noqa: F403
+from promptlab.settings import *  # noqa: F403
 
 DEBUG = False
 
@@ -42,7 +42,7 @@ CELERY_BROKER_URL = f"redis://{os.environ['REDIS_USER']}:{os.environ['REDIS_PASS
 CELERY_RESULT_BACKEND = f"redis://{os.environ['REDIS_USER']}:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:{os.environ['REDIS_PORT']}"
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://tawjeeh-production.up.railway.app",
+    "https://promptlab.up.railway.app",
     "https://*.railway.app",
     "https://*.127.0.0.1",
 ]

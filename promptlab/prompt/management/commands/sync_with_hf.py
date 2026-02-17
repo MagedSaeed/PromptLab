@@ -159,7 +159,7 @@ class Command(BaseCommand):
 
     def fetch_from_csv(self, options) -> List[Tuple]:
         file_path = os.path.join(
-            f"{settings.BASE_DIR}/tawjeeh", options["datasets_file"]
+            f"{settings.BASE_DIR}/promptlab", options["datasets_file"]
         )
         if not os.path.exists(file_path):
             self.stdout.write(self.style.ERROR("CSV file not found."))
