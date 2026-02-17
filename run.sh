@@ -6,9 +6,19 @@ sudo apt-get install -y redis
 sudo service redis-server restart
 
 # setup .env
-echo "SUPERUSER_PASSWORD=<your-superuser-password>
+echo "DJANGO_SECRET_KEY=<your-django-secret-key>
+SUPERUSER_PASSWORD=<your-superuser-password>
 GOOGLE_CLIENT_ID=<your-google-client-id>
-GOOGLE_CLIENT_SECRET=<your-google-client-secret>" > .env
+GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+DB_PASSWORD=<your-db-password>
+DB_USER=postgres
+DB_NAME=<your-db-name>
+DB_HOST=localhost
+DB_PORT=5432
+# Optional: required for AI-powered prompt generation
+chatgpt_key=<your-openai-api-key>
+claude_key=<your-anthropic-api-key>
+gemini_key=<your-gemini-api-key>" > .env
 
 # install requirements
 pip install -r requirements.txt
