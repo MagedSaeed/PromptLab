@@ -5,6 +5,9 @@ from django.db import models
 class PromptLabUser(AbstractUser):
     openrouter_api_key = models.CharField(max_length=255, blank=True, null=True)
 
+    class Meta:
+        db_table = "core_tawjeehuser"
+
     # Override any methods from AbstractUser if needed
     def __str__(self):
         return self.username

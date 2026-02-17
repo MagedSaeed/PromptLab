@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="tawjeehuser",
+            model_name="promptlabuser",
             name="openrouter_api_key",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
