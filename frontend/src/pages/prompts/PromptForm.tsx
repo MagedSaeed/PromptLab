@@ -1,172 +1,235 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import PageLayout from '@/components/layout/PageLayout';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
-import type { DatasetDetail, Project, Prompt, Task, TemplatePreview } from '@/types';
+import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import {
+  AlignLeft,
+  AlignRight,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  Play,
+  Send,
+  Save,
+  Loader2,
+  Sparkles,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import type { DatasetDetail, Task, Prompt, TemplatePreview } from '@/types';
+
+interface OpenRouterModel {
+  id: string;
+  name: string;
+}
 
 export default function PromptForm() {
-  const { projectId, datasetId, promptId } = useParams<{
-    projectId: string;
-    datasetId: string;
-    promptId: string;
-  }>();
+  const { datasetId, id } = useParams<{ datasetId: string; id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const isEdit = !!promptId;
+  const isEditMode = !!id;
 
-  // Form state
   const [name, setName] = useState('');
   const [template, setTemplate] = useState('');
   const [textDirection, setTextDirection] = useState<'ltr' | 'rtl'>('ltr');
   const [answerChoices, setAnswerChoices] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
-  const [selectedTask, setSelectedTask] = useState<number | ''>('');
-  const [selectedSubset, setSelectedSubset] = useState('');
-  const [formError, setFormError] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [tags, setTags] = useState('');
+  const [taskId, setTaskId] = useState<string>('');
+  const [datasetSubset, setDatasetSubset] = useState('');
   const [sampleIndex, setSampleIndex] = useState(0);
-  const [showLLMDialog, setShowLLMDialog] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('');
+  const [datasetInfoOpen, setDatasetInfoOpen] = useState(true);
 
-  // Preview state
-  const [previewResult, setPreviewResult] = useState<TemplatePreview | null>(null);
-
-  // Load project
-  const { data: project } = useQuery<Project>({
-    queryKey: ['project', projectId],
-    queryFn: async () => (await api.get(`/projects/${projectId}/`)).data,
-    enabled: !!projectId,
-  });
-
-  // Load dataset
-  const { data: dataset } = useQuery<DatasetDetail>({
+  const { data: dataset, isLoading: datasetLoading } = useQuery<DatasetDetail>({
     queryKey: ['dataset-detail', datasetId],
-    queryFn: async () => (await api.get(`/datasets/${datasetId}/`)).data,
-    enabled: !!datasetId,
-  });
-
-  // Load tasks
-  const { data: tasks } = useQuery<Task[]>({
-    queryKey: ['tasks', projectId],
     queryFn: async () => {
-      const res = await api.get(`/tasks/?project_pk=${projectId}`);
-      return res.data.results || res.data;
-    },
-    enabled: !!projectId,
-  });
-
-  // Load existing prompt for edit
-  const { data: existingPrompt, isLoading: isLoadingPrompt } = useQuery<Prompt>({
-    queryKey: ['prompt', promptId],
-    queryFn: async () => (await api.get(`/prompts/${promptId}/`)).data,
-    enabled: isEdit,
-  });
-
-  // Load samples for sidebar
-  const { data: samples } = useQuery({
-    queryKey: ['dataset-samples', datasetId, selectedSubset],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedSubset) params.set('config', selectedSubset);
-      const res = await api.get(`/datasets/${datasetId}/samples/?${params.toString()}`);
+      const res = await api.get(`/datasets/${datasetId}/`);
       return res.data;
     },
     enabled: !!datasetId,
   });
 
-  // Pre-populate form for edit
+  const { data: existingPrompt, isLoading: promptLoading } = useQuery<Prompt>({
+    queryKey: ['prompt', datasetId, id],
+    queryFn: async () => {
+      const res = await api.get(`/datasets/${datasetId}/prompts/${id}/`);
+      return res.data;
+    },
+    enabled: isEditMode,
+  });
+
+  const { data: tasks } = useQuery<Task[]>({
+    queryKey: ['tasks'],
+    queryFn: async () => {
+      const res = await api.get('/tasks/');
+      return res.data.results || res.data;
+    },
+  });
+
+  const { data: models } = useQuery<OpenRouterModel[]>({
+    queryKey: ['openrouter-models'],
+    queryFn: async () => {
+      const res = await api.get('/openrouter/models/');
+      return res.data;
+    },
+  });
+
   useEffect(() => {
     if (existingPrompt) {
       setName(existingPrompt.name);
       setTemplate(existingPrompt.template);
       setTextDirection(existingPrompt.text_direction);
-      setAnswerChoices(existingPrompt.answer_choices || '');
-      setTagsInput(existingPrompt.tags.join(', '));
-      setSelectedTask(existingPrompt.task || '');
-      setSelectedSubset(existingPrompt.dataset_subset || '');
+      setAnswerChoices(
+        existingPrompt.answer_choices_list?.join(', ') ||
+          existingPrompt.answer_choices ||
+          ''
+      );
+      setTags(existingPrompt.tags?.join(', ') || '');
+      setTaskId(existingPrompt.task ? String(existingPrompt.task) : '');
+      setDatasetSubset(existingPrompt.dataset_subset || '');
     }
   }, [existingPrompt]);
 
-  // Preview mutation
-  const previewMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.post(`/prompts/apply-template/`, {
+  useEffect(() => {
+    if (dataset && !isEditMode && dataset.default_subset) {
+      setDatasetSubset(dataset.default_subset);
+    }
+  }, [dataset, isEditMode]);
+
+  const previewMutation = useMutation<
+    TemplatePreview,
+    Error,
+    { testWithLlm?: boolean }
+  >({
+    mutationFn: async ({ testWithLlm = false }) => {
+      const splits = dataset?.configs_with_splits;
+      const subset = datasetSubset || dataset?.default_subset || '';
+      const split =
+        splits && subset && splits[subset] ? splits[subset][0] : '';
+
+      const body: Record<string, unknown> = {
         template,
-        dataset_id: datasetId,
-        subset: selectedSubset,
-        sample_index: sampleIndex,
         answer_choices: answerChoices,
-      });
+        sample_index: sampleIndex,
+        subset,
+        split,
+        text_direction: textDirection,
+      };
+
+      if (testWithLlm && selectedModel) {
+        body.test_with_llm = true;
+        body.llm_model = selectedModel;
+      }
+
+      const res = await api.post(
+        `/datasets/${datasetId}/prompts/apply-template/`,
+        body
+      );
       return res.data;
     },
-    onSuccess: (data) => setPreviewResult(data),
   });
 
-  // Save mutation
+  const handlePreview = useCallback(
+    (testWithLlm = false) => {
+      if (!template.trim()) {
+        toast.error('Please enter a template before previewing.');
+        return;
+      }
+      previewMutation.mutate({ testWithLlm });
+    },
+    [template, previewMutation]
+  );
+
   const saveMutation = useMutation({
-    mutationFn: async (status: string) => {
+    mutationFn: async (submitForReview: boolean) => {
       const payload = {
-        name: name.trim(),
+        name,
         template,
         text_direction: textDirection,
         answer_choices: answerChoices,
-        tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
-        task: selectedTask || null,
-        dataset: Number(datasetId),
-        dataset_subset: selectedSubset,
-        status,
+        tags: tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
+        task: taskId ? parseInt(taskId, 10) : null,
+        dataset_subset: datasetSubset,
+        submit_for_review: submitForReview,
       };
-      if (isEdit) {
-        return api.put(`/prompts/${promptId}/`, payload);
+
+      if (isEditMode) {
+        const res = await api.put(
+          `/datasets/${datasetId}/prompts/${id}/`,
+          payload
+        );
+        return res.data;
       }
-      return api.post(`/datasets/${datasetId}/prompts/`, payload);
+      const res = await api.post(
+        `/datasets/${datasetId}/prompts/`,
+        payload
+      );
+      return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['prompts', datasetId] });
-      navigate(`/app/projects/${projectId}/datasets/${datasetId}/prompts`);
+    onSuccess: (_data, submitForReview) => {
+      toast.success(
+        submitForReview
+          ? 'Prompt saved and submitted for review.'
+          : isEditMode
+            ? 'Prompt updated successfully.'
+            : 'Prompt saved as draft.'
+      );
+      navigate(`/app/datasets/${datasetId}/prompts`);
     },
     onError: (err: unknown) => {
       const message =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        (err as Error)?.message ||
-        'Failed to save prompt.';
-      setFormError(message);
+        err instanceof Error ? err.message : 'Failed to save prompt.';
+      toast.error(message);
     },
   });
 
-  // LLM test mutation
-  const llmTestMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.post(`/prompts/test-llm/`, {
-        template,
-        dataset_id: datasetId,
-        subset: selectedSubset,
-        sample_index: sampleIndex,
-        answer_choices: answerChoices,
-      });
-      return res.data;
-    },
-  });
+  const insertColumnIntoTemplate = (column: string) => {
+    setTemplate((prev) => `${prev}{{ ${column} }}`);
+  };
 
-  const sampleList: Record<string, unknown>[] = samples?.samples || [];
-  const currentSample = sampleList[sampleIndex] || null;
-  const totalSamples = sampleList.length;
+  const subsets = dataset?.configs_with_splits
+    ? Object.keys(dataset.configs_with_splits)
+    : [];
 
-  const subsets = dataset ? (dataset.subsets ? dataset.subsets.split(',').map((s) => s.trim()).filter(Boolean) : Object.keys(dataset.configs_with_splits || {})) : [];
-
-  if (isEdit && isLoadingPrompt) {
+  if (datasetLoading || (isEditMode && promptLoading)) {
     return (
       <PageLayout
         title=""
         breadcrumbs={[
-          { label: 'Projects', to: '/app/projects' },
-          { label: project?.name || '...', to: `/app/projects/${projectId}` },
+          { label: 'Projects', href: '/app/projects' },
+          { label: '...' },
           { label: 'Loading...' },
         ]}
       >
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
         </div>
       </PageLayout>
     );
@@ -174,309 +237,425 @@ export default function PromptForm() {
 
   return (
     <PageLayout
-      title={isEdit ? 'Edit Prompt' : 'New Prompt'}
+      title={isEditMode ? 'Edit Prompt' : 'New Prompt'}
       breadcrumbs={[
-        { label: 'Projects', to: '/app/projects' },
-        { label: project?.name || '...', to: `/app/projects/${projectId}` },
-        { label: dataset?.name || '...', to: `/app/projects/${projectId}/datasets/${datasetId}` },
-        { label: 'Prompts', to: `/app/projects/${projectId}/datasets/${datasetId}/prompts` },
-        { label: isEdit ? 'Edit' : 'New Prompt' },
+        { label: 'Projects', href: '/app/projects' },
+        {
+          label: dataset?.name || 'Dataset',
+          href: `/app/datasets/${datasetId}`,
+        },
+        {
+          label: 'Prompts',
+          href: `/app/datasets/${datasetId}/prompts`,
+        },
+        { label: isEditMode ? 'Edit' : 'New' },
       ]}
     >
-      <div className="flex gap-6">
-        {/* Left Panel - Editor */}
-        <div className={`flex-1 space-y-6 ${sidebarOpen ? 'max-w-[60%]' : ''}`}>
-          {/* Error */}
-          {formError && (
-            <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
-              <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>
-            </div>
-          )}
-
-          {/* Name */}
-          <div>
-            <label htmlFor="prompt-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Prompt Name <span className="text-red-500">*</span>
-            </label>
-            <input
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT COLUMN - Main Form */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="prompt-name">Name *</Label>
+            <Input
               id="prompt-name"
-              type="text"
+              placeholder="Enter a descriptive name for this prompt"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter prompt name"
             />
           </div>
 
-          {/* Task and Subset Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Task
-              </label>
-              <select
-                value={selectedTask}
-                onChange={(e) => setSelectedTask(e.target.value ? Number(e.target.value) : '')}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select task...</option>
-                {tasks?.map((task) => (
-                  <option key={task.id} value={task.id}>{task.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Dataset Subset
-              </label>
-              <select
-                value={selectedSubset}
-                onChange={(e) => setSelectedSubset(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Default</option>
-                {subsets.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Tags
-            </label>
-            <input
-              type="text"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Comma-separated tags, e.g. translation, AI generated"
-            />
-          </div>
-
-          {/* Template Editor */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Template <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">Direction:</span>
-                <button
-                  type="button"
-                  onClick={() => setTextDirection(textDirection === 'ltr' ? 'rtl' : 'ltr')}
-                  className={`rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
-                    textDirection === 'rtl'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
-                  }`}
-                >
-                  {textDirection.toUpperCase()}
-                </button>
-              </div>
-            </div>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="prompt-template">Template *</Label>
+            {/* TODO: Replace with PromptEditor component */}
+            <Textarea
+              id="prompt-template"
+              placeholder="Write your prompt template here. Use {{ column_name }} to insert dataset columns."
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
+              className="min-h-[200px] font-mono text-sm"
               dir={textDirection}
-              rows={12}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm font-mono text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
-              placeholder="Write your prompt template using Jinja2 syntax. Use {{ column_name }} for dataset placeholders."
             />
-            {dataset?.columns_names && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Available columns: {dataset.columns_names.map((c) => `{{ ${c} }}`).join(', ')}
-              </p>
-            )}
           </div>
 
-          {/* Answer Choices */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Answer Choices
-            </label>
-            <input
-              type="text"
+          <div className="space-y-2">
+            <Label>Text Direction</Label>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={textDirection === 'ltr' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTextDirection('ltr')}
+              >
+                <AlignLeft className="h-4 w-4 mr-1" />
+                LTR
+              </Button>
+              <Button
+                type="button"
+                variant={textDirection === 'rtl' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTextDirection('rtl')}
+              >
+                <AlignRight className="h-4 w-4 mr-1" />
+                RTL
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="answer-choices">Answer Choices</Label>
+            <Input
+              id="answer-choices"
+              placeholder="Enter comma-separated answer choices (e.g. Yes, No, Maybe)"
               value={answerChoices}
               onChange={(e) => setAnswerChoices(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder='JSON: [{"value": "choice1"}, {"value": "choice2"}]'
             />
+            <p className="text-xs text-muted-foreground">
+              Separate multiple choices with commas.
+            </p>
           </div>
 
-          {/* Preview Section */}
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Preview</h3>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => previewMutation.mutate()}
-                  disabled={!template || previewMutation.isPending}
-                  className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
-                >
-                  {previewMutation.isPending ? 'Rendering...' : 'Preview Template'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLLMDialog(true);
-                    llmTestMutation.mutate();
-                  }}
-                  disabled={!template}
-                  className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
-                >
-                  Test with LLM
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              {previewResult ? (
-                <div dir={textDirection} className="prose dark:prose-invert max-w-none">
-                  <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-900 rounded-md p-4 font-sans">
-                    {previewResult.rendered_template}
-                  </pre>
-                  {previewResult.processed_answer_choices?.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Answer Choices:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {previewResult.processed_answer_choices.map((choice, i) => (
-                          <span key={i} className="rounded bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">
-                            {choice}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                  Click "Preview Template" to render with sample data.
-                </p>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="tags">Tags</Label>
+            <Input
+              id="tags"
+              placeholder="Enter comma-separated tags (e.g. classification, sentiment)"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Separate multiple tags with commas.
+            </p>
           </div>
 
-          {/* LLM Test Dialog */}
-          {showLLMDialog && (
-            <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white">LLM Test Result</h4>
-                <button
-                  type="button"
-                  onClick={() => setShowLLMDialog(false)}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  &times;
-                </button>
-              </div>
-              {llmTestMutation.isPending && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600" />
-                  Running LLM test...
-                </div>
-              )}
-              {llmTestMutation.data && (
-                <pre className="whitespace-pre-wrap text-sm bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-200 dark:border-gray-700">
-                  {llmTestMutation.data.result?.content || llmTestMutation.data.error || 'No response'}
-                </pre>
-              )}
-              {llmTestMutation.isError && (
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {(llmTestMutation.error as Error)?.message || 'LLM test failed.'}
-                </p>
-              )}
+          <div className="space-y-2">
+            <Label>Task</Label>
+            <Select value={taskId} onValueChange={setTaskId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a task (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {tasks?.map((task) => (
+                  <SelectItem key={task.id} value={String(task.id)}>
+                    {task.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {subsets.length > 1 && (
+            <div className="space-y-2">
+              <Label>Dataset Subset</Label>
+              <Select
+                value={datasetSubset}
+                onValueChange={setDatasetSubset}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select subset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subsets.map((subset) => (
+                    <SelectItem key={subset} value={subset}>
+                      {subset}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={() => saveMutation.mutate('draft')}
-              disabled={saveMutation.isPending || !name.trim() || !template.trim()}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          <Separator />
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              disabled={
+                saveMutation.isPending ||
+                !name.trim() ||
+                !template.trim()
+              }
+              onClick={() => saveMutation.mutate(false)}
             >
-              {saveMutation.isPending ? 'Saving...' : 'Save as Draft'}
-            </button>
-            <button
-              type="button"
-              onClick={() => saveMutation.mutate('submitted')}
-              disabled={saveMutation.isPending || !name.trim() || !template.trim()}
-              className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 transition-colors"
+              {saveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Save as Draft
+            </Button>
+            <Button
+              disabled={
+                saveMutation.isPending ||
+                !name.trim() ||
+                !template.trim()
+              }
+              onClick={() => saveMutation.mutate(true)}
             >
-              {saveMutation.isPending ? 'Submitting...' : 'Submit for Review'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
+              {saveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Save &amp; Submit for Review
+            </Button>
           </div>
         </div>
 
-        {/* Right Sidebar - Dataset Samples */}
-        <div className={`transition-all ${sidebarOpen ? 'w-[40%]' : 'w-10'}`}>
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mb-2 rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            {sidebarOpen ? 'Hide Samples' : 'Show'}
-          </button>
-
-          {sidebarOpen && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-4">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                  Dataset Sample {totalSamples > 0 && `(${sampleIndex + 1}/${totalSamples})`}
-                </h3>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setSampleIndex(Math.max(0, sampleIndex - 1))}
-                    disabled={sampleIndex <= 0}
-                    className="rounded border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSampleIndex(Math.min(totalSamples - 1, sampleIndex + 1))}
-                    disabled={sampleIndex >= totalSamples - 1}
-                    className="rounded border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 max-h-[70vh] overflow-y-auto">
-                {currentSample ? (
-                  <dl className="space-y-3">
-                    {Object.entries(currentSample).map(([key, value]) => (
-                      <div key={key}>
-                        <dt className="text-xs font-medium text-gray-500 dark:text-gray-400 font-mono">
-                          {key}
-                        </dt>
-                        <dd className="mt-0.5 text-sm text-gray-900 dark:text-white break-all">
-                          {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
+        {/* RIGHT COLUMN - Sidebar */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader
+              className="cursor-pointer select-none"
+              onClick={() => setDatasetInfoOpen(!datasetInfoOpen)}
+            >
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">Dataset Info</CardTitle>
+                {datasetInfoOpen ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                    No sample data available.
-                  </p>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
-            </div>
-          )}
+            </CardHeader>
+            {datasetInfoOpen && dataset && (
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium">{dataset.name}</p>
+                  <a
+                    href={dataset.huggingface_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
+                  >
+                    {dataset.huggingface_name}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    Available Columns
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {dataset.columns_names?.map((col) => (
+                      <Badge
+                        key={col}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                        onClick={() => insertColumnIntoTemplate(col)}
+                      >
+                        {col}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Click a column to insert it into the template.
+                  </p>
+                </div>
+
+                {subsets.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        Configs / Splits
+                      </p>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        {Object.entries(
+                          dataset.configs_with_splits || {}
+                        ).map(([config, splits]) => (
+                          <div key={config}>
+                            <span className="font-medium text-foreground">
+                              {config}
+                            </span>
+                            {': '}
+                            {(splits as string[]).join(', ')}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            )}
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Template Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={
+                  previewMutation.isPending || !template.trim()
+                }
+                onClick={() => handlePreview(false)}
+              >
+                {previewMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                Preview Template
+              </Button>
+
+              {previewMutation.data && (
+                <>
+                  <div
+                    className="rounded-md border bg-muted/50 p-3 text-sm whitespace-pre-wrap max-h-[300px] overflow-y-auto"
+                    dir={textDirection}
+                  >
+                    {previewMutation.data.rendered_template}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={sampleIndex <= 0}
+                      onClick={() =>
+                        setSampleIndex((prev) => prev - 1)
+                      }
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Sample {sampleIndex + 1} /{' '}
+                      {previewMutation.data.max_samples}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        sampleIndex >=
+                        previewMutation.data.max_samples - 1
+                      }
+                      onClick={() =>
+                        setSampleIndex((prev) => prev + 1)
+                      }
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {previewMutation.data.processed_answer_choices &&
+                    previewMutation.data.processed_answer_choices
+                      .length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
+                          Answer Choices
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {previewMutation.data.processed_answer_choices.map(
+                            (choice, i) => (
+                              <Badge
+                                key={i}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {choice}
+                              </Badge>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+                </>
+              )}
+
+              <Separator />
+
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Test with LLM
+                </p>
+                <Select
+                  value={selectedModel}
+                  onValueChange={setSelectedModel}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models?.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        {model.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  disabled={
+                    previewMutation.isPending ||
+                    !template.trim() ||
+                    !selectedModel
+                  }
+                  onClick={() => handlePreview(true)}
+                >
+                  {previewMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  Test with LLM
+                </Button>
+
+                {previewMutation.data?.llm_result && (
+                  <div className="space-y-2">
+                    {previewMutation.data.llm_result.success ? (
+                      <div className="rounded-md border bg-muted/50 p-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
+                          LLM Response (
+                          {
+                            previewMutation.data.llm_result.result
+                              ?.model
+                          }
+                          )
+                        </p>
+                        <p
+                          className="text-sm whitespace-pre-wrap"
+                          dir={textDirection}
+                        >
+                          {
+                            previewMutation.data.llm_result.result
+                              ?.content
+                          }
+                        </p>
+                        {previewMutation.data.llm_result.result
+                          ?.usage && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Tokens:{' '}
+                            {
+                              previewMutation.data.llm_result.result
+                                .usage.total_tokens
+                            }
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                        <p className="text-sm text-destructive">
+                          {previewMutation.data.llm_result.error ||
+                            'LLM request failed.'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </PageLayout>
