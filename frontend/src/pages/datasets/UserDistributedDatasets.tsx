@@ -1,150 +1,165 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import PageLayout from '@/components/layout/PageLayout';
 import api from '@/lib/api';
+import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ChevronLeft, ChevronRight, Database } from 'lucide-react';
 
-interface DistributedDataset {
+interface UserDataset {
   id: number;
+  name: string;
+  huggingface_name: string;
   project_id: number;
   project_name: string;
-  task_name: string;
-  dataset_id: number;
-  dataset_name: string;
-  status: string;
-  prompts_count: number;
+  prompt_count: number;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-    in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  };
-  const label = status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status.toLowerCase()] || styles.pending}`}>
-      {label}
-    </span>
-  );
+interface PaginatedUserDatasets {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: UserDataset[];
 }
 
 export default function UserDistributedDatasets() {
-  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get('page') || '1', 10);
 
-  const { data, isLoading, isError, error } = useQuery<DistributedDataset[]>({
-    queryKey: ['user-distributed-datasets'],
+  const { data, isLoading, isError, error } = useQuery<PaginatedUserDatasets>({
+    queryKey: ['user-datasets', page],
     queryFn: async () => {
-      const res = await api.get('/user/datasets/');
-      return res.data.results || res.data;
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      const res = await api.get(`/user/datasets/?${params.toString()}`);
+      return res.data;
     },
   });
 
+  const handlePageChange = (newPage: number) => {
+    setSearchParams({ page: String(newPage) });
+  };
+
+  const totalPages = data ? Math.ceil(data.count / 20) : 0;
+
   return (
     <PageLayout
-      title="My Assigned Datasets"
+      title="My Datasets"
       breadcrumbs={[{ label: 'My Datasets' }]}
     >
-      {/* Error */}
       {isError && (
-        <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {(error as Error)?.message || 'Failed to load datasets.'}
-          </p>
-        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-sm text-destructive">
+              {(error as Error)?.message || 'Failed to load datasets.'}
+            </p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Loading */}
       {isLoading && (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-          <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                {['Project', 'Task', 'Dataset', 'Status', 'Prompts', 'Actions'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i} className="animate-pulse">
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <div className="p-4 space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
 
-      {/* Table */}
-      {data && (
-        <>
-          {data.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />
-              </svg>
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">No datasets assigned</h3>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                You have not been assigned any datasets yet. Project owners can distribute datasets to members.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Project</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Task</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dataset</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prompts</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {data.map((item) => (
-                    <tr key={`${item.project_id}-${item.dataset_id}-${item.task_name}`} className="hover:bg-gray-50 dark:hover:bg-gray-750">
-                      <td className="px-4 py-3">
-                        <Link
-                          to={`/app/projects/${item.project_id}`}
-                          className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {item.project_name}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        {item.task_name}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">
-                        {item.dataset_name}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={item.status} />
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        {item.prompts_count}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          to={`/app/projects/${item.project_id}/datasets/${item.dataset_id}/prompts/new`}
-                          className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-500 transition-colors"
-                        >
-                          Create Prompt
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+      {data && data.results.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center space-y-3">
+            <Database className="h-10 w-10 text-muted-foreground mx-auto" />
+            <p className="text-sm text-muted-foreground">
+              No datasets have been assigned to you yet.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {data && data.results.length > 0 && (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[280px]">Dataset Name</TableHead>
+                <TableHead>Project</TableHead>
+                <TableHead className="text-right">Prompts</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.results.map((ds) => (
+                <TableRow key={ds.id}>
+                  <TableCell className="font-medium">
+                    <Link
+                      to={`/app/datasets/${ds.id}`}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {ds.name}
+                    </Link>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                      {ds.huggingface_name}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    <Link
+                      to={`/app/projects/${ds.project_id}`}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {ds.project_name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {ds.prompt_count}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {data && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-sm text-muted-foreground">
+            Showing page {page} of {totalPages} ({data.count} total)
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data.previous}
+              onClick={() => handlePageChange(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data.next}
+              onClick={() => handlePageChange(page + 1)}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
     </PageLayout>
   );

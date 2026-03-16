@@ -1,346 +1,440 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import PageLayout from '@/components/layout/PageLayout';
 import api from '@/lib/api';
-import type { Prompt, Project, Dataset, ReviewAction } from '@/types';
-
-function ReviewHistoryItem({ action }: { action: ReviewAction }) {
-  return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-900 dark:text-white">
-          {action.submitter.username}
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {new Date(action.taken_on).toLocaleString()}
-        </span>
-      </div>
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            action.submitter_decision === 'approve'
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-              : action.submitter_decision === 'return'
-                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-                : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-          }`}
-        >
-          {action.submitter_decision_display || action.prompt_status}
-        </span>
-      </div>
-      {action.submitter_comment && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 bg-gray-50 dark:bg-gray-900 rounded-md p-3">
-          {action.submitter_comment}
-        </p>
-      )}
-    </div>
-  );
-}
+import PageLayout from '@/components/layout/PageLayout';
+import StatusBadge from '@/components/StatusBadge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import {
+  AlignLeft,
+  AlignRight,
+  Check,
+  RotateCcw,
+  Send,
+  Loader2,
+  Clock,
+  User,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import type { Prompt, Task, ReviewAction, DatasetDetail } from '@/types';
 
 export default function PromptReview() {
-  const { projectId, datasetId, promptId } = useParams<{
-    projectId: string;
-    datasetId: string;
-    promptId: string;
-  }>();
+  const { datasetId, id } = useParams<{ datasetId: string; id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [decision, setDecision] = useState<'approve' | 'return'>('approve');
+  const [name, setName] = useState('');
+  const [template, setTemplate] = useState('');
+  const [textDirection, setTextDirection] = useState<'ltr' | 'rtl'>('ltr');
+  const [answerChoices, setAnswerChoices] = useState('');
+  const [tags, setTags] = useState('');
+  const [taskId, setTaskId] = useState<string>('');
+  const [datasetSubset, setDatasetSubset] = useState('');
+  const [decision, setDecision] = useState<string>('');
   const [comment, setComment] = useState('');
-  const [editedTemplate, setEditedTemplate] = useState('');
-  const [editedName, setEditedName] = useState('');
-  const [editedAnswerChoices, setEditedAnswerChoices] = useState('');
-  const [formError, setFormError] = useState<string | null>(null);
-  const [initialized, setInitialized] = useState(false);
 
-  const { data: project } = useQuery<Project>({
-    queryKey: ['project', projectId],
-    queryFn: async () => (await api.get(`/projects/${projectId}/`)).data,
-    enabled: !!projectId,
+  const { data: prompt, isLoading: promptLoading } = useQuery<Prompt>({
+    queryKey: ['prompt-review', datasetId, id],
+    queryFn: async () => {
+      const res = await api.get(`/datasets/${datasetId}/prompts/${id}/`);
+      return res.data;
+    },
+    enabled: !!datasetId && !!id,
   });
 
-  const { data: dataset } = useQuery<Dataset>({
-    queryKey: ['dataset', datasetId],
-    queryFn: async () => (await api.get(`/datasets/${datasetId}/`)).data,
+  const { data: dataset } = useQuery<DatasetDetail>({
+    queryKey: ['dataset-detail', datasetId],
+    queryFn: async () => {
+      const res = await api.get(`/datasets/${datasetId}/`);
+      return res.data;
+    },
     enabled: !!datasetId,
   });
 
-  const { data: prompt, isLoading, isError, error } = useQuery<Prompt>({
-    queryKey: ['prompt', promptId],
-    queryFn: async () => (await api.get(`/prompts/${promptId}/`)).data,
-    enabled: !!promptId,
+  const { data: tasks } = useQuery<Task[]>({
+    queryKey: ['tasks'],
+    queryFn: async () => {
+      const res = await api.get('/tasks/');
+      return res.data.results || res.data;
+    },
   });
 
-  // Initialize editable fields once prompt loads
-  if (prompt && !initialized) {
-    setEditedName(prompt.name);
-    setEditedTemplate(prompt.template);
-    setEditedAnswerChoices(prompt.answer_choices || '');
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (prompt) {
+      setName(prompt.name);
+      setTemplate(prompt.template);
+      setTextDirection(prompt.text_direction);
+      setAnswerChoices(
+        prompt.answer_choices_list?.join(', ') || prompt.answer_choices || ''
+      );
+      setTags(prompt.tags?.join(', ') || '');
+      setTaskId(prompt.task ? String(prompt.task) : '');
+      setDatasetSubset(prompt.dataset_subset || '');
+    }
+  }, [prompt]);
 
-  const submitReviewMutation = useMutation({
+  const subsets = dataset?.configs_with_splits
+    ? Object.keys(dataset.configs_with_splits)
+    : [];
+
+  const reviewMutation = useMutation({
     mutationFn: async () => {
-      return api.post(`/prompts/${promptId}/review/`, {
-        decision,
-        comment: comment.trim(),
-        modifications: {
-          name: editedName,
-          template: editedTemplate,
-          answer_choices: editedAnswerChoices,
-        },
-      });
+      const payload: Record<string, unknown> = {
+        submitter_decision: decision,
+        submitter_comment: comment,
+        name,
+        template,
+        text_direction: textDirection,
+        answer_choices: answerChoices,
+        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        task: taskId ? parseInt(taskId, 10) : null,
+        dataset_subset: datasetSubset,
+      };
+      const res = await api.post(
+        `/datasets/${datasetId}/prompts/${id}/review/`,
+        payload
+      );
+      return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['prompt', promptId] });
+      toast.success('Review submitted successfully.');
+      queryClient.invalidateQueries({ queryKey: ['prompt-review', datasetId, id] });
       queryClient.invalidateQueries({ queryKey: ['prompts', datasetId] });
-      navigate(`/app/projects/${projectId}/datasets/${datasetId}/prompts`);
+      navigate(`/app/datasets/${datasetId}/prompts`);
     },
     onError: (err: unknown) => {
-      const message =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        (err as Error)?.message ||
-        'Failed to submit review.';
-      setFormError(message);
+      const message = err instanceof Error ? err.message : 'Failed to submit review.';
+      toast.error(message);
     },
   });
 
-  const handleSubmit = () => {
-    setFormError(null);
-    if (decision === 'return' && !comment.trim()) {
-      setFormError('A comment is required when returning a prompt for modification.');
+  const handleSubmitReview = () => {
+    if (!decision) {
+      toast.error('Please select a decision.');
       return;
     }
-    submitReviewMutation.mutate();
+    if (decision === 'return' && !comment.trim()) {
+      toast.error('Please provide a comment when returning for modification.');
+      return;
+    }
+    reviewMutation.mutate();
   };
 
-  if (isLoading) {
+  if (promptLoading) {
     return (
       <PageLayout
         title=""
         breadcrumbs={[
-          { label: 'Projects', to: '/app/projects' },
-          { label: project?.name || '...', to: `/app/projects/${projectId}` },
+          { label: 'Projects', href: '/app/projects' },
+          { label: '...' },
           { label: 'Loading...' },
         ]}
       >
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="space-y-4 max-w-4xl">
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
       </PageLayout>
     );
   }
 
-  if (isError || !prompt) {
+  if (!prompt) {
     return (
       <PageLayout
         title="Error"
         breadcrumbs={[
-          { label: 'Projects', to: '/app/projects' },
-          { label: project?.name || '...', to: `/app/projects/${projectId}` },
+          { label: 'Projects', href: '/app/projects' },
           { label: 'Error' },
         ]}
       >
-        <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {(error as Error)?.message || 'Failed to load prompt.'}
-          </p>
-        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-sm text-destructive">Prompt not found.</p>
+          </CardContent>
+        </Card>
       </PageLayout>
     );
   }
 
   return (
     <PageLayout
-      title={`Review: ${prompt.name}`}
+      title="Review Prompt"
       breadcrumbs={[
-        { label: 'Projects', to: '/app/projects' },
-        { label: project?.name || '...', to: `/app/projects/${projectId}` },
-        { label: dataset?.name || '...', to: `/app/projects/${projectId}/datasets/${datasetId}` },
-        { label: 'Prompts', to: `/app/projects/${projectId}/datasets/${datasetId}/prompts` },
+        { label: 'Projects', href: '/app/projects' },
+        { label: dataset?.name || 'Dataset', href: `/app/datasets/${datasetId}` },
+        { label: 'Prompts', href: `/app/datasets/${datasetId}/prompts` },
         { label: 'Review' },
       ]}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content - Prompt Fields */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Error */}
-          {formError && (
-            <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
-              <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>
-            </div>
-          )}
-
-          {/* Prompt Info */}
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="max-w-4xl space-y-6">
+        {/* Prompt Info Header */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div>
-                <span className="text-gray-500 dark:text-gray-400">Created by:</span>{' '}
-                <span className="font-medium text-gray-900 dark:text-white">{prompt.created_by.username}</span>
+                <CardTitle>{prompt.name}</CardTitle>
+                <CardDescription className="mt-1">
+                  Created by {prompt.created_by.username} on{' '}
+                  {new Date(prompt.created_on).toLocaleDateString()}
+                </CardDescription>
               </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Status:</span>{' '}
-                <span className="font-medium text-gray-900 dark:text-white">{prompt.status}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Dataset:</span>{' '}
-                <span className="font-medium text-gray-900 dark:text-white">{prompt.dataset_name}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Task:</span>{' '}
-                <span className="font-medium text-gray-900 dark:text-white">{prompt.task_name || '--'}</span>
-              </div>
+              <StatusBadge status={prompt.status} />
             </div>
-          </div>
+          </CardHeader>
+        </Card>
 
-          {/* Editable Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Prompt Name
-            </label>
-            <input
-              type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Editable Template */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Template
-            </label>
-            <textarea
-              value={editedTemplate}
-              onChange={(e) => setEditedTemplate(e.target.value)}
-              dir={prompt.text_direction}
-              rows={10}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm font-mono text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
-            />
-          </div>
-
-          {/* Answer Choices */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Answer Choices
-            </label>
-            <input
-              type="text"
-              value={editedAnswerChoices}
-              onChange={(e) => setEditedAnswerChoices(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Tags */}
-          {prompt.tags.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tags
-              </label>
-              <div className="flex flex-wrap gap-1">
-                {prompt.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Review Decision */}
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-              Review Decision
-            </h3>
-
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="decision"
-                  value="approve"
-                  checked={decision === 'approve'}
-                  onChange={() => setDecision('approve')}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                />
-                <span className="text-sm font-medium text-green-700 dark:text-green-400">Approve</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="decision"
-                  value="return"
-                  checked={decision === 'return'}
-                  onChange={() => setDecision('return')}
-                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
-                />
-                <span className="text-sm font-medium text-orange-700 dark:text-orange-400">Return for Modification</span>
-              </label>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Comment {decision === 'return' && <span className="text-red-500">*</span>}
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={4}
-                placeholder={decision === 'return' ? 'Explain what needs to be modified...' : 'Optional comment...'}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+        {/* Editable Fields */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Prompt Details</CardTitle>
+            <CardDescription>
+              You can modify these fields as part of the review.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="review-name">Name</Label>
+              <Input
+                id="review-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
 
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitReviewMutation.isPending}
-                className={`rounded-lg px-6 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50 transition-colors ${
-                  decision === 'approve'
-                    ? 'bg-green-600 hover:bg-green-500'
-                    : 'bg-orange-600 hover:bg-orange-500'
-                }`}
-              >
-                {submitReviewMutation.isPending
-                  ? 'Submitting...'
-                  : decision === 'approve'
-                    ? 'Approve Prompt'
-                    : 'Return for Modification'}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="rounded-lg border border-gray-300 dark:border-gray-600 px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
+            <div className="space-y-2">
+              <Label htmlFor="review-template">Template</Label>
+              <Textarea
+                id="review-template"
+                value={template}
+                onChange={(e) => setTemplate(e.target.value)}
+                className="min-h-[180px] font-mono text-sm"
+                dir={textDirection}
+              />
             </div>
-          </div>
-        </div>
 
-        {/* Sidebar - Review History */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-            Review History
-          </h3>
-          {prompt.review_actions && prompt.review_actions.length > 0 ? (
+            <div className="space-y-2">
+              <Label>Text Direction</Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant={textDirection === 'ltr' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTextDirection('ltr')}
+                >
+                  <AlignLeft className="h-4 w-4 mr-1" />
+                  LTR
+                </Button>
+                <Button
+                  type="button"
+                  variant={textDirection === 'rtl' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTextDirection('rtl')}
+                >
+                  <AlignRight className="h-4 w-4 mr-1" />
+                  RTL
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="review-answer-choices">Answer Choices</Label>
+              <Input
+                id="review-answer-choices"
+                value={answerChoices}
+                onChange={(e) => setAnswerChoices(e.target.value)}
+                placeholder="Comma-separated answer choices"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="review-tags">Tags</Label>
+              <Input
+                id="review-tags"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="Comma-separated tags"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Task</Label>
+                <Select value={taskId} onValueChange={setTaskId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select task" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tasks?.map((task) => (
+                      <SelectItem key={task.id} value={String(task.id)}>
+                        {task.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {subsets.length > 1 && (
+                <div className="space-y-2">
+                  <Label>Dataset Subset</Label>
+                  <Select value={datasetSubset} onValueChange={setDatasetSubset}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subsets.map((subset) => (
+                        <SelectItem key={subset} value={subset}>
+                          {subset}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Review Decision */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Review Decision</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
             <div className="space-y-3">
-              {prompt.review_actions.map((action) => (
-                <ReviewHistoryItem key={action.id} action={action} />
-              ))}
+              <Label>Decision *</Label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant={decision === 'approve' ? 'default' : 'outline'}
+                  className={
+                    decision === 'approve'
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : ''
+                  }
+                  onClick={() => setDecision('approve')}
+                >
+                  <Check className="h-4 w-4" />
+                  Approve
+                </Button>
+                <Button
+                  type="button"
+                  variant={decision === 'return' ? 'default' : 'outline'}
+                  className={
+                    decision === 'return'
+                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                      : ''
+                  }
+                  onClick={() => setDecision('return')}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Return for Modification
+                </Button>
+              </div>
             </div>
-          ) : (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">No review history yet.</p>
+
+            <div className="space-y-2">
+              <Label htmlFor="review-comment">
+                Comment{decision === 'return' ? ' *' : ''}
+              </Label>
+              <Textarea
+                id="review-comment"
+                placeholder={
+                  decision === 'return'
+                    ? 'Explain what needs to be modified (required)...'
+                    : 'Optional review comment...'
+                }
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-[100px]"
+              />
             </div>
-          )}
-        </div>
+
+            <Button
+              disabled={reviewMutation.isPending || !decision}
+              onClick={handleSubmitReview}
+              className="w-full sm:w-auto"
+            >
+              {reviewMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Submit Review
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Review History */}
+        {prompt.review_actions && prompt.review_actions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Review History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {prompt.review_actions.map((action: ReviewAction) => (
+                  <div key={action.id} className="flex gap-3 text-sm">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                        {action.submitter_decision === 'approve' ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : action.submitter_decision === 'return' ? (
+                          <RotateCcw className="h-4 w-4 text-orange-600" />
+                        ) : (
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">
+                          {action.submitter.username}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {action.submitter_decision_display}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(action.taken_on).toLocaleString()}
+                        </span>
+                      </div>
+                      {action.submitter_comment && (
+                        <p className="text-muted-foreground mt-1">
+                          {action.submitter_comment}
+                        </p>
+                      )}
+                      {action.prompt_status && (
+                        <div className="mt-1">
+                          <StatusBadge status={action.prompt_status} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageLayout>
   );
