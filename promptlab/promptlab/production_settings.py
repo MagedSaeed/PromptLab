@@ -47,7 +47,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.127.0.0.1",
 ]
 
-SECURE_PROXY_SSL_HEADER = None
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
 SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]

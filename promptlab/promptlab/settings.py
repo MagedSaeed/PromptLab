@@ -35,7 +35,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".railway.app", ".railway.app"]
 
 CSRF_TRUSTED_ORIGINS = ["http://*.127.0.0.1"]
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "http")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Application definition
 
 INSTALLED_APPS = [

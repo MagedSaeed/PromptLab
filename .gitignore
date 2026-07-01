@@ -167,3 +167,5 @@ db_backup
 
 # custom
 summary
+
+node_modules
