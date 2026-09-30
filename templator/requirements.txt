@@ -1,0 +1,5 @@
+openai
+datasets
+anthropic
+google-genai
+pandas==2.2.3

@@ -5,8 +5,8 @@ source venv/bin/activate
 # Install Python dependencies
 pip install -r requirements.txt
 
-# install the custom private prompt generation tool # TODO: needs to be moved to requirements once it becomes public
-pip install git+https://${GH_TOKEN}@github.com/zaidalyafeai/templator.git
+# install the custom prompt generation tool (local copy of the private zaidalyafeai/templator repo)
+pip install ./templator
 
 # Navigate to the project directory
 cd promptlab
